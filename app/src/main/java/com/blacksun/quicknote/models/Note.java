@@ -7,6 +7,14 @@ public class Note {
     private long dateCreated;
     private long dateModified;
 
+    public Note(String title, String content, long id, long dateCreated, long dateModified) {
+        this.title = title;
+        this.content = content;
+        this.id = id;
+        this.dateCreated = dateCreated;
+        this.dateModified = dateModified;
+    }
+
     public String getTitle() {
         return title;
     }

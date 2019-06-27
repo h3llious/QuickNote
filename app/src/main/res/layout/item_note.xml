@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="?android:attr/listPreferredItemHeightLarge"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:selectableItemBackground"
+    android:background="@drawable/background_note"
+    android:layout_margin="5dp">
+
+    <TextView
+        android:layout_marginLeft="10dp"
+        android:id="@+id/note_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"
+        android:text="This is a testing text, so it need to be longer than usual, damn still not long enough"
+        android:textAppearance="?android:textAppearanceMedium"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_marginLeft="10dp"
+        android:id="@+id/note_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/note_title"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:text="text holder" />
+
+    <TextView
+        android:layout_marginLeft="10dp"
+        android:id="@+id/note_text_update"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/note_content"
+        android:layout_alignParentLeft="true"
+        android:text="Updated: " />
+
+    <TextView
+        android:id="@+id/note_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/note_content"
+        android:layout_toRightOf="@id/note_text_update"
+        android:paddingLeft="10dp"
+        android:text="10 mins ago" />
+</RelativeLayout>

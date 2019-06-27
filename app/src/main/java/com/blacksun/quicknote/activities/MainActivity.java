@@ -3,18 +3,28 @@ package com.blacksun.quicknote.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.blacksun.quicknote.R;
+import com.blacksun.quicknote.adapters.NoteRecyclerAdapter;
+import com.blacksun.quicknote.models.Note;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
+
+    ArrayList<Note> notes;
+    RecyclerView noteList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +43,25 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        notes = new ArrayList<>();
+        notes.add(new Note("Go home and travel to another planet need longerrrrrrrrrrrrrrr", "Now get up", 10, 10, 10));
+        notes.add(new Note("Go home", "Now get up", 10, 10, 10));
+
+        noteList = (RecyclerView) findViewById(R.id.note_list);
+
+        View emptyView = findViewById(R.id.empty_view);
+        if (notes.size() == 0) {
+            emptyView.setVisibility(View.VISIBLE);
+        }
+
+        NoteRecyclerAdapter adapter = new NoteRecyclerAdapter(notes);
+
+        Log.d("TestRecyclerMain", "Not good 2");
+        noteList.setHasFixedSize(true);
+        noteList.setLayoutManager(new LinearLayoutManager(this));
+        noteList.setAdapter(adapter);
+
     }
 
     @Override
