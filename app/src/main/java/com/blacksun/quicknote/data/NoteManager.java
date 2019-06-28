@@ -63,7 +63,6 @@ public class NoteManager {
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_CONTENT, note.getContent());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, note.getDateCreated());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME, System.currentTimeMillis());
-        //values.put(Constants.COL_CATID, note.getCategoryId());
         mContext.getApplicationContext().getContentResolver().update(NoteContract.NoteEntry.CONTENT_URI,
                 values, NoteContract.NoteEntry.ID + "=" + note.getId(), null);
 
