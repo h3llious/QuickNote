@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.adapters.NoteRecyclerAdapter;
+import com.blacksun.quicknote.data.NoteManager;
 import com.blacksun.quicknote.models.Note;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -25,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
 
     ArrayList<Note> notes;
     RecyclerView noteList;
+    View emptyView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,20 +50,41 @@ public class MainActivity extends AppCompatActivity {
         notes.add(new Note("Go home and travel to another planet need longerrrrrrrrrrrrrrr", "Now get up", 10, 10, 10));
         notes.add(new Note("Go home", "Now get up", 10, 10, 10));
 
+        getInfo();
+
         noteList = (RecyclerView) findViewById(R.id.note_list);
 
-        View emptyView = findViewById(R.id.empty_view);
+        emptyView = findViewById(R.id.empty_view);
         if (notes.size() == 0) {
             emptyView.setVisibility(View.VISIBLE);
         }
 
         NoteRecyclerAdapter adapter = new NoteRecyclerAdapter(notes);
 
-        Log.d("TestRecyclerMain", "Not good 2");
+//        Log.d("TestRecyclerMain", "Not good 2");
         noteList.setHasFixedSize(true);
         noteList.setLayoutManager(new LinearLayoutManager(this));
         noteList.setAdapter(adapter);
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //update after create new note or delete
+        getInfo();
+        NoteRecyclerAdapter adapter = new NoteRecyclerAdapter(notes);
+
+        noteList.setHasFixedSize(true);
+        noteList.setLayoutManager(new LinearLayoutManager(this));
+        noteList.setAdapter(adapter);
+    }
+
+    private void getInfo() {
+        notes = NoteManager.newInstance(this).getAllNotes();
+        if (notes.size() == 0) {
+            emptyView.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

@@ -42,7 +42,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         final Note note = notes.get(position);
         holder.textTitle.setText(note.getTitle());
         holder.textContent.setText(note.getContent());
-        holder.textTime.setText(getDate(note.getDateModified(),"dd/MM/yyyy hh:mm"));
+        holder.textTime.setText(getDate(note.getDateModified(),"dd/MM/yyyy HH:mm"));
         //TODO: change date time to x mins ago if possible
 
         holder.itemView.setTag(position);
@@ -68,7 +68,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(v.getContext(), DetailActivity.class);
-                    intent.putExtra("noteID", getAdapterPosition());
+                    intent.putExtra("noteID", notes.get(getAdapterPosition()).getId());
                     intent.putExtra("title", notes.get(getAdapterPosition()).getTitle());
                     intent.putExtra("content", notes.get(getAdapterPosition()).getContent());
                     intent.putExtra("dateModified", notes.get(getAdapterPosition()).getDateModified());

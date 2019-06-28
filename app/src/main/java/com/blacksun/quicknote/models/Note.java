@@ -1,5 +1,9 @@
 package com.blacksun.quicknote.models;
 
+import android.database.Cursor;
+
+import com.blacksun.quicknote.data.NoteContract;
+
 public class Note {
     private String title;
     private String content;
@@ -13,6 +17,10 @@ public class Note {
         this.id = id;
         this.dateCreated = dateCreated;
         this.dateModified = dateModified;
+    }
+
+    public Note(){
+
     }
 
     public String getTitle() {
@@ -53,5 +61,16 @@ public class Note {
 
     public void setDateModified(long dateModified) {
         this.dateModified = dateModified;
+    }
+
+    public static Note getNoteFromCursor(Cursor cursor){
+        Note note = new Note();
+        note.setId(cursor.getLong(cursor.getColumnIndex(NoteContract.NoteEntry.ID)));
+        note.setTitle(cursor.getString(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_TITLE)));
+        note.setContent(cursor.getString(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_CONTENT)));
+        note.setDateCreated(cursor.getLong(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME)));
+        note.setDateModified(cursor.getLong(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME)));
+
+        return note;
     }
 }

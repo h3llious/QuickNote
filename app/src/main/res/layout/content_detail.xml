@@ -9,9 +9,12 @@
     tools:showIn="@layout/activity_detail">
 
     <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:id="@+id/detail_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_margin="@dimen/text_margin"
-        android:text="@string/large_text" />
+        android:hint="What's on your mind?"
+        android:selectAllOnFocus="false"
+        android:singleLine="false" />
 
 </androidx.core.widget.NestedScrollView>
