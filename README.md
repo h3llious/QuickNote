@@ -8,3 +8,4 @@ This project is intended to develop a functional note taking app.
 * Ability to manage notes by creating new notes, viewing, updating and deleting exist notes
 * Adding text, pictures, files into notes.
 * Synchronizing data across multiple devices.
+* Performance friendly
