@@ -6,6 +6,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -24,16 +26,34 @@ public class DetailActivity extends AppCompatActivity {
     CollapsingToolbarLayout collapsingToolbar;
     Note currentNote = null;
 
+    ImageButton detailCamera, detailImage, detailFile, detailCheckbox;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        if (getSupportActionBar() != null)
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         collapsingToolbar = findViewById(R.id.toolbar_layout);
 
         detailContent = findViewById(R.id.detail_content);
         detailTitle = findViewById(R.id.detail_title);
+
+        detailCamera = findViewById(R.id.detail_camera);
+        detailImage = findViewById(R.id.detail_image);
+        detailFile = findViewById(R.id.detail_file);
+        detailCheckbox = findViewById(R.id.detail_checkbox);
+
+        detailCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
 
         String title = null;
         if (getIntent() != null && getIntent().getExtras() != null) {
@@ -116,6 +136,7 @@ public class DetailActivity extends AppCompatActivity {
             currentNote.setContent(content);
             NoteManager.newInstance(this).update(currentNote);
         }
+        collapsingToolbar.setTitle(detailTitle.getText());
         return true;
 
     }
@@ -149,39 +170,45 @@ public class DetailActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         switch (id) {
+            case android.R.id.home:
+                finish();
+                break;
             case R.id.action_save:
                 boolean saveCheck = saveNote();
 
                 if (currentNote == null) {
                     if (saveCheck) {
-                        Snackbar.make(getWindow().getDecorView(), "Save successfully", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
-
+//                        Snackbar.make(getWindow().getDecorView(), "Save successfully", Snackbar.LENGTH_LONG)
+//                                .setAction("Action", null).show();
+                        Toast.makeText(this, "Save successfully", Toast.LENGTH_SHORT).show();
                         finish();
                     } else
-                        Snackbar.make(getWindow().getDecorView(), "Encounter error(s) when saving", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
+//                        Snackbar.make(getWindow().getDecorView(), "Encounter error(s) when saving", Snackbar.LENGTH_LONG)
+//                                .setAction("Action", null).show();
+                        Toast.makeText(this, "Encounter error(s) when saving", Toast.LENGTH_SHORT).show();
                 } else {
                     if (saveCheck) {
-                        Snackbar.make(getWindow().getDecorView(), "Update successfully", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
-
-                        finish();
+//                        Snackbar.make(findViewById(R.id.detail_content), "Update successfully", Snackbar.LENGTH_LONG)
+//                                .setAction("Action", null).show();
+                        Toast.makeText(this, "Update successfully", Toast.LENGTH_SHORT).show();
+                        //finish();
                     } else
-                        Snackbar.make(getWindow().getDecorView(), "Encounter error(s) when updating", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
+//                        Snackbar.make(getWindow().getDecorView(), "Encounter error(s) when updating", Snackbar.LENGTH_LONG)
+//                                .setAction("Action", null).show();
+                        Toast.makeText(this, "Encounter error(s) when updating", Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.action_delete:
                 boolean deleteCheck = deleteNote();
-                    if (deleteCheck) {
-                        Snackbar.make(getWindow().getDecorView(), "Delete successfully", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
-
-                        finish();
-                    } else
-                        Snackbar.make(getWindow().getDecorView(), "Encounter error(s) when deleting", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
+                if (deleteCheck) {
+//                    Snackbar.make(getWindow().getDecorView(), "Delete successfully", Snackbar.LENGTH_LONG)
+//                            .setAction("Action", null).show();
+                    Toast.makeText(this, "Delete successfully", Toast.LENGTH_SHORT).show();
+                    finish();
+                } else
+//                    Snackbar.make(getWindow().getDecorView(), "Encounter error(s) when deleting", Snackbar.LENGTH_LONG)
+//                            .setAction("Action", null).show();
+                    Toast.makeText(this, "Encounter error(s) when deleting", Toast.LENGTH_SHORT).show();
                 break;
             default:
         }

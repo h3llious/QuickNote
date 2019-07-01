@@ -43,6 +43,8 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         holder.textTitle.setText(note.getTitle());
         holder.textContent.setText(note.getContent());
         holder.textTime.setText(getDate(note.getDateModified(),"dd/MM/yyyy HH:mm"));
+        holder.textTimeCreated.setText(getDate(note.getDateCreated(),"dd/MM/yyyy HH:mm"));
+
         //TODO: change date time to x mins ago if possible
 
         holder.itemView.setTag(position);
@@ -55,7 +57,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
 
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        TextView textTitle, textContent, textTime;
+        TextView textTitle, textContent, textTime, textTimeCreated;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             textTitle = itemView.findViewById(R.id.note_title);
@@ -63,6 +65,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
 
             textContent = itemView.findViewById(R.id.note_content);
             textTime = itemView.findViewById(R.id.note_time);
+            textTimeCreated = itemView.findViewById(R.id.note_time_created);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
