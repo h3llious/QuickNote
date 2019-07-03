@@ -1,12 +1,17 @@
 package com.blacksun.quicknote.activities;
 
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,16 +27,91 @@ import com.google.android.material.snackbar.Snackbar;
 
 public class DetailActivity extends AppCompatActivity {
 
+
     EditText detailTitle, detailContent;
     CollapsingToolbarLayout collapsingToolbar;
     Note currentNote = null;
 
     ImageButton detailCamera, detailImage, detailFile, detailCheckbox;
 
+    PackageManager pm;
+
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+
+    ImageView testImage;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+
+        initialize();
+
+        pm = getPackageManager();
+
+        detailCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)){
+                    Toast.makeText(v.getContext(), "Device does not have camera", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    dispatchTakePictureIntent();
+                }
+            }
+        });
+
+        setUpAppBar();
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            testImage.setImageBitmap(imageBitmap);
+        }
+    }
+
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
+        else {
+            Toast.makeText(getBaseContext(), "No camera app installed", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    //Set title of the note and attributes of collapsing toolbar
+    private void setUpAppBar() {
+        if (getIntent() != null && getIntent().getExtras() != null) {
+            Bundle bundle = getIntent().getExtras();
+            if (bundle.getString("title") != null) {
+                detailTitle.setText(bundle.getString("title"));
+                detailContent.setText(bundle.getString("content"));
+
+                //test collapsing toolbar
+                collapsingToolbar.setTitle(bundle.getString("title"));
+
+                String title = bundle.getString("title");
+                String content = bundle.getString("content");
+                long dateCreated = bundle.getLong("dateCreated");
+                long dateModified = bundle.getLong("dateModified");
+                long id = bundle.getLong("noteID");
+
+                currentNote = new Note(title, content, id, dateCreated, dateModified);
+            }
+        } else {
+            collapsingToolbar.setTitle("New note");
+        }
+
+        collapsingToolbar.setCollapsedTitleTextColor(ContextCompat.getColor(this, R.color.white));
+        collapsingToolbar.setExpandedTitleColor(ContextCompat.getColor(this, R.color.transparent));
+    }
+
+    private void initialize() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -48,69 +128,8 @@ public class DetailActivity extends AppCompatActivity {
         detailFile = findViewById(R.id.detail_file);
         detailCheckbox = findViewById(R.id.detail_checkbox);
 
-        detailCamera.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-
-        String title = null;
-        if (getIntent() != null && getIntent().getExtras() != null) {
-            Bundle bundle = getIntent().getExtras();
-            if (bundle.getString("title") != null) {
-                detailTitle.setText(bundle.getString("title"));
-                detailContent.setText(bundle.getString("content"));
-
-                //test collapsing toolbar
-                collapsingToolbar.setTitle(bundle.getString("title"));
-
-                title = bundle.getString("title");
-                String content = bundle.getString("content");
-                long dateCreated = bundle.getLong("dateCreated");
-                long dateModified = bundle.getLong("dateModified");
-                long id = bundle.getLong("noteID");
-
-                currentNote = new Note(title, content, id, dateCreated, dateModified);
-
-            }
-        } else {
-            title = "0";
-            collapsingToolbar.setTitle("New note");
-
-
-        }
-
-
-        collapsingToolbar.setCollapsedTitleTextColor(ContextCompat.getColor(this, R.color.white));
-        collapsingToolbar.setExpandedTitleColor(ContextCompat.getColor(this, R.color.transparent));
-
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//
-//
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                boolean saveCheck = saveNote();
-//
-//                if (currentNote == null) {
-//                    if (saveCheck)
-//                        Snackbar.make(view, "Save successfully", Snackbar.LENGTH_LONG)
-//                                .setAction("Action", null).show();
-//                    else
-//                        Snackbar.make(view, "Encounter error(s) when saving", Snackbar.LENGTH_LONG)
-//                                .setAction("Action", null).show();
-//                } else {
-//                    if (saveCheck)
-//                        Snackbar.make(view, "Update successfully", Snackbar.LENGTH_LONG)
-//                                .setAction("Action", null).show();
-//                    else
-//                        Snackbar.make(view, "Encounter error(s) when updating", Snackbar.LENGTH_LONG)
-//                                .setAction("Action", null).show();
-//                }
-//                finish();
-//            }
-//        });
+        //just test TODO change into recyclerView
+        testImage = findViewById(R.id.test_image);
     }
 
     private boolean saveNote() {
