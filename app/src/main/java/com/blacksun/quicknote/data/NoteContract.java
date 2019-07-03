@@ -34,6 +34,8 @@ public class NoteContract {
         public final static String COLUMN_NOTE_CONTENT = "content";
         public final static String COLUMN_NOTE_MODTIME = "modified_time";
         public final static String COLUMN_NOTE_CRETIME = "created_time";
+        public final static String COLUMN_NOTE_IMG = "image_path";
+
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_NOTES);
     }

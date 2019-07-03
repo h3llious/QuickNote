@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "quick_note.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
 
 
@@ -33,5 +33,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + NoteContract.NoteEntry.COLUMN_NOTE_TITLE + " text NOT NULL, "
             + NoteContract.NoteEntry.COLUMN_NOTE_CONTENT + " text, "
             + NoteContract.NoteEntry.COLUMN_NOTE_MODTIME + " integer NOT NULL, "
-            + NoteContract.NoteEntry.COLUMN_NOTE_CRETIME + " integer NOT NULL" + ")";
+            + NoteContract.NoteEntry.COLUMN_NOTE_CRETIME + " integer NOT NULL,"
+            + NoteContract.NoteEntry.COLUMN_NOTE_IMG + " text" + ")";
 }

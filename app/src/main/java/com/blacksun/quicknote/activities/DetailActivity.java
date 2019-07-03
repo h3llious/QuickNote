@@ -3,9 +3,14 @@ package com.blacksun.quicknote.activities;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.ThumbnailUtils;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,6 +22,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.data.NoteManager;
@@ -24,6 +30,11 @@ import com.blacksun.quicknote.models.Note;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class DetailActivity extends AppCompatActivity {
 
@@ -39,6 +50,8 @@ public class DetailActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
 
     ImageView testImage;
+    String currentPhotoPath;
+    String currentPhotoName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,10 +65,9 @@ public class DetailActivity extends AppCompatActivity {
         detailCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)){
+                if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
                     Toast.makeText(v.getContext(), "Device does not have camera", Toast.LENGTH_SHORT).show();
-                }
-                else {
+                } else {
                     dispatchTakePictureIntent();
                 }
             }
@@ -65,21 +77,66 @@ public class DetailActivity extends AppCompatActivity {
 
     }
 
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getFilesDir();
+//        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        currentPhotoPath = image.getAbsolutePath();
+        currentPhotoName = image.getName();
+        Log.d("filePath", "" + currentPhotoPath);
+        Log.d("filePath", "" + currentPhotoName);
+        return image;
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            testImage.setImageBitmap(imageBitmap);
+//            Bundle extras = data.getExtras();
+//            Bitmap imageBitmap = (Bitmap) extras.get("data");
+//            testImage.setImageBitmap(imageBitmap);
+            createThumbnail();
         }
+    }
+
+    private void createThumbnail() {
+        Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(currentPhotoPath), 500, 500);
+        testImage.setImageBitmap(thumbImage);
     }
 
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        }
-        else {
+            File photoFile = null;
+
+            if (!TextUtils.isEmpty(currentPhotoPath)) {
+                File tobedeleted = new File(currentPhotoPath);
+                tobedeleted.delete();
+            }
+
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                Log.e("saveFile", "error saving file");
+            }
+
+            if (photoFile != null) {
+                Uri photoUri = FileProvider.getUriForFile(this,
+                        "com.blacksun.quicknote.fileprovider",
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
+
+        } else {
             Toast.makeText(getBaseContext(), "No camera app installed", Toast.LENGTH_SHORT).show();
         }
     }
@@ -100,8 +157,12 @@ public class DetailActivity extends AppCompatActivity {
                 long dateCreated = bundle.getLong("dateCreated");
                 long dateModified = bundle.getLong("dateModified");
                 long id = bundle.getLong("noteID");
+                String img = bundle.getString("imagePath");
+                currentPhotoPath = img;
+                if (!TextUtils.isEmpty(img))
+                    createThumbnail();
 
-                currentNote = new Note(title, content, id, dateCreated, dateModified);
+                currentNote = new Note(title, content, id, dateCreated, dateModified, img);
             }
         } else {
             collapsingToolbar.setTitle("New note");
@@ -149,10 +210,12 @@ public class DetailActivity extends AppCompatActivity {
             Note note = new Note();
             note.setTitle(title);
             note.setContent(content);
+            note.setImagePath(currentPhotoPath);
             NoteManager.newInstance(this).create(note);
         } else {
             currentNote.setTitle(title);
             currentNote.setContent(content);
+            currentNote.setImagePath(currentPhotoPath);
             NoteManager.newInstance(this).update(currentNote);
         }
         collapsingToolbar.setTitle(detailTitle.getText());
@@ -164,8 +227,15 @@ public class DetailActivity extends AppCompatActivity {
 
         if (currentNote == null)
             return false;
-        else
+        else {
+            if (!TextUtils.isEmpty(currentPhotoPath)) {
+                File tobedeleted = new File(currentPhotoPath);
+                tobedeleted.delete();
+                Log.d("filepath", "Deleted");
+            }
+            Log.d("filepath", "Not Deleted");
             NoteManager.newInstance(this).delete(currentNote);
+        }
         return true;
 
     }

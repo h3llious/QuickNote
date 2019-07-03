@@ -1,6 +1,7 @@
 package com.blacksun.quicknote.models;
 
 import android.database.Cursor;
+import android.text.TextUtils;
 
 import com.blacksun.quicknote.data.NoteContract;
 
@@ -10,13 +11,23 @@ public class Note {
     private long id;
     private long dateCreated;
     private long dateModified;
+    private String imagePath;
 
-    public Note(String title, String content, long id, long dateCreated, long dateModified) {
+    public Note(String title, String content, long id, long dateCreated, long dateModified, String imagePath) {
         this.title = title;
         this.content = content;
         this.id = id;
         this.dateCreated = dateCreated;
         this.dateModified = dateModified;
+        this.imagePath = imagePath;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 
     public Note(){
@@ -71,6 +82,10 @@ public class Note {
         note.setDateCreated(cursor.getLong(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME)));
         note.setDateModified(cursor.getLong(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME)));
 
+        if (!TextUtils.isEmpty(cursor.getString(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_IMG))))
+            note.setImagePath(cursor.getString(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_IMG)));
+        else
+            note.setImagePath(null);
         return note;
     }
 }

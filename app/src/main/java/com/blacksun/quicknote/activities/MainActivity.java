@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         drawerLayout = findViewById(R.id.drawer_layout);
+        emptyView = findViewById(R.id.empty_view);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -58,22 +59,20 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
                 Intent intent = new Intent(MainActivity.this, DetailActivity.class);
                 startActivity(intent);
             }
         });
 
         notes = new ArrayList<>();
-        notes.add(new Note("Go home and travel to another planet need longerrrrrrrrrrrrrrr", "Now get up", 10, 10, 10));
-        notes.add(new Note("Go home", "Now get up", 10, 10, 10));
 
         getInfo();
 
         noteList = (RecyclerView) findViewById(R.id.note_list);
 
-        emptyView = findViewById(R.id.empty_view);
+
         if (notes.size() == 0) {
             emptyView.setVisibility(View.VISIBLE);
         }
@@ -109,9 +108,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void getInfo() {
         notes = NoteManager.newInstance(this).getAllNotes();
+        emptyView.setVisibility(View.GONE);
         if (notes.size() == 0) {
             emptyView.setVisibility(View.VISIBLE);
         }
+
     }
 
     @Override

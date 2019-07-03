@@ -1,10 +1,16 @@
 package com.blacksun.quicknote.adapters;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.ThumbnailUtils;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +33,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         this.notes = notes;
     }
 
+
     @NonNull
     @Override
     public NoteRecyclerAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -45,6 +52,14 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         holder.textTime.setText(getDate(note.getDateModified(),"dd/MM/yyyy HH:mm"));
         holder.textTimeCreated.setText(getDate(note.getDateCreated(),"dd/MM/yyyy HH:mm"));
 
+        if (!TextUtils.isEmpty(note.getImagePath()))
+        {
+            int height = holder.itemView.getContext().getResources().getDimensionPixelSize(R.dimen.listPreferredItemHeightLarge);
+
+            Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(note.getImagePath()), height, height);
+            holder.img.setImageBitmap(thumbImage);
+        }
+
         //TODO: change date time to x mins ago if possible
 
         holder.itemView.setTag(position);
@@ -58,6 +73,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView textTitle, textContent, textTime, textTimeCreated;
+        ImageView img;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             textTitle = itemView.findViewById(R.id.note_title);
@@ -66,6 +82,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
             textContent = itemView.findViewById(R.id.note_content);
             textTime = itemView.findViewById(R.id.note_time);
             textTimeCreated = itemView.findViewById(R.id.note_time_created);
+            img = itemView.findViewById(R.id.note_img);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -76,6 +93,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
                     intent.putExtra("content", notes.get(getAdapterPosition()).getContent());
                     intent.putExtra("dateModified", notes.get(getAdapterPosition()).getDateModified());
                     intent.putExtra("dateCreated", notes.get(getAdapterPosition()).getDateCreated());
+                    intent.putExtra("imagePath", notes.get(getAdapterPosition()).getImagePath());
 
                     v.getContext().startActivity(intent);
                 }
