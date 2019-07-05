@@ -51,6 +51,7 @@ public class DetailActivity extends AppCompatActivity {
     EditText detailTitle, detailContent;
     CollapsingToolbarLayout collapsingToolbar;
     Note currentNote = null;
+    boolean isNew = true;
 
     ImageButton detailCamera, detailImage, detailFile, detailCheckbox;
 
@@ -346,6 +347,7 @@ public class DetailActivity extends AppCompatActivity {
                 }
 
                 currentNote = new Note(title, content, id, dateCreated, dateModified, img);
+                isNew = false;
             }
         } else {
             collapsingToolbar.setTitle("New note");
@@ -490,4 +492,10 @@ public class DetailActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (!isNew)
+            saveNote();
+    }
 }
