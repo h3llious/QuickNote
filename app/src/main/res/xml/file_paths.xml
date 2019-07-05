@@ -3,5 +3,8 @@
     <files-path
         name="note_images"
         path="/"/>
+    <external-path
+        name="external_files"
+        path="."/>
     <!--<external-path name="my_images" path="Android/data/com.blacksun.quicknote/files/Pictures" />-->
 </paths>

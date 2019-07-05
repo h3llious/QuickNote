@@ -2,21 +2,26 @@ package com.blacksun.quicknote.activities;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,7 +37,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -48,11 +57,14 @@ public class DetailActivity extends AppCompatActivity {
     PackageManager pm;
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
+    static final int REQUEST_FILE_CHOOSER = 2;
 
     ImageView testImage;
     String currentPhotoPath;
     String currentPhotoName;
     String oldPhotoPath;
+
+    TextView testFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +86,59 @@ public class DetailActivity extends AppCompatActivity {
             }
         });
 
+        detailFile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dispatchChooseFileIntent();
+
+//                File file = new File("/data/user/0/com.blacksun.quicknote/files/NewTextFile.txt");
+//                testFile.setText(file.getName());
+//
+//                testFile.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//                        File file = new File("/data/user/0/com.blacksun.quicknote/files/NewTextFile.txt");
+//                        Intent intent = new Intent();
+//                        intent.setAction(android.content.Intent.ACTION_VIEW);
+//                        Uri fileUri = FileProvider.getUriForFile(v.getContext(),
+//                                "com.blacksun.quicknote.fileprovider",
+//                                file);
+//                        intent.setData(fileUri);
+//                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//                        startActivity(intent);
+//                    }
+//                });
+            }
+        });
+
         setUpAppBar();
 
+    }
+
+    private void dispatchChooseFileIntent() {
+        Intent chooseFile;
+        Intent intent;
+        chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
+        chooseFile.addCategory(Intent.CATEGORY_OPENABLE);
+        chooseFile.setType("*/*");
+        intent = Intent.createChooser(chooseFile, "Choose a file");
+        startActivityForResult(intent, REQUEST_FILE_CHOOSER);
+    }
+
+    //    public static void copy(File src, File dst) {
+    public void copy(Uri uri, File dst) {
+//        try (InputStream in = new FileInputStream(src);
+        try (InputStream in = getContentResolver().openInputStream(uri);
+             OutputStream out = new FileOutputStream(dst)) {
+            // Transfer bytes from in to out
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+        } catch (IOException e) {
+            System.out.println(e);
+        }
     }
 
     private File createImageFile() throws IOException {
@@ -99,29 +162,88 @@ public class DetailActivity extends AppCompatActivity {
         return image;
     }
 
+    public String getFileName(Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            Log.d("filepath", "getFileNameContent");
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
+    }
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE) {
 //            Bundle extras = data.getExtras();
 //            Bitmap imageBitmap = (Bitmap) extras.get("data");
 //            testImage.setImageBitmap(imageBitmap);
-
-            if (!TextUtils.isEmpty(oldPhotoPath)) {
-                File tobedeleted = new File(oldPhotoPath);
-                tobedeleted.delete();
+            if (resultCode == RESULT_OK) {
+                if (!TextUtils.isEmpty(oldPhotoPath)) {
+                    File tobedeleted = new File(oldPhotoPath);
+                    tobedeleted.delete();
+                }
+                createThumbnail(currentPhotoPath);
+            } else if (resultCode == RESULT_CANCELED) {
+                if (!TextUtils.isEmpty(currentPhotoPath)) {
+                    File tobedeleted = new File(currentPhotoPath);
+                    tobedeleted.delete();
+                    Log.d("filePath", "cancel ok");
+                }
             }
-            createThumbnail();
-        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_CANCELED) {
-            if (!TextUtils.isEmpty(currentPhotoPath)) {
-                File tobedeleted = new File(currentPhotoPath);
-                tobedeleted.delete();
-                Log.d("filePath", "cancel ok");
+        } else if (requestCode == REQUEST_FILE_CHOOSER) {
+            if (resultCode == RESULT_OK) {
+                Uri uri = data.getData();
+                //String path = getPath(uri);
+
+                String id = DocumentsContract.getDocumentId(uri);
+
+                String fileName = getFileName(uri);
+
+                File savedFile = new File(getFilesDir().getAbsolutePath() + "/" + fileName);
+                copy(uri, savedFile);
+                final String filePath = savedFile.getAbsolutePath();
+
+                Log.d("filepath", filePath + ": " + fileName);
+
+                //just test get and open file, not saved into database yet
+                testFile.setText(fileName);
+
+                testFile.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        File file = new File(filePath);
+                        Intent intent = new Intent();
+                        intent.setAction(android.content.Intent.ACTION_VIEW);
+                        Uri fileUri = FileProvider.getUriForFile(v.getContext(),
+                                "com.blacksun.quicknote.fileprovider",
+                                file);
+                        intent.setData(fileUri);
+                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        startActivity(intent);
+                    }
+                });
+
             }
         }
     }
 
-    private void createThumbnail() {
-        Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(currentPhotoPath), 500, 500);
+    private void createThumbnail(String path) {
+        Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(path), 500, 500);
         testImage.setImageBitmap(thumbImage);
     }
 
@@ -171,7 +293,7 @@ public class DetailActivity extends AppCompatActivity {
                 if (!TextUtils.isEmpty(img)) {
                     File currentImg = new File(currentPhotoPath);
                     if (currentImg.exists())
-                        createThumbnail();
+                        createThumbnail(currentPhotoPath);
                 }
 
                 currentNote = new Note(title, content, id, dateCreated, dateModified, img);
@@ -203,6 +325,7 @@ public class DetailActivity extends AppCompatActivity {
 
         //just test TODO change into recyclerView
         testImage = findViewById(R.id.test_image);
+        testFile = findViewById(R.id.test_file);
     }
 
     private boolean saveNote() {
