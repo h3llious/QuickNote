@@ -58,6 +58,7 @@ public class DetailActivity extends AppCompatActivity {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_FILE_CHOOSER = 2;
+    static final int REQUEST_IMAGE_CHOOSER = 3;
 
     ImageView testImage;
     String currentPhotoPath;
@@ -110,6 +111,20 @@ public class DetailActivity extends AppCompatActivity {
 //                });
             }
         });
+
+        detailImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent chooseGallery;
+                Intent intent;
+                chooseGallery = new Intent(Intent.ACTION_GET_CONTENT);
+                chooseGallery.addCategory(Intent.CATEGORY_OPENABLE);
+                chooseGallery.setType("image/*");
+                intent = Intent.createChooser(chooseGallery, "Choose an image");
+                startActivityForResult(intent, REQUEST_IMAGE_CHOOSER);
+            }
+        });
+
 
         setUpAppBar();
 
@@ -239,12 +254,46 @@ public class DetailActivity extends AppCompatActivity {
                 });
 
             }
+        } else if (requestCode == REQUEST_IMAGE_CHOOSER) {
+            if (resultCode == RESULT_OK) {
+                Uri uri = data.getData();
+                //String path = getPath(uri);
+
+                String id = DocumentsContract.getDocumentId(uri);
+
+                String fileName = getFileName(uri);
+                try {
+                    File savedFile = createImageFile();
+                    copy(uri, savedFile);
+                    String filePath = savedFile.getAbsolutePath();
+
+                    Log.d("filepath", filePath + ": " + fileName);
+                    createThumbnail(filePath);
+                } catch (IOException e) {
+                    Log.e("saveFile", "error saving file");
+                }
+            }
         }
     }
 
-    private void createThumbnail(String path) {
+    private void createThumbnail(final String path) {
         Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(path), 500, 500);
         testImage.setImageBitmap(thumbImage);
+
+        testImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                File file = new File(path);
+                Intent intent = new Intent();
+                intent.setAction(android.content.Intent.ACTION_VIEW);
+                Uri fileUri = FileProvider.getUriForFile(v.getContext(),
+                        "com.blacksun.quicknote.fileprovider",
+                        file);
+                intent.setData(fileUri);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(intent);
+            }
+        });
     }
 
     private void dispatchTakePictureIntent() {
