@@ -15,6 +15,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.drawable.RoundedBitmapDrawable;
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.blacksun.quicknote.R;
@@ -22,6 +24,7 @@ import com.blacksun.quicknote.activities.DetailActivity;
 import com.blacksun.quicknote.activities.MainActivity;
 import com.blacksun.quicknote.models.Note;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -49,15 +52,26 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         final Note note = notes.get(position);
         holder.textTitle.setText(note.getTitle());
         holder.textContent.setText(note.getContent());
-        holder.textTime.setText(getDate(note.getDateModified(),"dd/MM/yyyy HH:mm"));
-        holder.textTimeCreated.setText(getDate(note.getDateCreated(),"dd/MM/yyyy HH:mm"));
+        holder.textTime.setText(getDate(note.getDateModified(), "dd/MM/yyyy HH:mm"));
+        holder.textTimeCreated.setText(getDate(note.getDateCreated(), "dd/MM/yyyy HH:mm"));
 
-        if (!TextUtils.isEmpty(note.getImagePath()))
-        {
-            int height = holder.itemView.getContext().getResources().getDimensionPixelSize(R.dimen.listPreferredItemHeightLarge);
+        if (!TextUtils.isEmpty(note.getImagePath())) {
+            File checkedImg = new File(note.getImagePath());
+            if (checkedImg.exists()) {
 
-            Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(note.getImagePath()), height, height);
-            holder.img.setImageBitmap(thumbImage);
+                int height = holder.itemView.getContext().getResources().getDimensionPixelSize(R.dimen.listPreferredItemHeightLarge);
+
+                Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(note.getImagePath()), height, height);
+
+            RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(holder.itemView.getContext().getResources(), thumbImage);
+            final float roundPx = (float) thumbImage.getWidth() * 0.1f;
+            roundedBitmapDrawable.setCornerRadius(roundPx);
+            holder.img.setImageDrawable(roundedBitmapDrawable);
+
+//                holder.img.setImageBitmap(thumbImage);
+            } else {
+                Log.e("Note Adapter", "Error getting image");
+            }
         }
 
         //TODO: change date time to x mins ago if possible
@@ -74,6 +88,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView textTitle, textContent, textTime, textTimeCreated;
         ImageView img;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             textTitle = itemView.findViewById(R.id.note_title);
@@ -101,8 +116,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         }
     }
 
-    public static String getDate(long milliSeconds, String dateFormat)
-    {
+    public static String getDate(long milliSeconds, String dateFormat) {
         // Create a DateFormatter object for displaying date in specified format.
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
 

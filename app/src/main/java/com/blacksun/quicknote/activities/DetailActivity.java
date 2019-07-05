@@ -52,6 +52,7 @@ public class DetailActivity extends AppCompatActivity {
     ImageView testImage;
     String currentPhotoPath;
     String currentPhotoName;
+    String oldPhotoPath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +91,7 @@ public class DetailActivity extends AppCompatActivity {
         );
 
         // Save a file: path for use with ACTION_VIEW intents
+        oldPhotoPath = currentPhotoPath;
         currentPhotoPath = image.getAbsolutePath();
         currentPhotoName = image.getName();
         Log.d("filePath", "" + currentPhotoPath);
@@ -103,7 +105,18 @@ public class DetailActivity extends AppCompatActivity {
 //            Bundle extras = data.getExtras();
 //            Bitmap imageBitmap = (Bitmap) extras.get("data");
 //            testImage.setImageBitmap(imageBitmap);
+
+            if (!TextUtils.isEmpty(oldPhotoPath)) {
+                File tobedeleted = new File(oldPhotoPath);
+                tobedeleted.delete();
+            }
             createThumbnail();
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_CANCELED) {
+            if (!TextUtils.isEmpty(currentPhotoPath)) {
+                File tobedeleted = new File(currentPhotoPath);
+                tobedeleted.delete();
+                Log.d("filePath", "cancel ok");
+            }
         }
     }
 
@@ -117,10 +130,6 @@ public class DetailActivity extends AppCompatActivity {
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             File photoFile = null;
 
-            if (!TextUtils.isEmpty(currentPhotoPath)) {
-                File tobedeleted = new File(currentPhotoPath);
-                tobedeleted.delete();
-            }
 
             try {
                 photoFile = createImageFile();
@@ -159,8 +168,11 @@ public class DetailActivity extends AppCompatActivity {
                 long id = bundle.getLong("noteID");
                 String img = bundle.getString("imagePath");
                 currentPhotoPath = img;
-                if (!TextUtils.isEmpty(img))
-                    createThumbnail();
+                if (!TextUtils.isEmpty(img)) {
+                    File currentImg = new File(currentPhotoPath);
+                    if (currentImg.exists())
+                        createThumbnail();
+                }
 
                 currentNote = new Note(title, content, id, dateCreated, dateModified, img);
             }
@@ -213,6 +225,7 @@ public class DetailActivity extends AppCompatActivity {
             note.setImagePath(currentPhotoPath);
             NoteManager.newInstance(this).create(note);
         } else {
+
             currentNote.setTitle(title);
             currentNote.setContent(content);
             currentNote.setImagePath(currentPhotoPath);
