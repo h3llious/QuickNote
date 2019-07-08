@@ -10,6 +10,8 @@ public class NoteContract {
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
     public static final String PATH_NOTES = "notes";
 
+    public static final String PATH_ATTACHES = "attaches";
+
     private NoteContract(){
     }
 
@@ -38,5 +40,24 @@ public class NoteContract {
 
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_NOTES);
+    }
+
+    public static final class AttachEntry implements  BaseColumns {
+        public static final String CONTENT_LIST_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE+"/"+CONTENT_AUTHORITY+"/" + PATH_ATTACHES;
+
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_ATTACHES;
+
+        public final static String TABLE_NAME = "attaches";
+        public final static String ID = BaseColumns._ID;
+        public final static String COLUMN_ATTACH_NOTE_ID = "note_id";
+        public final static String COLUMN_ATTACH_TYPE = "type";
+        public final static String COLUMN_ATTACH_PATH = "path";
+
+        public final static Uri CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_ATTACHES);
+
+        public final static String FILE_TYPE = "file";
+        public final static String IMAGE_TYPE = "image";
     }
 }

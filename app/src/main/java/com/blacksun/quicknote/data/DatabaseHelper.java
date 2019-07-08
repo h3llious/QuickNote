@@ -18,11 +18,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_NOTE);
+        db.execSQL(CREATE_TABLE_ATTACHMENT);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + NoteContract.NoteEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + NoteContract.AttachEntry.TABLE_NAME);
         onCreate(db);
     }
 
@@ -35,4 +37,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + NoteContract.NoteEntry.COLUMN_NOTE_MODTIME + " integer NOT NULL, "
             + NoteContract.NoteEntry.COLUMN_NOTE_CRETIME + " integer NOT NULL,"
             + NoteContract.NoteEntry.COLUMN_NOTE_IMG + " text" + ")";
+
+    private static final String CREATE_TABLE_ATTACHMENT = "CREATE TABLE "
+            + NoteContract.AttachEntry.TABLE_NAME
+            +"("
+            + NoteContract.AttachEntry.ID + "integer PRIMARY KEY AUTOINCREMENT, "
+            + NoteContract.AttachEntry.COLUMN_ATTACH_NOTE_ID + "integer NOT NULL, "
+            + NoteContract.AttachEntry.COLUMN_ATTACH_TYPE + "text NOT NULL, "
+            + NoteContract.AttachEntry.COLUMN_ATTACH_PATH + "text NOT NULL )";
 }

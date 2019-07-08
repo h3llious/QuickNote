@@ -30,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
 
     ArrayList<Note> notes;
     RecyclerView noteList;
+    NoteRecyclerAdapter noteRecyclerAdapter;
+
     View emptyView;
     DrawerLayout drawerLayout;
     ActionBarDrawerToggle drawerToggle;
@@ -77,12 +79,12 @@ public class MainActivity extends AppCompatActivity {
             emptyView.setVisibility(View.VISIBLE);
         }
 
-        NoteRecyclerAdapter adapter = new NoteRecyclerAdapter(notes);
+        noteRecyclerAdapter = new NoteRecyclerAdapter(notes);
 
 //        Log.d("TestRecyclerMain", "Not good 2");
         noteList.setHasFixedSize(true);
         noteList.setLayoutManager(new LinearLayoutManager(this));
-        noteList.setAdapter(adapter);
+        noteList.setAdapter(noteRecyclerAdapter);
 
     }
 
@@ -99,15 +101,18 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         //update after create new note or delete
         getInfo();
-        NoteRecyclerAdapter adapter = new NoteRecyclerAdapter(notes);
-
-        noteList.setHasFixedSize(true);
-        noteList.setLayoutManager(new LinearLayoutManager(this));
-        noteList.setAdapter(adapter);
+//        NoteRecyclerAdapter adapter = new NoteRecyclerAdapter(notes);
+//
+//        noteList.setHasFixedSize(true);
+//        noteList.setLayoutManager(new LinearLayoutManager(this));
+//        noteList.setAdapter(adapter);
+        noteRecyclerAdapter.notifyDataSetChanged();
     }
 
     private void getInfo() {
-        notes = NoteManager.newInstance(this).getAllNotes();
+        ArrayList<Note> newNotes = NoteManager.newInstance(this).getAllNotes();
+        notes.clear();
+        notes.addAll(newNotes);
         emptyView.setVisibility(View.GONE);
         if (notes.size() == 0) {
             emptyView.setVisibility(View.VISIBLE);

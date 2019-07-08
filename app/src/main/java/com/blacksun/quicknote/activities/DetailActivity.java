@@ -28,9 +28,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.blacksun.quicknote.R;
+import com.blacksun.quicknote.adapters.FileRecyclerAdapter;
+import com.blacksun.quicknote.adapters.ImageRecyclerAdapter;
 import com.blacksun.quicknote.data.NoteManager;
+import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.models.Note;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -43,6 +49,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class DetailActivity extends AppCompatActivity {
@@ -68,13 +75,50 @@ public class DetailActivity extends AppCompatActivity {
 
     TextView testFile;
 
+    RecyclerView imageList, fileList;
+
+    ArrayList<Attachment> images, files;
+    ImageRecyclerAdapter imageRecyclerAdapter;
+    FileRecyclerAdapter fileRecyclerAdapter;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
+        //findViewById
         initialize();
 
+        //toolbar for insert media
+        setOnClickButton();
+
+        //list of images and files
+        setUpRecyclerView();
+
+        //existed note content
+        setUpAppBar();
+
+    }
+
+    private void setUpRecyclerView() {
+        images = new ArrayList<>();
+        imageRecyclerAdapter = new ImageRecyclerAdapter(images);
+
+        imageList.setHasFixedSize(true);
+        imageList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        imageList.setAdapter(imageRecyclerAdapter);
+
+        files = new ArrayList<>();
+        fileRecyclerAdapter = new FileRecyclerAdapter(files);
+
+        fileList.setHasFixedSize(true); //size change with content
+        fileList.setLayoutManager(new LinearLayoutManager(this));
+        fileList.setAdapter(fileRecyclerAdapter);
+    }
+
+    private void setOnClickButton() {
         pm = getPackageManager();
 
         detailCamera.setOnClickListener(new View.OnClickListener() {
@@ -92,43 +136,32 @@ public class DetailActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 dispatchChooseFileIntent();
-
-//                File file = new File("/data/user/0/com.blacksun.quicknote/files/NewTextFile.txt");
-//                testFile.setText(file.getName());
-//
-//                testFile.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View v) {
-//                        File file = new File("/data/user/0/com.blacksun.quicknote/files/NewTextFile.txt");
-//                        Intent intent = new Intent();
-//                        intent.setAction(android.content.Intent.ACTION_VIEW);
-//                        Uri fileUri = FileProvider.getUriForFile(v.getContext(),
-//                                "com.blacksun.quicknote.fileprovider",
-//                                file);
-//                        intent.setData(fileUri);
-//                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-//                        startActivity(intent);
-//                    }
-//                });
             }
         });
 
         detailImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent chooseGallery;
-                Intent intent;
-                chooseGallery = new Intent(Intent.ACTION_GET_CONTENT);
-                chooseGallery.addCategory(Intent.CATEGORY_OPENABLE);
-                chooseGallery.setType("image/*");
-                intent = Intent.createChooser(chooseGallery, "Choose an image");
-                startActivityForResult(intent, REQUEST_IMAGE_CHOOSER);
+                dispatchChooseGalleryIntent();
             }
         });
 
+        detailCheckbox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Snackbar.make(v, "Not implemented yet",Snackbar.LENGTH_SHORT).show();
+            }
+        });
+    }
 
-        setUpAppBar();
-
+    private void dispatchChooseGalleryIntent() {
+        Intent chooseGallery;
+        Intent intent;
+        chooseGallery = new Intent(Intent.ACTION_GET_CONTENT);
+        chooseGallery.addCategory(Intent.CATEGORY_OPENABLE);
+        chooseGallery.setType("image/*");
+        intent = Intent.createChooser(chooseGallery, "Choose an image");
+        startActivityForResult(intent, REQUEST_IMAGE_CHOOSER);
     }
 
     private void dispatchChooseFileIntent() {
@@ -153,7 +186,7 @@ public class DetailActivity extends AppCompatActivity {
                 out.write(buf, 0, len);
             }
         } catch (IOException e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 
@@ -209,11 +242,15 @@ public class DetailActivity extends AppCompatActivity {
 //            Bitmap imageBitmap = (Bitmap) extras.get("data");
 //            testImage.setImageBitmap(imageBitmap);
             if (resultCode == RESULT_OK) {
-                if (!TextUtils.isEmpty(oldPhotoPath)) {
-                    File tobedeleted = new File(oldPhotoPath);
-                    tobedeleted.delete();
-                }
+//                if (!TextUtils.isEmpty(oldPhotoPath)) {
+//                    File tobedeleted = new File(oldPhotoPath);
+//                    tobedeleted.delete();
+//                }
                 createThumbnail(currentPhotoPath);
+
+                //new RecyclerView
+                images.add(new Attachment(1, 1, "IMAGE", currentPhotoPath));
+                imageRecyclerAdapter.notifyItemInserted(images.size()-1);
             } else if (resultCode == RESULT_CANCELED) {
                 if (!TextUtils.isEmpty(currentPhotoPath)) {
                     File tobedeleted = new File(currentPhotoPath);
@@ -230,11 +267,16 @@ public class DetailActivity extends AppCompatActivity {
 
                 String fileName = getFileName(uri);
 
-                File savedFile = new File(getFilesDir().getAbsolutePath() + "/" + fileName);
+                long timeStamp = (new Date()).getTime();
+
+                File savedFile = new File(getFilesDir().getAbsolutePath() + "/" + timeStamp + "_" + fileName);
                 copy(uri, savedFile);
                 final String filePath = savedFile.getAbsolutePath();
 
                 Log.d("filepath", filePath + ": " + fileName);
+
+                files.add(new Attachment(1, 1, "FILE", filePath));
+                fileRecyclerAdapter.notifyDataSetChanged();
 
                 //just test get and open file, not saved into database yet
                 testFile.setText(fileName);
@@ -267,6 +309,10 @@ public class DetailActivity extends AppCompatActivity {
                     File savedFile = createImageFile();
                     copy(uri, savedFile);
                     String filePath = savedFile.getAbsolutePath();
+
+                    //new RecyclerView
+                    images.add(new Attachment(1, 1, "IMAGE", filePath));
+                    imageRecyclerAdapter.notifyDataSetChanged();
 
                     Log.d("filepath", filePath + ": " + fileName);
                     createThumbnail(filePath);
@@ -377,6 +423,9 @@ public class DetailActivity extends AppCompatActivity {
         //just test TODO change into recyclerView
         testImage = findViewById(R.id.test_image);
         testFile = findViewById(R.id.test_file);
+
+        imageList = findViewById(R.id.detail_images);
+        fileList = findViewById(R.id.detail_files);
     }
 
     private boolean saveNote() {
