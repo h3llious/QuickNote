@@ -8,7 +8,6 @@ import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
@@ -17,7 +16,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -28,7 +26,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -41,11 +38,9 @@ import com.blacksun.quicknote.data.NoteManager;
 import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.models.Note;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,7 +55,7 @@ public class DetailActivity extends AppCompatActivity {
     EditText detailTitle, detailContent;
     CollapsingToolbarLayout collapsingToolbar;
     Note currentNote = null;
-    boolean isNew = true;
+    boolean isSaved = false;
 
     ImageButton detailCamera, detailImage, detailFile, detailCheckbox;
 
@@ -105,7 +100,7 @@ public class DetailActivity extends AppCompatActivity {
 
     private void setUpRecyclerView() {
         images = new ArrayList<>();
-        imageRecyclerAdapter = new ImageRecyclerAdapter(images);
+        imageRecyclerAdapter = new ImageRecyclerAdapter(images, this);
 
         imageList.setHasFixedSize(false);
         imageList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
@@ -308,7 +303,7 @@ public class DetailActivity extends AppCompatActivity {
                 }
 
 //                fileRecyclerAdapter.notifyDataSetChanged();
-                fileRecyclerAdapter.notifyItemInserted(files.size()-1);
+                fileRecyclerAdapter.notifyItemInserted(files.size() - 1);
 
                 //just test get and open file, not saved into database yet
 //                testFile.setText(fileName);
@@ -458,9 +453,8 @@ public class DetailActivity extends AppCompatActivity {
                 newFiles = new ArrayList<>();
 
 
-
                 currentNote = new Note(title, content, id, dateCreated, dateModified, img);
-                isNew = false;
+//                isSaved = false;
             }
         } else {
             collapsingToolbar.setTitle("New note");
@@ -497,21 +491,38 @@ public class DetailActivity extends AppCompatActivity {
 
     private boolean saveNote() {
         String title = detailTitle.getText().toString();
-        if (TextUtils.isEmpty(title)) {
-            detailTitle.setError("Title is required");
+        String content = detailContent.getText().toString();
+
+//        Log.d("save_state", "something title: " + TextUtils.isEmpty(title) + " content: \""+TextUtils.isEmpty(content)+"\""+(currentNote == null)+"   "+(images == null)+"  "+(files == null));
+
+        if (TextUtils.isEmpty(title) && TextUtils.isEmpty(content) &&
+                currentNote == null && images.size() == 0 && files.size() == 0) {
+            Toast.makeText(this, "Note cannot be empty!", Toast.LENGTH_LONG).show();
+            Log.d("saveState", "nothing");
             return false;
         }
 
-        String content = detailContent.getText().toString();
-        if (TextUtils.isEmpty(content)) {
-            detailContent.setError("Content is required");
-            return false;
+//        if (TextUtils.isEmpty(title)) {
+//            detailTitle.setError("Title is required");
+//            return false;
+//        }
+//
+//        if (TextUtils.isEmpty(content)) {
+//            detailContent.setError("Content is required");
+//            return false;
+//        }
+        if (TextUtils.isEmpty(title)) {
+            title = "No title";
+            //return false;
         }
+
 
         if (currentNote == null) {
             Note note = new Note();
             note.setTitle(title);
-            note.setContent(content);
+
+            if (!TextUtils.isEmpty(content))
+                note.setContent(content);
             note.setImagePath(currentPhotoPath);
             long newId = NoteManager.newInstance(this).create(note);
 
@@ -532,7 +543,8 @@ public class DetailActivity extends AppCompatActivity {
             }
         } else {
             currentNote.setTitle(title);
-            currentNote.setContent(content);
+            if (!TextUtils.isEmpty(content))
+                currentNote.setContent(content);
             currentNote.setImagePath(currentPhotoPath);
             NoteManager.newInstance(this).update(currentNote);
 
@@ -573,7 +585,7 @@ public class DetailActivity extends AppCompatActivity {
             ArrayList<Attachment> currentAttachments = AttachManager.newInstance(this).getAttach(noteId, NoteContract.AttachEntry.ANY_TYPE);
             Log.d("attach", "sizeDel " + currentAttachments.size());
 
-            for (int attachPos = 0; attachPos<currentAttachments.size(); attachPos++){
+            for (int attachPos = 0; attachPos < currentAttachments.size(); attachPos++) {
                 Attachment curAttach = currentAttachments.get(attachPos);
 //                long curAttachId = curAttach.getId();
                 String curPath = curAttach.getPath();
@@ -619,6 +631,8 @@ public class DetailActivity extends AppCompatActivity {
                 break;
             case R.id.action_save:
                 boolean saveCheck = saveNote();
+                if (saveCheck)
+                    isSaved = true;
 
                 if (currentNote == null) {
                     if (saveCheck) {
@@ -627,9 +641,10 @@ public class DetailActivity extends AppCompatActivity {
                         Toast.makeText(this, "Save successfully", Toast.LENGTH_SHORT).show();
                         finish();
                     } else
+                        finish();
 //                        Snackbar.make(getWindow().getDecorView(), "Encounter error(s) when saving", Snackbar.LENGTH_LONG)
 //                                .setAction("Action", null).show();
-                        Toast.makeText(this, "Encounter error(s) when saving", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(this, "Encounter error(s) when saving", Toast.LENGTH_SHORT).show();
                 } else {
                     if (saveCheck) {
 //                        Snackbar.make(findViewById(R.id.detail_content), "Update successfully", Snackbar.LENGTH_LONG)
@@ -637,9 +652,10 @@ public class DetailActivity extends AppCompatActivity {
                         Toast.makeText(this, "Update successfully", Toast.LENGTH_SHORT).show();
                         //finish();
                     } else
+                        finish();
 //                        Snackbar.make(getWindow().getDecorView(), "Encounter error(s) when updating", Snackbar.LENGTH_LONG)
 //                                .setAction("Action", null).show();
-                        Toast.makeText(this, "Encounter error(s) when updating", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(this, "Encounter error(s) when updating", Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.action_delete:
@@ -663,7 +679,7 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (!isNew)
+        if (!isSaved)
             saveNote();
     }
 }
