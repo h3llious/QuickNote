@@ -22,8 +22,8 @@ public class AttachProvider extends ContentProvider {
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     static {
-        sUriMatcher.addURI(NoteContract.CONTENT_AUTHORITY, NoteContract.PATH_ATTACHES, ATTACHES);
-        sUriMatcher.addURI(NoteContract.CONTENT_AUTHORITY, NoteContract.PATH_ATTACHES + "/#", ATTACH);
+        sUriMatcher.addURI(NoteContract.CONTENT_AUTHORITY_ATTACH, NoteContract.PATH_ATTACHES, ATTACHES);
+        sUriMatcher.addURI(NoteContract.CONTENT_AUTHORITY_ATTACH, NoteContract.PATH_ATTACHES + "/#", ATTACH);
     }
 
     @Override
@@ -42,7 +42,7 @@ public class AttachProvider extends ContentProvider {
         switch (match) {
             case ATTACHES:
                 cursor = database.query(NoteContract.AttachEntry.TABLE_NAME, projection,
-                        null, null, null, null, sortOrder);
+                        selection, selectionArgs, null, null, sortOrder);
                 break;
             case ATTACH:
                 selection = NoteContract.AttachEntry.ID + "=?";

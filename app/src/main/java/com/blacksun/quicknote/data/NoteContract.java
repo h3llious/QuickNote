@@ -6,8 +6,8 @@ import android.provider.BaseColumns;
 
 //for the whole database
 public class NoteContract {
-    public static final String CONTENT_AUTHORITY = "com.blacksun.quicknote";
-    public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
+    public static final String CONTENT_AUTHORITY_NOTE = "com.blacksun.quicknote.data.NoteProvider";
+    public static final String CONTENT_AUTHORITY_ATTACH = "com.blacksun.quicknote.data.AttachProvider";
     public static final String PATH_NOTES = "notes";
 
     public static final String PATH_ATTACHES = "attaches";
@@ -18,17 +18,19 @@ public class NoteContract {
     //Entry for each table
     public static final class NoteEntry implements BaseColumns {
 
+        public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY_NOTE);
+
         /**
          * The MIME type of the {@link #CONTENT_URI} for a list of notes.
          */
         public static final String CONTENT_LIST_TYPE =
-                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_NOTES;
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY_NOTE + "/" + PATH_NOTES;
 
         /**
          * The MIME type of the {@link #CONTENT_URI} for a single pet.
          */
         public static final String CONTENT_ITEM_TYPE =
-                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_NOTES;
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY_NOTE + "/" + PATH_NOTES;
 
         public final static String TABLE_NAME = "notes";
         public final static String ID = BaseColumns._ID;
@@ -43,11 +45,13 @@ public class NoteContract {
     }
 
     public static final class AttachEntry implements  BaseColumns {
+        public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY_ATTACH);
+
         public static final String CONTENT_LIST_TYPE =
-                ContentResolver.CURSOR_DIR_BASE_TYPE+"/"+CONTENT_AUTHORITY+"/" + PATH_ATTACHES;
+                ContentResolver.CURSOR_DIR_BASE_TYPE+"/"+ CONTENT_AUTHORITY_ATTACH +"/" + PATH_ATTACHES;
 
         public static final String CONTENT_ITEM_TYPE =
-                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_ATTACHES;
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY_ATTACH + "/" + PATH_ATTACHES;
 
         public final static String TABLE_NAME = "attaches";
         public final static String ID = BaseColumns._ID;
@@ -59,5 +63,6 @@ public class NoteContract {
 
         public final static String FILE_TYPE = "file";
         public final static String IMAGE_TYPE = "image";
+        public final static String ANY_TYPE = "any";
     }
 }

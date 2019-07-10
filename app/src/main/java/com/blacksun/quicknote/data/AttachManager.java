@@ -15,16 +15,16 @@ public class AttachManager {
     private Context mContext;
     private static AttachManager sNoteManagerInstance = null;
 
-    public static AttachManager newInstance(Context context){
+    public static AttachManager newInstance(Context context) {
 
-        if (sNoteManagerInstance == null){
+        if (sNoteManagerInstance == null) {
             sNoteManagerInstance = new AttachManager(context.getApplicationContext());
         }
 
         return sNoteManagerInstance;
     }
 
-    private AttachManager(Context context){
+    private AttachManager(Context context) {
         this.mContext = context.getApplicationContext();
     }
 
@@ -36,7 +36,7 @@ public class AttachManager {
 
         Uri result = mContext.getContentResolver().insert(NoteContract.AttachEntry.CONTENT_URI, values);
         long id = Long.parseLong(result.getLastPathSegment());
-        Log.i("Log Cursor"," create attach name  "+id + " "  );
+        Log.i("Log Cursor", " create attach name  " + id + " ");
         return id;
     }
 
@@ -58,15 +58,29 @@ public class AttachManager {
 
     public ArrayList<Attachment> getAttach(long noteId, String type) {
         ArrayList<Attachment> attaches = new ArrayList<Attachment>();
-        String selection = NoteContract.AttachEntry.COLUMN_ATTACH_NOTE_ID + "=? OR "+ NoteContract.AttachEntry.COLUMN_ATTACH_TYPE + "=?";
-        String[] selectionArgs = new String[]{
-                Long.toString(noteId),
-                type
-        };
+
+        String selection;
+        String[] selectionArgs;
+        if (type.equals(NoteContract.AttachEntry.ANY_TYPE)) {
+            selection = NoteContract.AttachEntry.COLUMN_ATTACH_NOTE_ID + "=?";
+            selectionArgs = new String[]{
+                    Long.toString(noteId)
+            };
+
+        } else {
+            //original
+            selection = NoteContract.AttachEntry.COLUMN_ATTACH_NOTE_ID + "=? AND " + NoteContract.AttachEntry.COLUMN_ATTACH_TYPE + "=?";
+            selectionArgs = new String[]{
+                    Long.toString(noteId),
+                    type
+            };
+        }
+
+
         Cursor cursor = mContext.getContentResolver().query(NoteContract.AttachEntry.CONTENT_URI, null, selection, selectionArgs, null);
-        if (cursor != null){
+        if (cursor != null) {
             cursor.moveToFirst();
-            while (!cursor.isAfterLast()){
+            while (!cursor.isAfterLast()) {
                 attaches.add(Attachment.getAttachFromCursor(cursor));
                 cursor.moveToNext();
             }

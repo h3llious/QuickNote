@@ -28,8 +28,11 @@
             </intent-filter>
         </activity>
         <provider
-            android:authorities="com.blacksun.quicknote"
+            android:authorities="com.blacksun.quicknote.data.NoteProvider"
             android:name=".data.NoteProvider"/>
+        <provider
+            android:authorities="com.blacksun.quicknote.data.AttachProvider"
+            android:name=".data.AttachProvider"/>
         <provider
             android:authorities="com.blacksun.quicknote.fileprovider"
             android:name="androidx.core.content.FileProvider"

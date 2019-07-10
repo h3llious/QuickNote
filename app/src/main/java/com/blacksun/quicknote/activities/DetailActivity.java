@@ -35,6 +35,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.adapters.FileRecyclerAdapter;
 import com.blacksun.quicknote.adapters.ImageRecyclerAdapter;
+import com.blacksun.quicknote.data.AttachManager;
+import com.blacksun.quicknote.data.NoteContract;
 import com.blacksun.quicknote.data.NoteManager;
 import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.models.Note;
@@ -77,10 +79,9 @@ public class DetailActivity extends AppCompatActivity {
 
     RecyclerView imageList, fileList;
 
-    ArrayList<Attachment> images, files;
+    ArrayList<Attachment> images, files, newImages, newFiles;
     ImageRecyclerAdapter imageRecyclerAdapter;
     FileRecyclerAdapter fileRecyclerAdapter;
-
 
 
     @Override
@@ -106,14 +107,14 @@ public class DetailActivity extends AppCompatActivity {
         images = new ArrayList<>();
         imageRecyclerAdapter = new ImageRecyclerAdapter(images);
 
-        imageList.setHasFixedSize(true);
+        imageList.setHasFixedSize(false);
         imageList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         imageList.setAdapter(imageRecyclerAdapter);
 
         files = new ArrayList<>();
         fileRecyclerAdapter = new FileRecyclerAdapter(files);
 
-        fileList.setHasFixedSize(true); //size change with content
+        fileList.setHasFixedSize(false); //size change with content
         fileList.setLayoutManager(new LinearLayoutManager(this));
         fileList.setAdapter(fileRecyclerAdapter);
     }
@@ -149,7 +150,13 @@ public class DetailActivity extends AppCompatActivity {
         detailCheckbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Snackbar.make(v, "Not implemented yet",Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(v, "Not implemented yet", Snackbar.LENGTH_SHORT)
+                        .setAction("Dismiss", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                            }
+                        })
+                        .show();
             }
         });
     }
@@ -249,8 +256,19 @@ public class DetailActivity extends AppCompatActivity {
                 createThumbnail(currentPhotoPath);
 
                 //new RecyclerView
-                images.add(new Attachment(1, 1, "IMAGE", currentPhotoPath));
-                imageRecyclerAdapter.notifyItemInserted(images.size()-1);
+                Attachment newAttach = new Attachment();
+                if (currentNote == null) {
+                    newAttach.setType(NoteContract.AttachEntry.IMAGE_TYPE);
+                    newAttach.setPath(currentPhotoPath);
+                    images.add(newAttach);
+                } else {
+                    newAttach.setNote_id(currentNote.getId());
+                    newAttach.setType(NoteContract.AttachEntry.IMAGE_TYPE);
+                    newAttach.setPath(currentPhotoPath);
+                    newImages.add(newAttach);
+                    images.add(newAttach);
+                }
+                imageRecyclerAdapter.notifyItemInserted(images.size() - 1);
             } else if (resultCode == RESULT_CANCELED) {
                 if (!TextUtils.isEmpty(currentPhotoPath)) {
                     File tobedeleted = new File(currentPhotoPath);
@@ -275,26 +293,40 @@ public class DetailActivity extends AppCompatActivity {
 
                 Log.d("filepath", filePath + ": " + fileName);
 
-                files.add(new Attachment(1, 1, "FILE", filePath));
-                fileRecyclerAdapter.notifyDataSetChanged();
+                //files.add(new Attachment(1, 1, "FILE", filePath));
+                Attachment newAttach = new Attachment();
+                if (currentNote == null) {
+                    newAttach.setType(NoteContract.AttachEntry.FILE_TYPE);
+                    newAttach.setPath(filePath);
+                    files.add(newAttach);
+                } else {
+                    newAttach.setNote_id(currentNote.getId());
+                    newAttach.setType(NoteContract.AttachEntry.FILE_TYPE);
+                    newAttach.setPath(filePath);
+                    newFiles.add(newAttach);
+                    files.add(newAttach);
+                }
+
+//                fileRecyclerAdapter.notifyDataSetChanged();
+                fileRecyclerAdapter.notifyItemInserted(files.size()-1);
 
                 //just test get and open file, not saved into database yet
-                testFile.setText(fileName);
-
-                testFile.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        File file = new File(filePath);
-                        Intent intent = new Intent();
-                        intent.setAction(android.content.Intent.ACTION_VIEW);
-                        Uri fileUri = FileProvider.getUriForFile(v.getContext(),
-                                "com.blacksun.quicknote.fileprovider",
-                                file);
-                        intent.setData(fileUri);
-                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        startActivity(intent);
-                    }
-                });
+//                testFile.setText(fileName);
+//
+//                testFile.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//                        File file = new File(filePath);
+//                        Intent intent = new Intent();
+//                        intent.setAction(android.content.Intent.ACTION_VIEW);
+//                        Uri fileUri = FileProvider.getUriForFile(v.getContext(),
+//                                "com.blacksun.quicknote.fileprovider",
+//                                file);
+//                        intent.setData(fileUri);
+//                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//                        startActivity(intent);
+//                    }
+//                });
 
             }
         } else if (requestCode == REQUEST_IMAGE_CHOOSER) {
@@ -311,8 +343,24 @@ public class DetailActivity extends AppCompatActivity {
                     String filePath = savedFile.getAbsolutePath();
 
                     //new RecyclerView
-                    images.add(new Attachment(1, 1, "IMAGE", filePath));
-                    imageRecyclerAdapter.notifyDataSetChanged();
+//                    images.add(new Attachment(1, 1, "IMAGE", filePath));
+//                    imageRecyclerAdapter.notifyDataSetChanged();
+
+                    Attachment newAttach = new Attachment();
+                    if (currentNote == null) {
+                        newAttach.setType(NoteContract.AttachEntry.IMAGE_TYPE);
+                        newAttach.setPath(currentPhotoPath);
+                        images.add(newAttach);
+                    } else {
+                        newAttach.setNote_id(currentNote.getId());
+                        newAttach.setType(NoteContract.AttachEntry.IMAGE_TYPE);
+                        newAttach.setPath(currentPhotoPath);
+                        newImages.add(newAttach);
+                        images.add(newAttach);
+                    }
+                    imageRecyclerAdapter.notifyItemInserted(images.size() - 1);
+//                    imageRecyclerAdapter.notifyDataSetChanged(); //BUG can't solve, change to this
+
 
                     Log.d("filepath", filePath + ": " + fileName);
                     createThumbnail(filePath);
@@ -325,29 +373,28 @@ public class DetailActivity extends AppCompatActivity {
 
     private void createThumbnail(final String path) {
         Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(path), 500, 500);
-        testImage.setImageBitmap(thumbImage);
-
-        testImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                File file = new File(path);
-                Intent intent = new Intent();
-                intent.setAction(android.content.Intent.ACTION_VIEW);
-                Uri fileUri = FileProvider.getUriForFile(v.getContext(),
-                        "com.blacksun.quicknote.fileprovider",
-                        file);
-                intent.setData(fileUri);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                startActivity(intent);
-            }
-        });
+//        testImage.setImageBitmap(thumbImage);
+//
+//        testImage.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                File file = new File(path);
+//                Intent intent = new Intent();
+//                intent.setAction(android.content.Intent.ACTION_VIEW);
+//                Uri fileUri = FileProvider.getUriForFile(v.getContext(),
+//                        "com.blacksun.quicknote.fileprovider",
+//                        file);
+//                intent.setData(fileUri);
+//                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//                startActivity(intent);
+//            }
+//        });
     }
 
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             File photoFile = null;
-
 
             try {
                 photoFile = createImageFile();
@@ -368,7 +415,7 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
-    //Set title of the note and attributes of collapsing toolbar
+    //Set title of the note and attributes of collapsing toolbar with corresponding attachments
     private void setUpAppBar() {
         if (getIntent() != null && getIntent().getExtras() != null) {
             Bundle bundle = getIntent().getExtras();
@@ -391,6 +438,26 @@ public class DetailActivity extends AppCompatActivity {
                     if (currentImg.exists())
                         createThumbnail(currentPhotoPath);
                 }
+
+
+                ArrayList<Attachment> currentImages = AttachManager.newInstance(this).getAttach(id, NoteContract.AttachEntry.IMAGE_TYPE);
+                images.clear();
+                images.addAll(currentImages);
+                Log.d("attach", "id " + id + ", number " + images.size());
+                imageRecyclerAdapter.notifyDataSetChanged();
+
+                newImages = new ArrayList<>();
+
+
+                ArrayList<Attachment> currentFiles = AttachManager.newInstance(this).getAttach(id, NoteContract.AttachEntry.FILE_TYPE);
+                files.clear();
+                files.addAll(currentFiles);
+                Log.d("attach", "id " + id + ", number of files " + files.size());
+                fileRecyclerAdapter.notifyDataSetChanged();
+
+                newFiles = new ArrayList<>();
+
+
 
                 currentNote = new Note(title, content, id, dateCreated, dateModified, img);
                 isNew = false;
@@ -420,9 +487,9 @@ public class DetailActivity extends AppCompatActivity {
         detailFile = findViewById(R.id.detail_file);
         detailCheckbox = findViewById(R.id.detail_checkbox);
 
-        //just test TODO change into recyclerView
-        testImage = findViewById(R.id.test_image);
-        testFile = findViewById(R.id.test_file);
+        //just test changed into recyclerView
+//        testImage = findViewById(R.id.test_image);
+//        testFile = findViewById(R.id.test_file);
 
         imageList = findViewById(R.id.detail_images);
         fileList = findViewById(R.id.detail_files);
@@ -446,13 +513,44 @@ public class DetailActivity extends AppCompatActivity {
             note.setTitle(title);
             note.setContent(content);
             note.setImagePath(currentPhotoPath);
-            NoteManager.newInstance(this).create(note);
-        } else {
+            long newId = NoteManager.newInstance(this).create(note);
 
+            if (images != null) {
+                for (int imagePos = 0; imagePos < images.size(); imagePos++) {
+                    Attachment currentAttach = images.get(imagePos);
+                    currentAttach.setNote_id(newId);
+                    AttachManager.newInstance(this).create(currentAttach);
+                }
+            }
+
+            if (files != null) {
+                for (int filePos = 0; filePos < files.size(); filePos++) {
+                    Attachment currentAttach = files.get(filePos);
+                    currentAttach.setNote_id(newId);
+                    AttachManager.newInstance(this).create(currentAttach);
+                }
+            }
+        } else {
             currentNote.setTitle(title);
             currentNote.setContent(content);
             currentNote.setImagePath(currentPhotoPath);
             NoteManager.newInstance(this).update(currentNote);
+
+            if (newImages != null) {
+                for (int imagePos = 0; imagePos < newImages.size(); imagePos++) {
+                    Attachment currentAttach = newImages.get(imagePos);
+                    AttachManager.newInstance(this).create(currentAttach);
+                }
+                newImages.clear();
+            }
+
+            if (newFiles != null) {
+                for (int filePos = 0; filePos < newFiles.size(); filePos++) {
+                    Attachment currentAttach = newFiles.get(filePos);
+                    AttachManager.newInstance(this).create(currentAttach);
+                }
+                newFiles.clear();
+            }
         }
         collapsingToolbar.setTitle(detailTitle.getText());
         return true;
@@ -464,12 +562,33 @@ public class DetailActivity extends AppCompatActivity {
         if (currentNote == null)
             return false;
         else {
-            if (!TextUtils.isEmpty(currentPhotoPath)) {
-                File tobedeleted = new File(currentPhotoPath);
-                tobedeleted.delete();
-                Log.d("filepath", "Deleted");
+//            if (!TextUtils.isEmpty(currentPhotoPath)) {
+//                File tobedeleted = new File(currentPhotoPath);
+//                tobedeleted.delete();
+//                Log.d("filepath", "Deleted");
+//            } else
+//                Log.d("filepath", "Not Deleted");
+
+            long noteId = currentNote.getId();
+            ArrayList<Attachment> currentAttachments = AttachManager.newInstance(this).getAttach(noteId, NoteContract.AttachEntry.ANY_TYPE);
+            Log.d("attach", "sizeDel " + currentAttachments.size());
+
+            for (int attachPos = 0; attachPos<currentAttachments.size(); attachPos++){
+                Attachment curAttach = currentAttachments.get(attachPos);
+//                long curAttachId = curAttach.getId();
+                String curPath = curAttach.getPath();
+
+                File delFile = new File(curPath);
+                boolean res = delFile.delete();
+                if (res)
+                    Log.d("attach", "file deleted");
+                else
+                    Log.d("attach", "file not deleted");
+
+                AttachManager.newInstance(this).delete(curAttach);
             }
-            Log.d("filepath", "Not Deleted");
+
+
             NoteManager.newInstance(this).delete(currentNote);
         }
         return true;

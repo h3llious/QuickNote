@@ -19,8 +19,8 @@ public class NoteProvider extends ContentProvider {
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     static {
-        sUriMatcher.addURI(NoteContract.CONTENT_AUTHORITY, NoteContract.PATH_NOTES, NOTES);
-        sUriMatcher.addURI(NoteContract.CONTENT_AUTHORITY, NoteContract.PATH_NOTES + "/#", NOTE);
+        sUriMatcher.addURI(NoteContract.CONTENT_AUTHORITY_NOTE, NoteContract.PATH_NOTES, NOTES);
+        sUriMatcher.addURI(NoteContract.CONTENT_AUTHORITY_NOTE, NoteContract.PATH_NOTES + "/#", NOTE);
     }
 
     @Override
@@ -75,7 +75,7 @@ public class NoteProvider extends ContentProvider {
     public Uri insert(@androidx.annotation.NonNull Uri uri, @androidx.annotation.Nullable ContentValues values) {
         String title = values.getAsString(NoteContract.NoteEntry.COLUMN_NOTE_TITLE);
         if (title == null) {
-            throw new IllegalArgumentException("Pet requires a name");
+            throw new IllegalArgumentException("Note requires a title");
         }
 
         final int match = sUriMatcher.match(uri);

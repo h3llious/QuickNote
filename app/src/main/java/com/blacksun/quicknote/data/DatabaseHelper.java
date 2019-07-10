@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "quick_note.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
 
 
@@ -41,8 +41,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String CREATE_TABLE_ATTACHMENT = "CREATE TABLE "
             + NoteContract.AttachEntry.TABLE_NAME
             +"("
-            + NoteContract.AttachEntry.ID + "integer PRIMARY KEY AUTOINCREMENT, "
-            + NoteContract.AttachEntry.COLUMN_ATTACH_NOTE_ID + "integer NOT NULL, "
-            + NoteContract.AttachEntry.COLUMN_ATTACH_TYPE + "text NOT NULL, "
-            + NoteContract.AttachEntry.COLUMN_ATTACH_PATH + "text NOT NULL )";
+            + NoteContract.AttachEntry.ID + " integer PRIMARY KEY AUTOINCREMENT, "
+            + NoteContract.AttachEntry.COLUMN_ATTACH_NOTE_ID + " integer NOT NULL, "
+            + NoteContract.AttachEntry.COLUMN_ATTACH_TYPE + " text NOT NULL, "
+            + NoteContract.AttachEntry.COLUMN_ATTACH_PATH + " text NOT NULL )";
 }
