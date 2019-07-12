@@ -37,8 +37,8 @@ public class NoteManager {
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME, System.currentTimeMillis());
 
         //test new img path
-        if (!TextUtils.isEmpty(note.getImagePath()))
-            values.put(NoteContract.NoteEntry.COLUMN_NOTE_IMG, note.getImagePath());
+//        if (!TextUtils.isEmpty(note.getImagePath()))
+//            values.put(NoteContract.NoteEntry.COLUMN_NOTE_IMG, note.getImagePath());
 
         //values.put(NoteContract.NoteEntry.ID, note.getId());
         Uri result = mContext.getContentResolver().insert(NoteContract.NoteEntry.CONTENT_URI, values);
@@ -70,8 +70,8 @@ public class NoteManager {
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, note.getDateCreated());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME, System.currentTimeMillis());
 
-        if (!TextUtils.isEmpty(note.getImagePath()))
-            values.put(NoteContract.NoteEntry.COLUMN_NOTE_IMG, note.getImagePath());
+//        if (!TextUtils.isEmpty(note.getImagePath()))
+//            values.put(NoteContract.NoteEntry.COLUMN_NOTE_IMG, note.getImagePath());
 
         mContext.getApplicationContext().getContentResolver().update(NoteContract.NoteEntry.CONTENT_URI,
                 values, NoteContract.NoteEntry.ID + "=" + note.getId(), null);

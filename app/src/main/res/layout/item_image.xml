@@ -5,7 +5,11 @@
 
     android:layout_width="100dp"
     android:layout_height="100dp"
-    android:layout_marginEnd="5dp" >
+    android:layout_marginEnd="5dp"
+
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:selectableItemBackground">
 
     <ImageView
         android:id="@+id/attach_image"

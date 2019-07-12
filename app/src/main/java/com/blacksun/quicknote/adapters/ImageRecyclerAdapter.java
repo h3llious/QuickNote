@@ -6,17 +6,21 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
+import android.os.Environment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.blacksun.quicknote.R;
+import com.blacksun.quicknote.activities.DetailActivity;
 import com.blacksun.quicknote.data.AttachManager;
 import com.blacksun.quicknote.models.Attachment;
 
@@ -42,7 +46,7 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
 
     @Override
     public void onBindViewHolder(@NonNull ImageRecyclerAdapter.ViewHolder holder, final int position) {
-        Attachment attach = images.get(position);
+        final Attachment attach = images.get(position);
         Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(attach.getPath()), 300, 300);
         holder.image.setImageBitmap(thumbImage);
 
@@ -58,6 +62,27 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
                 intent.setData(fileUri);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 v.getContext().startActivity(intent);
+            }
+        });
+
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                File file = new File(attach.getPath());
+                Uri fileUri = FileProvider.getUriForFile(v.getContext(),
+                        "com.blacksun.quicknote.fileprovider",
+                        file);
+                String filename = file.getName();
+
+                File storageLoc = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+                File savedFile = new File(storageLoc, filename);
+
+                DetailActivity.copy(fileUri, savedFile, context);
+
+                Log.d("saveFile", ""+savedFile);
+
+                Toast.makeText(context, "Image saved", Toast.LENGTH_SHORT).show();
+                return true;
             }
         });
 

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.media.ThumbnailUtils;
 import android.text.TextUtils;
 import android.util.Log;
@@ -15,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,6 +25,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.activities.DetailActivity;
 import com.blacksun.quicknote.activities.MainActivity;
+import com.blacksun.quicknote.data.AttachManager;
+import com.blacksun.quicknote.data.NoteContract;
+import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.models.Note;
 
 import java.io.File;
@@ -55,25 +61,41 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         holder.textTime.setText(getDate(note.getDateModified(), "dd/MM/yyyy HH:mm"));
         holder.textTimeCreated.setText(getDate(note.getDateCreated(), "dd/MM/yyyy HH:mm"));
 
-        if (!TextUtils.isEmpty(note.getImagePath())) {
-            File checkedImg = new File(note.getImagePath());
-            if (checkedImg.exists()) {
+        ArrayList<Attachment> curAttaches = AttachManager.newInstance(holder.itemView.getContext()).getAttach(note.getId(), NoteContract.AttachEntry.ANY_TYPE);
 
-                int height = holder.itemView.getContext().getResources().getDimensionPixelSize(R.dimen.listPreferredItemHeightLarge);
+        if (curAttaches.size() != 0) {
 
-                Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(note.getImagePath()), height, height);
+            Attachment curAttach = curAttaches.get(curAttaches.size() - 1);
+            if (curAttach.getType().equals(NoteContract.AttachEntry.FILE_TYPE)) {
+                float scale = holder.itemView.getContext().getResources().getDisplayMetrics().density;
+                int dpAsPixels = (int) (20 * scale + 0.5f);
 
-            RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(holder.itemView.getContext().getResources(), thumbImage);
-            final float roundPx = (float) thumbImage.getWidth() * 0.1f;
-            roundedBitmapDrawable.setCornerRadius(roundPx);
-            holder.img.setImageDrawable(roundedBitmapDrawable);
+                holder.img.setImageDrawable(ContextCompat.getDrawable(holder.itemView.getContext(), R.drawable.ic_attach));
+//                holder.img.setPadding(dpAsPixels, dpAsPixels, dpAsPixels, dpAsPixels);
+            } else {
+
+
+                File checkedImg = new File(curAttach.getPath());
+                if (checkedImg.exists()) {
+
+                    int height = holder.itemView.getContext().getResources().getDimensionPixelSize(R.dimen.listPreferredItemHeightLarge);
+
+                    Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(curAttach.getPath()), height, height);
+
+                    RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(holder.itemView.getContext().getResources(), thumbImage);
+                    final float roundPx = (float) thumbImage.getWidth() * 0.1f;
+                    roundedBitmapDrawable.setCornerRadius(roundPx);
+                    holder.img.setImageDrawable(roundedBitmapDrawable);
 
 //                holder.img.setImageBitmap(thumbImage);
-            } else {
-                Log.e("Note Adapter", "Error getting image");
+                } else {
+                    Log.e("Note Adapter", "Error getting image");
+                }
             }
+//            notifyItemChanged(position);
+        } else {
+            holder.img.setImageDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
-
         //TODO: change date time to x mins ago if possible
 
         holder.itemView.setTag(position);
@@ -108,7 +130,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
                     intent.putExtra("content", notes.get(getAdapterPosition()).getContent());
                     intent.putExtra("dateModified", notes.get(getAdapterPosition()).getDateModified());
                     intent.putExtra("dateCreated", notes.get(getAdapterPosition()).getDateCreated());
-                    intent.putExtra("imagePath", notes.get(getAdapterPosition()).getImagePath());
+//                    intent.putExtra("imagePath", notes.get(getAdapterPosition()).getImagePath());
 
                     v.getContext().startActivity(intent);
                 }

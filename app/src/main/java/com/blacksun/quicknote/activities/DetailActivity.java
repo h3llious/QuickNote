@@ -1,5 +1,6 @@
 package com.blacksun.quicknote.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -107,7 +108,7 @@ public class DetailActivity extends AppCompatActivity {
         imageList.setAdapter(imageRecyclerAdapter);
 
         files = new ArrayList<>();
-        fileRecyclerAdapter = new FileRecyclerAdapter(files);
+        fileRecyclerAdapter = new FileRecyclerAdapter(files, this);
 
         fileList.setHasFixedSize(false); //size change with content
         fileList.setLayoutManager(new LinearLayoutManager(this));
@@ -177,9 +178,9 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     //    public static void copy(File src, File dst) {
-    public void copy(Uri uri, File dst) {
+    public static void copy(Uri uri, File dst, Context context) {
 //        try (InputStream in = new FileInputStream(src);
-        try (InputStream in = getContentResolver().openInputStream(uri);
+        try (InputStream in = context.getContentResolver().openInputStream(uri);
              OutputStream out = new FileOutputStream(dst)) {
             // Transfer bytes from in to out
             byte[] buf = new byte[1024];
@@ -283,7 +284,7 @@ public class DetailActivity extends AppCompatActivity {
                 long timeStamp = (new Date()).getTime();
 
                 File savedFile = new File(getFilesDir().getAbsolutePath() + "/" + timeStamp + "_" + fileName);
-                copy(uri, savedFile);
+                copy(uri, savedFile, this);
                 final String filePath = savedFile.getAbsolutePath();
 
                 Log.d("filepath", filePath + ": " + fileName);
@@ -334,7 +335,7 @@ public class DetailActivity extends AppCompatActivity {
                 String fileName = getFileName(uri);
                 try {
                     File savedFile = createImageFile();
-                    copy(uri, savedFile);
+                    copy(uri, savedFile, this);
                     String filePath = savedFile.getAbsolutePath();
 
                     //new RecyclerView
@@ -453,7 +454,8 @@ public class DetailActivity extends AppCompatActivity {
                 newFiles = new ArrayList<>();
 
 
-                currentNote = new Note(title, content, id, dateCreated, dateModified, img);
+//                currentNote = new Note(title, content, id, dateCreated, dateModified, img);
+                currentNote = new Note(title, content, id, dateCreated, dateModified);
 //                isSaved = false;
             }
         } else {
@@ -523,7 +525,7 @@ public class DetailActivity extends AppCompatActivity {
 
             if (!TextUtils.isEmpty(content))
                 note.setContent(content);
-            note.setImagePath(currentPhotoPath);
+//            note.setImagePath(currentPhotoPath);
             long newId = NoteManager.newInstance(this).create(note);
 
             if (images != null) {
@@ -545,7 +547,7 @@ public class DetailActivity extends AppCompatActivity {
             currentNote.setTitle(title);
             if (!TextUtils.isEmpty(content))
                 currentNote.setContent(content);
-            currentNote.setImagePath(currentPhotoPath);
+//            currentNote.setImagePath(currentPhotoPath);
             NoteManager.newInstance(this).update(currentNote);
 
             if (newImages != null) {
