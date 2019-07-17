@@ -1,8 +1,10 @@
-package com.blacksun.quicknote.data;
+package com.blacksun.quicknote.utils;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
+import com.blacksun.quicknote.data.NoteContract;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "quick_note.db";

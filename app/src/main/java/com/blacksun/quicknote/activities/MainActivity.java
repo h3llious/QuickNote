@@ -4,10 +4,6 @@ package com.blacksun.quicknote.activities;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.BitmapShader;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Shader;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -45,7 +42,7 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity  implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     ArrayList<Note> notes;
     RecyclerView noteList;
@@ -113,7 +110,6 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
         navigationView.setNavigationItemSelectedListener(this);
 
 
-
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -129,7 +125,7 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
 
         getInfo();
 
-        noteList = (RecyclerView) findViewById(R.id.note_list);
+        noteList = findViewById(R.id.note_list);
 
 
         if (notes.size() == 0) {
@@ -168,12 +164,16 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
         super.onStart();
         //update after create new note or delete
         getInfo();
-//        NoteRecyclerAdapter adapter = new NoteRecyclerAdapter(notes);
-//
-//        noteList.setHasFixedSize(true);
-//        noteList.setLayoutManager(new LinearLayoutManager(this));
-//        noteList.setAdapter(adapter);
         noteRecyclerAdapter.notifyDataSetChanged();
+
+        //check if already logged in
+        GoogleSignInAccount alreadyLoggedAccount = GoogleSignIn.getLastSignedInAccount(this);
+        if (alreadyLoggedAccount != null) {
+            //Toast.makeText(this, "Already Logged In", Toast.LENGTH_SHORT).show();
+            onLoggedIn(alreadyLoggedAccount);
+        } else {
+            Log.d(SIGN_IN_TAG, "Not logged in");
+        }
     }
 
     private void getInfo() {
@@ -199,7 +199,7 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        if(drawerToggle.onOptionsItemSelected(item)) {
+        if (drawerToggle.onOptionsItemSelected(item)) {
             return true;
         }
 
@@ -216,15 +216,16 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK){
-            switch (requestCode){
+        if (resultCode == RESULT_OK) {
+            switch (requestCode) {
                 case REQUEST_GOOGLE_SIGN_IN:
-                    try{
-                        Task<GoogleSignInAccount> task =GoogleSignIn.getSignedInAccountFromIntent(data);
+                    try {
+                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
                         account = task.getResult(ApiException.class);
-                        onLoggedIn(account);
-                    } catch (ApiException e){
-                        Log.e(SIGN_IN_TAG, "SignInResult failed "+e.getStatusCode());
+                        if (account != null)
+                            onLoggedIn(account);
+                    } catch (ApiException e) {
+                        Log.e(SIGN_IN_TAG, "SignInResult failed " + e.getStatusCode());
                     }
                     break;
             }
@@ -235,7 +236,7 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
         googleNameText.setText(account.getDisplayName());
         googleEmailText.setText(account.getEmail());
 
-        Log.d(SIGN_IN_TAG, ""+account.getPhotoUrl());
+        Log.d(SIGN_IN_TAG, "" + account.getPhotoUrl());
 
         new DownloadImgTask(this).execute(account.getPhotoUrl().toString());
     }
@@ -261,10 +262,10 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
         return true;
     }
 
-    private static class DownloadImgTask extends AsyncTask<String, Void, Bitmap>{
+    private static class DownloadImgTask extends AsyncTask<String, Void, Bitmap> {
         private WeakReference<MainActivity> activityReference;
 
-        DownloadImgTask(MainActivity context){
+        DownloadImgTask(MainActivity context) {
             activityReference = new WeakReference<>(context);
         }
 
@@ -276,7 +277,7 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
             try {
                 InputStream in = new java.net.URL(url).openStream();
                 bitmap = BitmapFactory.decodeStream(in);
-            } catch (Exception e){
+            } catch (Exception e) {
                 Log.e(SIGN_IN_TAG, e.getMessage());
                 e.printStackTrace();
             }

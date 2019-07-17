@@ -15,16 +15,16 @@ public class NoteManager {
     private Context mContext;
     private static NoteManager sNoteManagerInstance = null;
 
-    public static NoteManager newInstance(Context context){
+    public static NoteManager newInstance(Context context) {
 
-        if (sNoteManagerInstance == null){
+        if (sNoteManagerInstance == null) {
             sNoteManagerInstance = new NoteManager(context.getApplicationContext());
         }
 
         return sNoteManagerInstance;
     }
 
-    private NoteManager(Context context){
+    private NoteManager(Context context) {
         this.mContext = context.getApplicationContext();
     }
 
@@ -42,18 +42,21 @@ public class NoteManager {
 
         //values.put(NoteContract.NoteEntry.ID, note.getId());
         Uri result = mContext.getContentResolver().insert(NoteContract.NoteEntry.CONTENT_URI, values);
-        long id = Long.parseLong(result.getLastPathSegment());
-        Log.i("Log Cursor"," create note name  "+id + " "  );
-        return id;
+        if (result == null) {
+            long id = Long.parseLong(result.getLastPathSegment());
+            Log.i("Log Cursor", " create note name  " + id + " ");
+            return id;
+        } else
+            return -1;
     }
 
     //C(R)UD
     public ArrayList<Note> getAllNotes() {
-        ArrayList<Note> notes = new ArrayList<Note>();
+        ArrayList<Note> notes = new ArrayList<>();
         Cursor cursor = mContext.getContentResolver().query(NoteContract.NoteEntry.CONTENT_URI, null, null, null, null);
-        if (cursor != null){
+        if (cursor != null) {
             cursor.moveToFirst();
-            while (!cursor.isAfterLast()){
+            while (!cursor.isAfterLast()) {
                 notes.add(Note.getNoteFromCursor(cursor));
                 cursor.moveToNext();
             }
@@ -67,7 +70,7 @@ public class NoteManager {
         ContentValues values = new ContentValues();
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_TITLE, note.getTitle());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_CONTENT, note.getContent());
-        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, note.getDateCreated());
+//        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, note.getDateCreated());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME, System.currentTimeMillis());
 
 //        if (!TextUtils.isEmpty(note.getImagePath()))

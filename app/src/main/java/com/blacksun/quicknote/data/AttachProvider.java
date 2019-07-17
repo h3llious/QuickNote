@@ -12,6 +12,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.blacksun.quicknote.utils.DatabaseHelper;
+
 public class AttachProvider extends ContentProvider {
     public static final String LOG_TAG = AttachProvider.class.getSimpleName();
     private DatabaseHelper noteHelper;
@@ -36,7 +38,7 @@ public class AttachProvider extends ContentProvider {
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
         SQLiteDatabase database = noteHelper.getReadableDatabase();
-        Cursor cursor = null;
+        Cursor cursor;
 
         int match = sUriMatcher.match(uri);
         switch (match) {
@@ -74,15 +76,18 @@ public class AttachProvider extends ContentProvider {
     @Nullable
     @Override
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
-        Long noteId = values.getAsLong(NoteContract.AttachEntry.COLUMN_ATTACH_NOTE_ID);
-        if (noteId == null)
-            throw new IllegalArgumentException("Attachment must have its note id");
-        final int match = sUriMatcher.match(uri);
+        if (values != null) {
+            Long noteId = values.getAsLong(NoteContract.AttachEntry.COLUMN_ATTACH_NOTE_ID);
+            if (noteId == null)
+                throw new IllegalArgumentException("Attachment must have its note id");
+            final int match = sUriMatcher.match(uri);
 
-        if (match == ATTACHES)
-            return insertAttach(uri, values);
-        else
-            throw new IllegalArgumentException("Insertion is not supported for " + uri);
+            if (match == ATTACHES)
+                return insertAttach(uri, values);
+            else
+                throw new IllegalArgumentException("Insertion is not supported for " + uri);
+        } else
+            throw new IllegalArgumentException("ContentValues must not be null");
     }
 
     private Uri insertAttach(Uri uri, ContentValues values) {
@@ -118,16 +123,19 @@ public class AttachProvider extends ContentProvider {
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
         final int match = sUriMatcher.match(uri);
-        switch (match) {
-            case ATTACHES:
-                return updateAttach(uri, values, selection, selectionArgs);
-            case ATTACH:
-                selection = NoteContract.AttachEntry._ID + "=?";
-                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
-                return updateAttach(uri, values, selection, selectionArgs);
-            default:
-                throw new IllegalArgumentException("Update is not supported for " + uri);
-        }
+        if (values != null)
+            switch (match) {
+                case ATTACHES:
+                    return updateAttach(uri, values, selection, selectionArgs);
+                case ATTACH:
+                    selection = NoteContract.AttachEntry._ID + "=?";
+                    selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                    return updateAttach(uri, values, selection, selectionArgs);
+                default:
+                    throw new IllegalArgumentException("Update is not supported for " + uri);
+            }
+        else
+            throw new IllegalArgumentException("ContentValues must not be null");
     }
 
     private int updateAttach(Uri uri, ContentValues values, String selection, String[] selectionArgs) {

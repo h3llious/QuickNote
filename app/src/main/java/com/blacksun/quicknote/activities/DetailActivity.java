@@ -49,6 +49,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 public class DetailActivity extends AppCompatActivity {
 
@@ -195,7 +196,7 @@ public class DetailActivity extends AppCompatActivity {
 
     private File createImageFile() throws IOException {
         // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
         File storageDir = getFilesDir();
 //        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
@@ -442,7 +443,6 @@ public class DetailActivity extends AppCompatActivity {
                 Log.d("attach", "id " + id + ", number " + images.size());
                 imageRecyclerAdapter.notifyDataSetChanged();
 
-                newImages = new ArrayList<>();
 
 
                 ArrayList<Attachment> currentFiles = AttachManager.newInstance(this).getAttach(id, NoteContract.AttachEntry.FILE_TYPE);
@@ -451,7 +451,6 @@ public class DetailActivity extends AppCompatActivity {
                 Log.d("attach", "id " + id + ", number of files " + files.size());
                 fileRecyclerAdapter.notifyDataSetChanged();
 
-                newFiles = new ArrayList<>();
 
 
 //                currentNote = new Note(title, content, id, dateCreated, dateModified, img);
@@ -462,12 +461,15 @@ public class DetailActivity extends AppCompatActivity {
             collapsingToolbar.setTitle("New note");
         }
 
+        newImages = new ArrayList<>();
+        newFiles = new ArrayList<>();
+
         collapsingToolbar.setCollapsedTitleTextColor(ContextCompat.getColor(this, R.color.white));
         collapsingToolbar.setExpandedTitleColor(ContextCompat.getColor(this, R.color.transparent));
     }
 
     private void initialize() {
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         if (getSupportActionBar() != null)
@@ -543,6 +545,13 @@ public class DetailActivity extends AppCompatActivity {
                     AttachManager.newInstance(this).create(currentAttach);
                 }
             }
+
+            //update currentNote to show that a new note has been created
+            note.setId(newId);
+            currentNote = note;
+//            newImages.addAll(images);
+//            newFiles.addAll(files);
+
         } else {
             currentNote.setTitle(title);
             if (!TextUtils.isEmpty(content))
@@ -652,7 +661,7 @@ public class DetailActivity extends AppCompatActivity {
 //                        Snackbar.make(findViewById(R.id.detail_content), "Update successfully", Snackbar.LENGTH_LONG)
 //                                .setAction("Action", null).show();
                         Toast.makeText(this, "Update successfully", Toast.LENGTH_SHORT).show();
-                        //finish();
+                        finish();
                     } else
                         finish();
 //                        Snackbar.make(getWindow().getDecorView(), "Encounter error(s) when updating", Snackbar.LENGTH_LONG)
@@ -681,7 +690,12 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (!isSaved)
+        if (!isSaved) {
             saveNote();
+//            isSaved = true;
+            Log.d("SaveState", "save with "+isSaved);
+        }
+
+        //just implement create new note or something
     }
 }

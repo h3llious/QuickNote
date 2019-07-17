@@ -9,6 +9,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.util.Log;
 
+import com.blacksun.quicknote.utils.DatabaseHelper;
+
 public class NoteProvider extends ContentProvider {
     public static final String LOG_TAG = NoteProvider.class.getSimpleName();
     private DatabaseHelper noteHelper;
@@ -33,7 +35,7 @@ public class NoteProvider extends ContentProvider {
     @Override
     public Cursor query(@androidx.annotation.NonNull Uri uri, @androidx.annotation.Nullable String[] projection, @androidx.annotation.Nullable String selection, @androidx.annotation.Nullable String[] selectionArgs, @androidx.annotation.Nullable String sortOrder) {
         SQLiteDatabase database = noteHelper.getReadableDatabase();
-        Cursor cursor = null;
+        Cursor cursor;
 
         //distinguish uri type
         int match = sUriMatcher.match(uri);
@@ -73,19 +75,21 @@ public class NoteProvider extends ContentProvider {
     @androidx.annotation.Nullable
     @Override
     public Uri insert(@androidx.annotation.NonNull Uri uri, @androidx.annotation.Nullable ContentValues values) {
-        String title = values.getAsString(NoteContract.NoteEntry.COLUMN_NOTE_TITLE);
-        if (title == null) {
-            throw new IllegalArgumentException("Note requires a title");
-        }
+        if (values != null) {
+            String title = values.getAsString(NoteContract.NoteEntry.COLUMN_NOTE_TITLE);
+            if (title == null) {
+                throw new IllegalArgumentException("Note requires a title");
+            }
 
-        final int match = sUriMatcher.match(uri);
+            final int match = sUriMatcher.match(uri);
 
-        if (match == NOTES)
-            return insertNote(uri, values);
-        else
-            throw new IllegalArgumentException("Insertion is not supported for " + uri);
+            if (match == NOTES)
+                return insertNote(uri, values);
+            else
+                throw new IllegalArgumentException("Insertion is not supported for " + uri);
 
-
+        } else
+            throw new IllegalArgumentException("ContentValues must not be null");
     }
 
     private Uri insertNote(Uri uri, ContentValues values) {
@@ -121,22 +125,25 @@ public class NoteProvider extends ContentProvider {
     @Override
     public int update(@androidx.annotation.NonNull Uri uri, @androidx.annotation.Nullable ContentValues values, @androidx.annotation.Nullable String selection, @androidx.annotation.Nullable String[] selectionArgs) {
         final int match = sUriMatcher.match(uri);
-        switch (match){
-            case NOTES:
-                return updateNote(uri, values, selection, selectionArgs);
-            case NOTE:
-                selection = NoteContract.NoteEntry._ID + "=?";
-                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
-                return updateNote(uri, values, selection, selectionArgs);
-            default:
-                throw new IllegalArgumentException("Update is not supported for " + uri);
-        }
+        if (values != null)
+            switch (match) {
+                case NOTES:
+                    return updateNote(uri, values, selection, selectionArgs);
+                case NOTE:
+                    selection = NoteContract.NoteEntry._ID + "=?";
+                    selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                    return updateNote(uri, values, selection, selectionArgs);
+                default:
+                    throw new IllegalArgumentException("Update is not supported for " + uri);
+            }
+        else
+            throw new IllegalArgumentException("ContentValues must not be null");
     }
 
     private int updateNote(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         SQLiteDatabase database = noteHelper.getWritableDatabase();
 
-        if (values.containsKey(NoteContract.NoteEntry.COLUMN_NOTE_TITLE)){
+        if (values.containsKey(NoteContract.NoteEntry.COLUMN_NOTE_TITLE)) {
             if (values.getAsString(NoteContract.NoteEntry.COLUMN_NOTE_TITLE) == null) {
                 throw new IllegalArgumentException("Note needs a title");
             }
