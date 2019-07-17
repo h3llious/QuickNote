@@ -2,11 +2,22 @@ package com.blacksun.quicknote.activities;
 
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Shader;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -19,13 +30,19 @@ import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.adapters.NoteRecyclerAdapter;
 import com.blacksun.quicknote.data.NoteManager;
 import com.blacksun.quicknote.models.Note;
+import com.blacksun.quicknote.utils.ImageHelper;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
+import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity  implements NavigationView.OnNavigationItemSelectedListener {
@@ -44,6 +61,13 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
 
     static final int REQUEST_GOOGLE_SIGN_IN = 4;
 
+    private static final String SIGN_IN_TAG = "SignIn";
+
+    TextView googleEmailText, googleNameText;
+    ImageView googleAvatarImg;
+
+    GoogleSignInAccount account;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,7 +78,10 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
         drawerLayout = findViewById(R.id.drawer_layout);
         emptyView = findViewById(R.id.empty_view);
         navigationView = findViewById(R.id.nav_view);
-        googleSignInButton = findViewById(R.id.google_sign_in);
+        googleSignInButton = navigationView.getHeaderView(0).findViewById(R.id.google_sign_in);
+        googleAvatarImg = navigationView.getHeaderView(0).findViewById(R.id.google_avatar);
+        googleEmailText = navigationView.getHeaderView(0).findViewById(R.id.google_email);
+        googleNameText = navigationView.getHeaderView(0).findViewById(R.id.google_username);
 
 
         // Configure sign-in to request the user's ID, email address, and basic
@@ -65,13 +92,13 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
 
         // Build a GoogleSignInClient with the options specified by gso.
         googleSignInClient = GoogleSignIn.getClient(this, gso);
-//        googleSignInButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent signInIntent = googleSignInClient.getSignInIntent();
-//                startActivityForResult(signInIntent, REQUEST_GOOGLE_SIGN_IN);
-//            }
-//        });
+        googleSignInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent signInIntent = googleSignInClient.getSignInIntent();
+                startActivityForResult(signInIntent, REQUEST_GOOGLE_SIGN_IN);
+            }
+        });
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -186,6 +213,33 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK){
+            switch (requestCode){
+                case REQUEST_GOOGLE_SIGN_IN:
+                    try{
+                        Task<GoogleSignInAccount> task =GoogleSignIn.getSignedInAccountFromIntent(data);
+                        account = task.getResult(ApiException.class);
+                        onLoggedIn(account);
+                    } catch (ApiException e){
+                        Log.e(SIGN_IN_TAG, "SignInResult failed "+e.getStatusCode());
+                    }
+                    break;
+            }
+        }
+    }
+
+    private void onLoggedIn(GoogleSignInAccount account) {
+        googleNameText.setText(account.getDisplayName());
+        googleEmailText.setText(account.getEmail());
+
+        Log.d(SIGN_IN_TAG, ""+account.getPhotoUrl());
+
+        new DownloadImgTask(this).execute(account.getPhotoUrl().toString());
+    }
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -193,7 +247,7 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
         int id = item.getItemId();
 
         if (id == R.id.nav_home) {
-            // Handle the camera action
+
         } else if (id == R.id.nav_tools) {
 
         } else if (id == R.id.nav_share) {
@@ -205,5 +259,42 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private static class DownloadImgTask extends AsyncTask<String, Void, Bitmap>{
+        private WeakReference<MainActivity> activityReference;
+
+        DownloadImgTask(MainActivity context){
+            activityReference = new WeakReference<>(context);
+        }
+
+        @Override
+        protected Bitmap doInBackground(String... strings) {
+            String url = strings[0];
+            Bitmap bitmap = null;
+
+            try {
+                InputStream in = new java.net.URL(url).openStream();
+                bitmap = BitmapFactory.decodeStream(in);
+            } catch (Exception e){
+                Log.e(SIGN_IN_TAG, e.getMessage());
+                e.printStackTrace();
+            }
+
+            return bitmap;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+
+            // get a reference to the activity if it is still there
+            MainActivity activity = activityReference.get();
+            if (activity == null || activity.isFinishing()) return;
+
+            ImageView avatar = activity.findViewById(R.id.google_avatar);
+
+            Bitmap rounded = ImageHelper.getRoundedCornerBitmap(bitmap);
+            avatar.setImageBitmap(rounded);
+        }
     }
 }
