@@ -80,6 +80,7 @@ public class DetailActivity extends AppCompatActivity {
     ImageRecyclerAdapter imageRecyclerAdapter;
     FileRecyclerAdapter fileRecyclerAdapter;
 
+    boolean isAttaching = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,6 +126,7 @@ public class DetailActivity extends AppCompatActivity {
                 if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
                     Toast.makeText(v.getContext(), "Device does not have camera", Toast.LENGTH_SHORT).show();
                 } else {
+                    isAttaching = true;
                     dispatchTakePictureIntent();
                 }
             }
@@ -133,6 +135,7 @@ public class DetailActivity extends AppCompatActivity {
         detailFile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isAttaching = true;
                 dispatchChooseFileIntent();
             }
         });
@@ -140,6 +143,7 @@ public class DetailActivity extends AppCompatActivity {
         detailImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isAttaching = true;
                 dispatchChooseGalleryIntent();
             }
         });
@@ -444,13 +448,14 @@ public class DetailActivity extends AppCompatActivity {
                 imageRecyclerAdapter.notifyDataSetChanged();
 
 
+                newImages = new ArrayList<>();
+                newFiles = new ArrayList<>();
 
                 ArrayList<Attachment> currentFiles = AttachManager.newInstance(this).getAttach(id, NoteContract.AttachEntry.FILE_TYPE);
                 files.clear();
                 files.addAll(currentFiles);
                 Log.d("attach", "id " + id + ", number of files " + files.size());
                 fileRecyclerAdapter.notifyDataSetChanged();
-
 
 
 //                currentNote = new Note(title, content, id, dateCreated, dateModified, img);
@@ -461,8 +466,6 @@ public class DetailActivity extends AppCompatActivity {
             collapsingToolbar.setTitle("New note");
         }
 
-        newImages = new ArrayList<>();
-        newFiles = new ArrayList<>();
 
         collapsingToolbar.setCollapsedTitleTextColor(ContextCompat.getColor(this, R.color.white));
         collapsingToolbar.setExpandedTitleColor(ContextCompat.getColor(this, R.color.transparent));
@@ -530,12 +533,16 @@ public class DetailActivity extends AppCompatActivity {
 //            note.setImagePath(currentPhotoPath);
             long newId = NoteManager.newInstance(this).create(note);
 
+            if (newId == -1)
+                Log.e("saveState", "error creating new note.");
+
             if (images != null) {
                 for (int imagePos = 0; imagePos < images.size(); imagePos++) {
                     Attachment currentAttach = images.get(imagePos);
                     currentAttach.setNote_id(newId);
                     AttachManager.newInstance(this).create(currentAttach);
                 }
+                Log.d("saveState", "is adding images with size "+images.size());
             }
 
             if (files != null) {
@@ -547,8 +554,8 @@ public class DetailActivity extends AppCompatActivity {
             }
 
             //update currentNote to show that a new note has been created
-            note.setId(newId);
-            currentNote = note;
+//            note.setId(newId);
+//            currentNote = note;
 //            newImages.addAll(images);
 //            newFiles.addAll(files);
 
@@ -661,7 +668,7 @@ public class DetailActivity extends AppCompatActivity {
 //                        Snackbar.make(findViewById(R.id.detail_content), "Update successfully", Snackbar.LENGTH_LONG)
 //                                .setAction("Action", null).show();
                         Toast.makeText(this, "Update successfully", Toast.LENGTH_SHORT).show();
-                        finish();
+//                        finish();
                     } else
                         finish();
 //                        Snackbar.make(getWindow().getDecorView(), "Encounter error(s) when updating", Snackbar.LENGTH_LONG)
@@ -690,12 +697,16 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (!isSaved) {
-            saveNote();
+        if (!isAttaching) {
+            if (!isSaved) { //fix no duplication caused by calling saveNote() twice in a row
+                saveNote();
 //            isSaved = true;
-            Log.d("SaveState", "save with "+isSaved);
-        }
+                Log.d("SaveState", "save with " + isSaved);
+            }
 
+
+        } else
+            isAttaching = false;
         //just implement create new note or something
     }
 }

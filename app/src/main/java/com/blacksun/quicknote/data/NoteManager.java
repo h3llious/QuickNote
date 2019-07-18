@@ -42,7 +42,7 @@ public class NoteManager {
 
         //values.put(NoteContract.NoteEntry.ID, note.getId());
         Uri result = mContext.getContentResolver().insert(NoteContract.NoteEntry.CONTENT_URI, values);
-        if (result == null) {
+        if (result != null) {
             long id = Long.parseLong(result.getLastPathSegment());
             Log.i("Log Cursor", " create note name  " + id + " ");
             return id;
