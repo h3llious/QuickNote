@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -64,23 +65,66 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ImageView googleAvatarImg;
 
     GoogleSignInAccount account;
+    Button googleSignOutButton;
+    Bitmap loadedAvatar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_drawer);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
-        drawerLayout = findViewById(R.id.drawer_layout);
-        emptyView = findViewById(R.id.empty_view);
-        navigationView = findViewById(R.id.nav_view);
-        googleSignInButton = navigationView.getHeaderView(0).findViewById(R.id.google_sign_in);
-        googleAvatarImg = navigationView.getHeaderView(0).findViewById(R.id.google_avatar);
-        googleEmailText = navigationView.getHeaderView(0).findViewById(R.id.google_email);
-        googleNameText = navigationView.getHeaderView(0).findViewById(R.id.google_username);
+        initialize();
+
+        //sign in, sign out by google account
+        setUpGoogleAccount();
 
 
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
+
+        //new navigation drawer
+        drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(drawerToggle);
+        drawerToggle.syncState();
+        navigationView.setNavigationItemSelectedListener(this);
+
+
+        FloatingActionButton createNewNote = findViewById(R.id.fab);
+        createNewNote.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        retrieveNoteList();
+
+    }
+
+    private void retrieveNoteList() {
+        notes = new ArrayList<>();
+
+        getInfo();
+
+        noteList = findViewById(R.id.note_list);
+
+        if (notes.size() == 0) {
+            emptyView.setVisibility(View.VISIBLE);
+        }
+
+        noteRecyclerAdapter = new NoteRecyclerAdapter(notes);
+
+        noteList.setHasFixedSize(true);
+        noteList.setLayoutManager(new LinearLayoutManager(this));
+        noteList.setAdapter(noteRecyclerAdapter);
+    }
+
+    private void setUpGoogleAccount() {
         // Configure sign-in to request the user's ID, email address, and basic
         // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -97,48 +141,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setHomeButtonEnabled(true);
-        }
-
-        //new navigation drawer
-        drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawerLayout.addDrawerListener(drawerToggle);
-
-        drawerToggle.syncState();
-        navigationView.setNavigationItemSelectedListener(this);
-
-
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        googleSignOutButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-                startActivity(intent);
+            public void onClick(View v) {
+                onSignOut();
             }
         });
+    }
 
-        notes = new ArrayList<>();
+    private void initialize() {
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        getInfo();
+        drawerLayout = findViewById(R.id.drawer_layout);
+        emptyView = findViewById(R.id.empty_view);
+        navigationView = findViewById(R.id.nav_view);
+        googleSignInButton = navigationView.getHeaderView(0).findViewById(R.id.google_sign_in);
+        googleSignOutButton = navigationView.getHeaderView(0).findViewById(R.id.google_sign_out);
+        googleAvatarImg = navigationView.getHeaderView(0).findViewById(R.id.google_avatar);
+        googleEmailText = navigationView.getHeaderView(0).findViewById(R.id.google_email);
+        googleNameText = navigationView.getHeaderView(0).findViewById(R.id.google_username);
+    }
 
-        noteList = findViewById(R.id.note_list);
-
-
-        if (notes.size() == 0) {
-            emptyView.setVisibility(View.VISIBLE);
-        }
-
-        noteRecyclerAdapter = new NoteRecyclerAdapter(notes);
-
-//        Log.d("TestRecyclerMain", "Not good 2");
-        noteList.setHasFixedSize(true);
-        noteList.setLayoutManager(new LinearLayoutManager(this));
-        noteList.setAdapter(noteRecyclerAdapter);
-
+    private void onSignOut() {
+        googleSignInClient.signOut();
+        googleSignInButton.setVisibility(View.VISIBLE);
+        googleSignOutButton.setVisibility(View.GONE);
+        googleEmailText.setText("");
+        googleNameText.setText(R.string.app_name);
+        googleAvatarImg.setImageDrawable(getResources().getDrawable(R.mipmap.ic_launcher_round));
     }
 
     @Override
@@ -167,10 +198,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         noteRecyclerAdapter.notifyDataSetChanged();
 
         //check if already logged in
+        checkLoggedIn();
+    }
+
+    private void checkLoggedIn() {
         GoogleSignInAccount alreadyLoggedAccount = GoogleSignIn.getLastSignedInAccount(this);
         if (alreadyLoggedAccount != null) {
             //Toast.makeText(this, "Already Logged In", Toast.LENGTH_SHORT).show();
             onLoggedIn(alreadyLoggedAccount);
+            googleSignInButton.setVisibility(View.GONE);
+            googleSignOutButton.setVisibility(View.VISIBLE);
         } else {
             Log.d(SIGN_IN_TAG, "Not logged in");
         }
@@ -236,9 +273,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         googleNameText.setText(account.getDisplayName());
         googleEmailText.setText(account.getEmail());
 
+        googleSignInButton.setVisibility(View.GONE);
+        googleSignOutButton.setVisibility(View.VISIBLE);
+
         Log.d(SIGN_IN_TAG, "" + account.getPhotoUrl());
 
-        new DownloadImgTask(this).execute(account.getPhotoUrl().toString());
+        if (loadedAvatar != null)
+            googleAvatarImg.setImageBitmap(loadedAvatar);
+        else
+            new DownloadImgTask(this).execute(account.getPhotoUrl().toString());
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -270,7 +313,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         @Override
+        protected void onPreExecute() {
+            MainActivity activity = activityReference.get();
+            if (activity == null || activity.isFinishing()) return;
+
+            NavigationView navigationView = activity.findViewById(R.id.nav_view);
+
+            ImageView avatar = navigationView.getHeaderView(0).findViewById(R.id.google_avatar);
+            avatar.setImageDrawable(activity.getResources().getDrawable(R.drawable.ic_user));
+        }
+
+        @Override
         protected Bitmap doInBackground(String... strings) {
+            publishProgress();
             String url = strings[0];
             Bitmap bitmap = null;
 
@@ -292,9 +347,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             MainActivity activity = activityReference.get();
             if (activity == null || activity.isFinishing()) return;
 
+
+
             ImageView avatar = activity.findViewById(R.id.google_avatar);
 
             Bitmap rounded = ImageHelper.getRoundedCornerBitmap(bitmap);
+            activity.loadedAvatar = rounded;
+
             avatar.setImageBitmap(rounded);
         }
     }
