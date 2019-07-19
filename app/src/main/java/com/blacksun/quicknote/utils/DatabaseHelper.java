@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.blacksun.quicknote.data.NoteContract;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
-    private static final String DATABASE_NAME = "quick_note.db";
+    public static final String DATABASE_NAME = "quick_note.db";
     private static final int DATABASE_VERSION = 4;
 
 

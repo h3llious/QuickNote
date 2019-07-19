@@ -1,15 +1,19 @@
 package com.blacksun.quicknote.activities;
 
 
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -26,8 +30,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.adapters.NoteRecyclerAdapter;
+import com.blacksun.quicknote.data.NoteContract;
 import com.blacksun.quicknote.data.NoteManager;
 import com.blacksun.quicknote.models.Note;
+import com.blacksun.quicknote.utils.DatabaseHelper;
 import com.blacksun.quicknote.utils.ImageHelper;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -35,13 +41,28 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.api.client.http.FileContent;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.DriveScopes;
+
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -60,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     static final int REQUEST_GOOGLE_SIGN_IN = 4;
 
     private static final String SIGN_IN_TAG = "SignIn";
+    private static final String DRIVE_TAG = "GDrive";
 
     TextView googleEmailText, googleNameText;
     ImageView googleAvatarImg;
@@ -67,6 +89,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     GoogleSignInAccount account;
     Button googleSignOutButton;
     Bitmap loadedAvatar;
+
+    Drive googleServiceDrive;
+    private static final String[] DRIVE_SCOPES = {DriveScopes.DRIVE_FILE, DriveScopes.DRIVE_APPDATA};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -202,10 +227,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void checkLoggedIn() {
-        GoogleSignInAccount alreadyLoggedAccount = GoogleSignIn.getLastSignedInAccount(this);
-        if (alreadyLoggedAccount != null) {
+        account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null) {
             //Toast.makeText(this, "Already Logged In", Toast.LENGTH_SHORT).show();
-            onLoggedIn(alreadyLoggedAccount);
+            createDriveCredential(account);
+
+            onLoggedIn(account);
             googleSignInButton.setVisibility(View.GONE);
             googleSignOutButton.setVisibility(View.VISIBLE);
         } else {
@@ -259,14 +286,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     try {
                         Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
                         account = task.getResult(ApiException.class);
-                        if (account != null)
+
+                        if (account != null) {
+                            createDriveCredential(account);
                             onLoggedIn(account);
+                        }
                     } catch (ApiException e) {
                         Log.e(SIGN_IN_TAG, "SignInResult failed " + e.getStatusCode());
                     }
                     break;
             }
         }
+    }
+
+    private void createDriveCredential(GoogleSignInAccount account) {
+        GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(this,
+                Arrays.asList(DRIVE_SCOPES));
+        credential.setSelectedAccount(account.getAccount());
+        googleServiceDrive = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new GsonFactory(), credential)
+                .setApplicationName(getResources().getString(R.string.app_name))
+                .build();
+
+
     }
 
     private void onLoggedIn(GoogleSignInAccount account) {
@@ -280,8 +321,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         if (loadedAvatar != null)
             googleAvatarImg.setImageBitmap(loadedAvatar);
-        else
-            new DownloadImgTask(this).execute(account.getPhotoUrl().toString());
+        else {
+            Uri avatarUri = account.getPhotoUrl();
+
+            if (avatarUri == null) //user doesn't have avatar
+                googleAvatarImg.setImageDrawable(getResources().getDrawable(R.drawable.ic_user));
+            else
+                new DownloadImgTask(this).execute(avatarUri.toString());
+        }
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -296,6 +343,98 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         } else if (id == R.id.nav_share) {
 
+            //testing: upload database into drive.
+            final String PACKAGE_NAME = getPackageName();
+            final String DATABASE_NAME = DatabaseHelper.DATABASE_NAME;
+//            final String DATABASE_PATH = "/data/data/" + PACKAGE_NAME + "/databases/" + DATABASE_NAME;
+            final File FILE_DATABASE =
+                    new File(Environment.getDataDirectory() + "/data/" + PACKAGE_NAME + "/databases/" + DATABASE_NAME);
+            final String MIME_TYPE = "application/x-sqlite-3";
+            final String FOLDER_NAME = "files";
+
+
+            if (googleServiceDrive == null) {
+                Toast.makeText(this, "Please sign in with your Google account!", Toast.LENGTH_SHORT).show();
+            } else {
+
+                if (!GoogleSignIn.hasPermissions(account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE))) {
+                    GoogleSignIn.requestPermissions(this, 10, account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE));
+                }
+
+                Thread testThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            com.google.api.services.drive.model.File fileMetadata = new com.google.api.services.drive.model.File();
+                            fileMetadata.setName(FILE_DATABASE.getName());
+//                            fileMetadata.setParents(Collections.singletonList("appDataFolder"));
+
+
+                            //File filePath = new File("/data/user/0/com.blacksun.quicknote/files/1563510459450_Lost_Control-vi6v0MOWp2Q.mp3");
+
+                            Log.d(DRIVE_TAG, "path " + FILE_DATABASE.getAbsolutePath());
+
+                            FileContent mediaContent = new FileContent(MIME_TYPE, FILE_DATABASE);
+                            com.google.api.services.drive.model.File file = googleServiceDrive.files().create(fileMetadata, mediaContent)
+                                    .setFields("id")
+                                    .execute();
+
+                            com.google.api.services.drive.model.File folderMetadata = new com.google.api.services.drive.model.File()
+//                                    .setParents(Collections.singletonList("appDataFolder"))
+                                    .setMimeType(DriveFolder.MIME_TYPE)
+                                    .setName(FOLDER_NAME);
+
+                            com.google.api.services.drive.model.File newFilesFolder =
+                                    googleServiceDrive.files().create(folderMetadata).execute();
+
+                            String folderID = newFilesFolder.getId();
+//
+
+                            File directory = getFilesDir();
+                            File[] files = directory.listFiles();
+                            Log.d("Files", "Size: " + files.length);
+//                            ArrayList<String> allFilesPath = new ArrayList<>();
+                            for (File child : files) {
+                                String name = child.getName();
+                                if (!name.equals("instant-run")) {
+//                                    allFilesPath.add(name);
+                                    com.google.api.services.drive.model.File attachMetadata = new com.google.api.services.drive.model.File();
+                                    attachMetadata.setName(name);
+                                    attachMetadata.setParents(Collections.singletonList(folderID));
+
+
+//                                    File filePath = new File("/data/user/0/com.blacksun.quicknote/files/1563510459450_Lost_Control-vi6v0MOWp2Q.mp3");
+
+                                    Log.d(DRIVE_TAG, "path " + child.getAbsolutePath());
+
+                                    FileContent attachContent = new FileContent(getMIMEType(child), child);
+                                    com.google.api.services.drive.model.File attach = googleServiceDrive.files().create(attachMetadata, attachContent)
+                                            .setFields("id")
+                                            .execute();
+                                }
+                                Log.d("Files", "FileName:" + child.getName());
+                            }
+
+
+
+
+                        } catch (UserRecoverableAuthIOException e) {
+                            Log.e(DRIVE_TAG, "Error " + e.getMessage());
+                            e.printStackTrace();
+                            startActivityForResult(e.getIntent(), 6);
+
+                        } catch (IOException e) {
+                            Log.e(DRIVE_TAG, "Error " + e.getMessage());
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                testThread.start();
+
+
+//                    System.out.println("File ID: " + file.getId());
+
+            }
         } else if (id == R.id.nav_send) {
 
         }
@@ -303,6 +442,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+
+    //needed for Drive upload
+    private String getMIMEType(File child) {
+        String mimeType;
+        Uri uri = Uri.fromFile(child);
+        if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
+            ContentResolver cr = this.getContentResolver();
+            mimeType = cr.getType(uri);
+        } else {
+            String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri
+                    .toString());
+            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
+                    fileExtension.toLowerCase());
+        }
+        return mimeType;
     }
 
     private static class DownloadImgTask extends AsyncTask<String, Void, Bitmap> {
@@ -346,7 +502,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // get a reference to the activity if it is still there
             MainActivity activity = activityReference.get();
             if (activity == null || activity.isFinishing()) return;
-
 
 
             ImageView avatar = activity.findViewById(R.id.google_avatar);
