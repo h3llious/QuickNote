@@ -31,8 +31,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.adapters.NoteRecyclerAdapter;
 import com.blacksun.quicknote.data.NoteManager;
+import com.blacksun.quicknote.models.DriveFileHolder;
 import com.blacksun.quicknote.models.Note;
 import com.blacksun.quicknote.utils.DatabaseHelper;
+import com.blacksun.quicknote.utils.DriveServiceHelper;
 import com.blacksun.quicknote.utils.UtilHelper;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -51,10 +53,8 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecovera
 import com.google.api.client.http.FileContent;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,7 +63,6 @@ import java.util.Collections;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.drive.model.FileList;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -83,6 +82,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     static final int REQUEST_GOOGLE_SIGN_IN = 4;
 
     private static final String SIGN_IN_TAG = "SignIn";
+
+    //TODO clean up
     private static final String DRIVE_TAG = "GDrive";
 
     TextView googleEmailText, googleNameText;
@@ -94,6 +95,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     Drive googleServiceDrive;
     private static final String[] DRIVE_SCOPES = {DriveScopes.DRIVE_FILE, DriveScopes.DRIVE_APPDATA};
+
+    DriveServiceHelper driveServiceHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -343,7 +346,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         } else if (id == R.id.nav_tools) {
 
-        } else if (id == R.id.nav_share) {
+        } else if (id == R.id.nav_upload) {
 
             //testing: upload database into drive.
             final String PACKAGE_NAME = getPackageName();
@@ -363,35 +366,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     GoogleSignIn.requestPermissions(this, 10, account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE));
                 }
 
+                if (driveServiceHelper == null) {
+                    driveServiceHelper = new DriveServiceHelper(googleServiceDrive, this);
+                }
+
                 Thread testThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            com.google.api.services.drive.model.File fileMetadata = new com.google.api.services.drive.model.File();
-                            fileMetadata.setName(FILE_DATABASE.getName());
-//                            fileMetadata.setParents(Collections.singletonList("appDataFolder"));
+                            //upload db
+                            driveServiceHelper.upload(FILE_DATABASE, MIME_TYPE, null);
+//                            driveServiceHelper.upload(FILE_DATABASE, MIME_TYPE, "appDataFolder");
 
+                            //create files folder on Drive
+//                            String folderID = driveServiceHelper.createFolder(FOLDER_NAME, "appDataFolder");
+                            String folderID = driveServiceHelper.createFolder(FOLDER_NAME, null);
 
-                            //File filePath = new File("/data/user/0/com.blacksun.quicknote/files/1563510459450_Lost_Control-vi6v0MOWp2Q.mp3");
-
-                            Log.d(DRIVE_TAG, "path " + FILE_DATABASE.getAbsolutePath());
-
-                            FileContent mediaContent = new FileContent(MIME_TYPE, FILE_DATABASE);
-                            com.google.api.services.drive.model.File file = googleServiceDrive.files().create(fileMetadata, mediaContent)
-                                    .setFields("id")
-                                    .execute();
-
-                            com.google.api.services.drive.model.File folderMetadata = new com.google.api.services.drive.model.File()
-//                                    .setParents(Collections.singletonList("appDataFolder"))
-                                    .setMimeType(DriveFolder.MIME_TYPE)
-                                    .setName(FOLDER_NAME);
-
-                            com.google.api.services.drive.model.File newFilesFolder =
-                                    googleServiceDrive.files().create(folderMetadata).execute();
-
-                            String folderID = newFilesFolder.getId();
-//
-
+                            //upload files
                             File directory = getFilesDir();
                             File[] files = directory.listFiles();
                             Log.d("Files", "Size: " + files.length);
@@ -400,23 +391,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 String name = child.getName();
                                 if (!name.equals("instant-run")) {
 //                                    allFilesPath.add(name);
-                                    com.google.api.services.drive.model.File attachMetadata = new com.google.api.services.drive.model.File();
-                                    attachMetadata.setName(name);
-                                    attachMetadata.setParents(Collections.singletonList(folderID));
-
-
-//                                    File filePath = new File("/data/user/0/com.blacksun.quicknote/files/1563510459450_Lost_Control-vi6v0MOWp2Q.mp3");
-
-                                    Log.d(DRIVE_TAG, "path " + child.getAbsolutePath());
-
-                                    FileContent attachContent = new FileContent(getMIMEType(child), child);
-                                    com.google.api.services.drive.model.File attach = googleServiceDrive.files().create(attachMetadata, attachContent)
-                                            .setFields("id")
-                                            .execute();
+                                    driveServiceHelper.upload(child, getMIMEType(child), folderID);
                                 }
                                 Log.d("Files", getMIMEType(child) + " FileName:" + child.getName());
                             }
-
 
                         } catch (UserRecoverableAuthIOException e) {
                             Log.e(DRIVE_TAG, "Error " + e.getMessage());
@@ -443,16 +421,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //                    System.out.println("File ID: " + file.getId());
 
             }
-        } else if (id == R.id.nav_send) {
+        } else if (id == R.id.nav_download) {
 
 
-            //testing: upload database into drive.
+            //testing: download database into drive.
             final String PACKAGE_NAME = getPackageName();
             final String DATABASE_NAME = DatabaseHelper.DATABASE_NAME;
 //            final String DATABASE_PATH = "/data/data/" + PACKAGE_NAME + "/databases/" + DATABASE_NAME;
-            final File FILE_DATABASE =
-                    new File(Environment.getDataDirectory() + "/data/" + PACKAGE_NAME + "/databases/" + DATABASE_NAME);
-            final String MIME_TYPE = "application/x-sqlite-3";
+            final String databasePath = Environment.getDataDirectory() + "/data/" + PACKAGE_NAME + "/databases/" + DATABASE_NAME;
+            final File FILE_DATABASE = new File(databasePath);
+            final String MIME_TYPE_DB = "application/x-sqlite-3";
+            final String MIME_TYPE_FOLDER = "application/vnd.google-apps.folder";
             final String FOLDER_NAME = "files";
 
 
@@ -464,76 +443,50 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     GoogleSignIn.requestPermissions(this, 10, account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE));
                 }
 
+                if (driveServiceHelper == null) {
+                    driveServiceHelper = new DriveServiceHelper(googleServiceDrive, this);
+                }
+
                 Thread testThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
 
-                            //database
-                            String pageToken = null;
-                            do {
-                                FileList resultDb = googleServiceDrive.files().list()
-                                        .setQ("mimeType='" + MIME_TYPE + "' and name = '" + DATABASE_NAME + "'")
-                                        .setSpaces("drive")
-                                        .setFields("nextPageToken, files(id, name)")
-                                        .setPageToken(pageToken)
-                                        .execute();
-                                for (com.google.api.services.drive.model.File file : resultDb.getFiles()) {
-                                    String databaseId = file.getId();
-                                    OutputStream out = new FileOutputStream(FILE_DATABASE);
-                                    googleServiceDrive.files().get(databaseId).executeMediaAndDownloadTo(out);
-                                }
 
-                                pageToken = resultDb.getNextPageToken();
-                                Log.e(DRIVE_TAG, "Database downloaded");
-                            } while (pageToken != null);
+                            //database
+                            ArrayList<DriveFileHolder> database = driveServiceHelper.search(MIME_TYPE_DB, DATABASE_NAME, null);
+                            if (database.size() >= 1) {
+                                String databaseId = database.get(0).getId();
+
+                                driveServiceHelper.download(databasePath, databaseId);
+                                Log.d(DRIVE_TAG, "Database downloaded " + databaseId);
+                            } else {
+                                Log.e(DRIVE_TAG, "Cannot download database");
+                            }
 
 
                             //folder files
-                            pageToken = null;
+                            ArrayList<DriveFileHolder> filesFolder = driveServiceHelper.search(MIME_TYPE_FOLDER, FOLDER_NAME, null);
                             String folderId = null;
-                            do {
-                                FileList resultFolder = googleServiceDrive.files().list()
-                                        .setQ("mimeType='" + "application/vnd.google-apps.folder" + "' and name = '" + FOLDER_NAME + "'")
-                                        .setSpaces("drive")
-                                        .setFields("nextPageToken, files(id, name)")
-                                        .setPageToken(pageToken)
-                                        .execute();
-                                boolean isFound = false;
-                                for (com.google.api.services.drive.model.File file : resultFolder.getFiles()) {
-                                    folderId = file.getId();
-                                    isFound = true;
-                                    break;
-                                }
-                                if (isFound) {
-                                    break;
-                                }
-                                pageToken = resultFolder.getNextPageToken();
-                            } while (pageToken != null);
-
+                            if (filesFolder.size() >= 1) {
+                                folderId = filesFolder.get(0).getId();
+                            } else {
+                                Log.e(DRIVE_TAG, "Cannot get \"files\" folder");
+                            }
 
                             //attachments
-                            pageToken = null;
                             if (folderId != null) {
-                                do {
-                                    FileList resultAttach = googleServiceDrive.files().list()
-                                            .setQ("'" + folderId + "' in parents")
-                                            .setSpaces("drive")
-                                            .setFields("nextPageToken, files(id, name)")
-                                            .setPageToken(pageToken)
-                                            .execute();
-                                    for (com.google.api.services.drive.model.File file : resultAttach.getFiles()) {
-                                        String attachId = file.getId();
-                                        File attachment = new File(getFilesDir().getAbsolutePath() + "/" +file.getName());
-                                        OutputStream out = new FileOutputStream(attachment);
-                                        googleServiceDrive.files().get(attachId).executeMediaAndDownloadTo(out);
-                                    }
+                                ArrayList<DriveFileHolder> attachments = driveServiceHelper.search(null, null, folderId);
+                                String filesDir = getFilesDir().getAbsolutePath();
+                                for (DriveFileHolder attach : attachments) {
+                                    String attachId = attach.getId();
 
-                                    pageToken = resultAttach.getNextPageToken();
-                                } while (pageToken != null);
-                                Log.e(DRIVE_TAG, "Attachment downloaded");
-                            } else
-                                Log.e(DRIVE_TAG, "Error getting files folder");
+                                    driveServiceHelper.download(filesDir+"/"+attach.getName(), attachId);
+
+                                }
+                            } else {
+                                Log.e(DRIVE_TAG, "No attachment");
+                            }
 
                         } catch (UserRecoverableAuthIOException e) {
                             Log.e(DRIVE_TAG, "Error " + e.getMessage());
@@ -573,15 +526,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     //needed for Drive upload
-    private String getMIMEType(File child) {
+    public String getMIMEType(File child) {
         String mimeType;
         Uri uri = Uri.fromFile(child);
         if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
             ContentResolver cr = this.getContentResolver();
             mimeType = cr.getType(uri);
         } else {
-            String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri
-                    .toString());
+            String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
             mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
                     fileExtension.toLowerCase());
         }

@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class UtilHelper {
+
     public static Bitmap getRoundedCornerBitmap(Bitmap bitmap) {
         Bitmap circleBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
 
