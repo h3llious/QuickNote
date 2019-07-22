@@ -1,6 +1,5 @@
 package com.blacksun.quicknote.activities;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -38,14 +37,12 @@ import com.blacksun.quicknote.data.NoteContract;
 import com.blacksun.quicknote.data.NoteManager;
 import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.models.Note;
+import com.blacksun.quicknote.utils.UtilHelper;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -182,22 +179,6 @@ public class DetailActivity extends AppCompatActivity {
         startActivityForResult(intent, REQUEST_FILE_CHOOSER);
     }
 
-    //    public static void copy(File src, File dst) {
-    public static void copy(Uri uri, File dst, Context context) {
-//        try (InputStream in = new FileInputStream(src);
-        try (InputStream in = context.getContentResolver().openInputStream(uri);
-             OutputStream out = new FileOutputStream(dst)) {
-            // Transfer bytes from in to out
-            byte[] buf = new byte[1024];
-            int len;
-            while ((len = in.read(buf)) > 0) {
-                out.write(buf, 0, len);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
@@ -289,7 +270,7 @@ public class DetailActivity extends AppCompatActivity {
                 long timeStamp = (new Date()).getTime();
 
                 File savedFile = new File(getFilesDir().getAbsolutePath() + "/" + timeStamp + "_" + fileName);
-                copy(uri, savedFile, this);
+                UtilHelper.copy(uri, savedFile, this);
                 final String filePath = savedFile.getAbsolutePath();
 
                 Log.d("filepath", filePath + ": " + fileName);
@@ -340,7 +321,7 @@ public class DetailActivity extends AppCompatActivity {
                 String fileName = getFileName(uri);
                 try {
                     File savedFile = createImageFile();
-                    copy(uri, savedFile, this);
+                    UtilHelper.copy(uri, savedFile, this);
                     String filePath = savedFile.getAbsolutePath();
 
                     //new RecyclerView

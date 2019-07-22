@@ -30,11 +30,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.adapters.NoteRecyclerAdapter;
-import com.blacksun.quicknote.data.NoteContract;
 import com.blacksun.quicknote.data.NoteManager;
 import com.blacksun.quicknote.models.Note;
 import com.blacksun.quicknote.utils.DatabaseHelper;
-import com.blacksun.quicknote.utils.ImageHelper;
+import com.blacksun.quicknote.utils.UtilHelper;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -52,8 +51,10 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecovera
 import com.google.api.client.http.FileContent;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,6 +63,7 @@ import java.util.Collections;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.drive.model.FileList;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -412,10 +414,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                             .setFields("id")
                                             .execute();
                                 }
-                                Log.d("Files", "FileName:" + child.getName());
+                                Log.d("Files", getMIMEType(child) + " FileName:" + child.getName());
                             }
-
-
 
 
                         } catch (UserRecoverableAuthIOException e) {
@@ -427,6 +427,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             Log.e(DRIVE_TAG, "Error " + e.getMessage());
                             e.printStackTrace();
                         }
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getBaseContext(), "Finished uploading data into Drive", Toast.LENGTH_LONG).show();
+                            }
+                        });
+
                     }
                 });
                 testThread.start();
@@ -436,6 +444,125 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         } else if (id == R.id.nav_send) {
+
+
+            //testing: upload database into drive.
+            final String PACKAGE_NAME = getPackageName();
+            final String DATABASE_NAME = DatabaseHelper.DATABASE_NAME;
+//            final String DATABASE_PATH = "/data/data/" + PACKAGE_NAME + "/databases/" + DATABASE_NAME;
+            final File FILE_DATABASE =
+                    new File(Environment.getDataDirectory() + "/data/" + PACKAGE_NAME + "/databases/" + DATABASE_NAME);
+            final String MIME_TYPE = "application/x-sqlite-3";
+            final String FOLDER_NAME = "files";
+
+
+            if (googleServiceDrive == null) {
+                Toast.makeText(this, "Please sign in with your Google account!", Toast.LENGTH_SHORT).show();
+            } else {
+
+                if (!GoogleSignIn.hasPermissions(account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE))) {
+                    GoogleSignIn.requestPermissions(this, 10, account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE));
+                }
+
+                Thread testThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+
+                            //database
+                            String pageToken = null;
+                            do {
+                                FileList resultDb = googleServiceDrive.files().list()
+                                        .setQ("mimeType='" + MIME_TYPE + "' and name = '" + DATABASE_NAME + "'")
+                                        .setSpaces("drive")
+                                        .setFields("nextPageToken, files(id, name)")
+                                        .setPageToken(pageToken)
+                                        .execute();
+                                for (com.google.api.services.drive.model.File file : resultDb.getFiles()) {
+                                    String databaseId = file.getId();
+                                    OutputStream out = new FileOutputStream(FILE_DATABASE);
+                                    googleServiceDrive.files().get(databaseId).executeMediaAndDownloadTo(out);
+                                }
+
+                                pageToken = resultDb.getNextPageToken();
+                                Log.e(DRIVE_TAG, "Database downloaded");
+                            } while (pageToken != null);
+
+
+                            //folder files
+                            pageToken = null;
+                            String folderId = null;
+                            do {
+                                FileList resultFolder = googleServiceDrive.files().list()
+                                        .setQ("mimeType='" + "application/vnd.google-apps.folder" + "' and name = '" + FOLDER_NAME + "'")
+                                        .setSpaces("drive")
+                                        .setFields("nextPageToken, files(id, name)")
+                                        .setPageToken(pageToken)
+                                        .execute();
+                                boolean isFound = false;
+                                for (com.google.api.services.drive.model.File file : resultFolder.getFiles()) {
+                                    folderId = file.getId();
+                                    isFound = true;
+                                    break;
+                                }
+                                if (isFound) {
+                                    break;
+                                }
+                                pageToken = resultFolder.getNextPageToken();
+                            } while (pageToken != null);
+
+
+                            //attachments
+                            pageToken = null;
+                            if (folderId != null) {
+                                do {
+                                    FileList resultAttach = googleServiceDrive.files().list()
+                                            .setQ("'" + folderId + "' in parents")
+                                            .setSpaces("drive")
+                                            .setFields("nextPageToken, files(id, name)")
+                                            .setPageToken(pageToken)
+                                            .execute();
+                                    for (com.google.api.services.drive.model.File file : resultAttach.getFiles()) {
+                                        String attachId = file.getId();
+                                        File attachment = new File(getFilesDir().getAbsolutePath() + "/" +file.getName());
+                                        OutputStream out = new FileOutputStream(attachment);
+                                        googleServiceDrive.files().get(attachId).executeMediaAndDownloadTo(out);
+                                    }
+
+                                    pageToken = resultAttach.getNextPageToken();
+                                } while (pageToken != null);
+                                Log.e(DRIVE_TAG, "Attachment downloaded");
+                            } else
+                                Log.e(DRIVE_TAG, "Error getting files folder");
+
+                        } catch (UserRecoverableAuthIOException e) {
+                            Log.e(DRIVE_TAG, "Error " + e.getMessage());
+                            e.printStackTrace();
+                            startActivityForResult(e.getIntent(), 6);
+
+                        } catch (IOException e) {
+                            Log.e(DRIVE_TAG, "Error " + e.getMessage());
+                            e.printStackTrace();
+                        }
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                //update after create new note or delete
+                                getInfo();
+                                noteRecyclerAdapter.notifyDataSetChanged();
+                                Toast.makeText(getBaseContext(), "Finished synchronizing data into Drive", Toast.LENGTH_LONG).show();
+                            }
+                        });
+
+                    }
+                });
+                testThread.start();
+
+
+//                    System.out.println("File ID: " + file.getId());
+
+            }
 
         }
 
@@ -506,7 +633,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             ImageView avatar = activity.findViewById(R.id.google_avatar);
 
-            Bitmap rounded = ImageHelper.getRoundedCornerBitmap(bitmap);
+            Bitmap rounded = UtilHelper.getRoundedCornerBitmap(bitmap);
             activity.loadedAvatar = rounded;
 
             avatar.setImageBitmap(rounded);

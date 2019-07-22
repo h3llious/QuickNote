@@ -20,9 +20,9 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.blacksun.quicknote.R;
-import com.blacksun.quicknote.activities.DetailActivity;
 import com.blacksun.quicknote.data.AttachManager;
 import com.blacksun.quicknote.models.Attachment;
+import com.blacksun.quicknote.utils.UtilHelper;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -77,7 +77,7 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
                 File storageLoc = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
                 File savedFile = new File(storageLoc, filename);
 
-                DetailActivity.copy(fileUri, savedFile, context);
+                UtilHelper.copy(fileUri, savedFile, context);
 
                 Log.d("saveFile", ""+savedFile);
 
