@@ -32,6 +32,9 @@ import java.util.Collections;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_DB;
+import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_FOLDER;
+
 /**
  * A utility for performing read/write operations on Drive files via the REST API and opening a
  * file picker UI via Storage Access Framework.
@@ -41,9 +44,9 @@ public class DriveServiceHelper {
     private final Drive googleServiceDrive;
     private Context context;
 
-    private static final String DRIVE_TAG = "GDrive";
-    final String MIME_TYPE_DB = "application/x-sqlite-3";
-    final String MIME_TYPE_FOLDER = "application/vnd.google-apps.folder";
+    public static final String DRIVE_TAG = "GDrive";
+//    final String MIME_TYPE_DB = "application/x-sqlite-3";
+//    final String MIME_TYPE_FOLDER = "application/vnd.google-apps.folder";
 
     public DriveServiceHelper(Drive driveService, Context context) {
         this.googleServiceDrive = driveService;

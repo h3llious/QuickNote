@@ -11,6 +11,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.net.Uri;
+import android.os.Environment;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,7 +19,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import static com.blacksun.quicknote.activities.MainActivity.PACKAGE_NAME;
+import static com.blacksun.quicknote.utils.DatabaseHelper.DATABASE_NAME;
+
 public class UtilHelper {
+    public final static String DATABASE_PATH = Environment.getDataDirectory() + "/data/" + PACKAGE_NAME + "/databases/" + DATABASE_NAME;
+    public final static File FILE_DATABASE = new File(DATABASE_PATH);
+    public final static String MIME_TYPE_DB = "application/x-sqlite-3";
+    public final static String MIME_TYPE_FOLDER = "application/vnd.google-apps.folder";
+    public final static String FOLDER_NAME = "files";
 
     public static Bitmap getRoundedCornerBitmap(Bitmap bitmap) {
         Bitmap circleBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
