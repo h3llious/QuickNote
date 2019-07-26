@@ -32,6 +32,7 @@ import com.blacksun.quicknote.adapters.NoteRecyclerAdapter;
 import com.blacksun.quicknote.data.NoteManager;
 import com.blacksun.quicknote.models.DriveFileHolder;
 import com.blacksun.quicknote.models.Note;
+import com.blacksun.quicknote.thread.SyncDownTask;
 import com.blacksun.quicknote.thread.SyncManager;
 import com.blacksun.quicknote.thread.SyncUpTask;
 import com.blacksun.quicknote.utils.DriveServiceHelper;
@@ -56,7 +57,6 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.Future;
 
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
@@ -65,7 +65,6 @@ import com.google.api.services.drive.DriveScopes;
 import static com.blacksun.quicknote.utils.DatabaseHelper.DATABASE_NAME;
 import static com.blacksun.quicknote.utils.DriveServiceHelper.DRIVE_TAG;
 import static com.blacksun.quicknote.utils.UtilHelper.DATABASE_PATH;
-import static com.blacksun.quicknote.utils.UtilHelper.FILE_DATABASE;
 import static com.blacksun.quicknote.utils.UtilHelper.FOLDER_NAME;
 import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_DB;
 import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_FOLDER;
@@ -214,6 +213,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         googleEmailText.setText("");
         googleNameText.setText(R.string.app_name);
         googleAvatarImg.setImageDrawable(getResources().getDrawable(R.mipmap.ic_launcher_round));
+        loadedAvatar = null;
     }
 
     @Override
@@ -371,95 +371,109 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //            final String MIME_TYPE = "application/x-sqlite-3";
 //            final String FOLDER_NAME = "files";
 
-
-            syncData();
+//            SyncUpTask syncUpTask = new SyncUpTask(driveServiceHelper, getApplicationContext());
+            syncData(SyncManager.UP_DATA);
         } else if (id == R.id.nav_download) {
+//
 
 
-            //testing: download database into drive.
+
+            //download database into drive.
+            syncData(SyncManager.DOWN_DATA);
+
+            //test delete
+//            try {
+//                if (driveServiceHelper == null) {
+//                    driveServiceHelper = new DriveServiceHelper(googleServiceDrive, this);
+//                }
+//                driveServiceHelper.deleteFile("1ntp32PnEAo7j_U4J8TFDv83TyUXNyZ7k");
+//                driveServiceHelper.deleteFile("1V4o0hgbzVo80Llk7n3qokBuuUjgswKnI");
+//                Log.d(DRIVE_TAG, "deleting test");
+//            } catch (IOException e) {
+//            }
 
 
-            if (googleServiceDrive == null) {
-                Toast.makeText(this, "Please sign in with your Google account!", Toast.LENGTH_SHORT).show();
-            } else {
-
-                if (!GoogleSignIn.hasPermissions(account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE))) {
-                    GoogleSignIn.requestPermissions(this, 10, account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE));
-                }
-
-                if (driveServiceHelper == null) {
-                    driveServiceHelper = new DriveServiceHelper(googleServiceDrive, this);
-                }
-
-                Thread testThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-
-
-                            //database
-                            ArrayList<DriveFileHolder> database = driveServiceHelper.search(MIME_TYPE_DB, DATABASE_NAME, null);
-                            if (database.size() >= 1) {
-                                String databaseId = database.get(0).getId();
-
-                                driveServiceHelper.download(DATABASE_PATH, databaseId);
-                                Log.d(DRIVE_TAG, "Database downloaded " + databaseId);
-                            } else {
-                                Log.e(DRIVE_TAG, "Cannot download database");
-                            }
-
-
-                            //folder files
-                            ArrayList<DriveFileHolder> filesFolder = driveServiceHelper.search(MIME_TYPE_FOLDER, FOLDER_NAME, null);
-                            String folderId = null;
-                            if (filesFolder.size() >= 1) {
-                                folderId = filesFolder.get(0).getId();
-                            } else {
-                                Log.e(DRIVE_TAG, "Cannot get \"files\" folder");
-                            }
-
-                            //attachments
-                            if (folderId != null) {
-                                ArrayList<DriveFileHolder> attachments = driveServiceHelper.search(null, null, folderId);
-                                String filesDir = DIRECTORY.getAbsolutePath();
-                                for (DriveFileHolder attach : attachments) {
-                                    String attachId = attach.getId();
-
-                                    driveServiceHelper.download(filesDir + "/" + attach.getName(), attachId);
-
-                                }
-                            } else {
-                                Log.e(DRIVE_TAG, "No attachment");
-                            }
-
-                        } catch (UserRecoverableAuthIOException e) {
-                            Log.e(DRIVE_TAG, "Error " + e.getMessage());
-                            e.printStackTrace();
-                            startActivityForResult(e.getIntent(), 6);
-
-                        } catch (IOException e) {
-                            Log.e(DRIVE_TAG, "Error " + e.getMessage());
-                            e.printStackTrace();
-                        }
-
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                //update after create new note or delete
-                                getInfo();
-                                noteRecyclerAdapter.notifyDataSetChanged();
-                                Toast.makeText(getBaseContext(), "Finished synchronizing data into Drive", Toast.LENGTH_LONG).show();
-                            }
-                        });
-
-                    }
-                });
-                testThread.start();
-
-
-//                    System.out.println("File ID: " + file.getId());
-
-            }
+//            if (googleServiceDrive == null) {
+//                Toast.makeText(this, "Please sign in with your Google account!", Toast.LENGTH_SHORT).show();
+//            } else {
+//
+//                if (!GoogleSignIn.hasPermissions(account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE))) {
+//                    GoogleSignIn.requestPermissions(this, 10, account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE));
+//                }
+//
+//                if (driveServiceHelper == null) {
+//                    driveServiceHelper = new DriveServiceHelper(googleServiceDrive, this);
+//                }
+//
+//                Thread testThread = new Thread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        try {
+//
+//
+//                            //database
+//                            ArrayList<DriveFileHolder> database = driveServiceHelper.search(MIME_TYPE_DB, DATABASE_NAME, null);
+//                            if (database.size() >= 1) {
+//                                String databaseId = database.get(0).getId();
+//
+//                                driveServiceHelper.download(DATABASE_PATH, databaseId);
+//                                Log.d(DRIVE_TAG, "Database downloaded " + databaseId);
+//                            } else {
+//                                Log.e(DRIVE_TAG, "Cannot download database");
+//                            }
+//
+//
+//                            //folder files
+//                            ArrayList<DriveFileHolder> filesFolder = driveServiceHelper.search(MIME_TYPE_FOLDER, FOLDER_NAME, null);
+//                            String folderId = null;
+//                            if (filesFolder.size() >= 1) {
+//                                folderId = filesFolder.get(0).getId();
+//                            } else {
+//                                Log.e(DRIVE_TAG, "Cannot get \"files\" folder");
+//                            }
+//
+//                            //attachments
+//                            if (folderId != null) {
+//                                ArrayList<DriveFileHolder> attachments = driveServiceHelper.search(null, null, folderId);
+//                                String filesDir = DIRECTORY.getAbsolutePath();
+//                                for (DriveFileHolder attach : attachments) {
+//                                    String attachId = attach.getId();
+//
+//                                    driveServiceHelper.download(filesDir + "/" + attach.getName(), attachId);
+//
+//                                }
+//                            } else {
+//                                Log.e(DRIVE_TAG, "No attachment");
+//                            }
+//
+//                        } catch (UserRecoverableAuthIOException e) {
+//                            Log.e(DRIVE_TAG, "Error " + e.getMessage());
+//                            e.printStackTrace();
+//                            startActivityForResult(e.getIntent(), 6);
+//
+//                        } catch (IOException e) {
+//                            Log.e(DRIVE_TAG, "Error " + e.getMessage());
+//                            e.printStackTrace();
+//                        }
+//
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                //update after create new note or delete
+//                                getInfo();
+//                                noteRecyclerAdapter.notifyDataSetChanged();
+//                                Toast.makeText(getBaseContext(), "Finished synchronizing data into Drive", Toast.LENGTH_LONG).show();
+//                            }
+//                        });
+//
+//                    }
+//                });
+//                testThread.start();
+//
+//
+////                    System.out.println("File ID: " + file.getId());
+//
+//            }
 
         }
 
@@ -468,7 +482,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    private void syncData() {
+    private void syncData(String type) {
         if (googleServiceDrive == null) {
             Toast.makeText(this, "Please sign in with your Google account!", Toast.LENGTH_SHORT).show();
         } else {
@@ -483,10 +497,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 driveServiceHelper = new DriveServiceHelper(googleServiceDrive, this);
             }
 
+            Runnable syncTask = null;
+            if (type.equals(SyncManager.DOWN_DATA)) {
+                syncTask = new SyncDownTask(driveServiceHelper, getApplicationContext());
+            } else if (type.equals(SyncManager.UP_DATA)) {
+                syncTask = new SyncUpTask(driveServiceHelper, getApplicationContext());
+            }
 
-//
-                SyncUpTask syncUpTask = new SyncUpTask(driveServiceHelper, getApplicationContext());
-                SyncManager.getSyncManager().runSync(syncUpTask);
+            SyncManager.getSyncManager().runSync(syncTask);
 
 //            //new implementation body
 //            UploadTask uploadDb = new UploadTask(driveServiceHelper, FILE_DATABASE, MIME_TYPE_DB, null);

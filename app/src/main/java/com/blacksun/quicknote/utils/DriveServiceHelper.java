@@ -148,6 +148,9 @@ public class DriveServiceHelper {
         return newFilesFolder.getId();
     }
 
+    public void deleteFile(String fileId) throws  IOException {
+        googleServiceDrive.files().delete(fileId).execute();
+    }
 
 //    //needed for Drive upload
 //    public String getMIMEType(java.io.File child) {

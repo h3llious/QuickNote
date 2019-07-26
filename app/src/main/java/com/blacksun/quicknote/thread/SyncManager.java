@@ -28,6 +28,9 @@ public class SyncManager {
         handler = new MainThreadExecutor();
     }
 
+    public static final String DOWN_DATA = "down";
+    public static final String UP_DATA = "up";
+
     private SyncManager(){
         syncWorkQueue = new LinkedBlockingQueue<Runnable>();
 
