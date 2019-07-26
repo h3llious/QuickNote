@@ -11,9 +11,10 @@ public class Note {
     private long id;
     private long dateCreated;
     private long dateModified;
+    private int sync;
     private String imagePath;
 
-//    public Note(String title, String content, long id, long dateCreated, long dateModified, String imagePath) {
+    //    public Note(String title, String content, long id, long dateCreated, long dateModified, String imagePath) {
     public Note(String title, String content, long id, long dateCreated, long dateModified) {
         this.title = title;
         this.content = content;
@@ -31,8 +32,15 @@ public class Note {
 //        this.imagePath = imagePath;
 //    }
 
-    public Note(){
+    public Note() {
+    }
 
+    public int getSync() {
+        return sync;
+    }
+
+    public void setSync(int sync) {
+        this.sync = sync;
     }
 
     public String getTitle() {
@@ -75,13 +83,14 @@ public class Note {
         this.dateModified = dateModified;
     }
 
-    public static Note getNoteFromCursor(Cursor cursor){
+    public static Note getNoteFromCursor(Cursor cursor) {
         Note note = new Note();
         note.setId(cursor.getLong(cursor.getColumnIndex(NoteContract.NoteEntry.ID)));
         note.setTitle(cursor.getString(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_TITLE)));
         note.setContent(cursor.getString(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_CONTENT)));
         note.setDateCreated(cursor.getLong(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME)));
         note.setDateModified(cursor.getLong(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME)));
+        note.setSync(cursor.getInt(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_SYNC)));
 
 //        if (!TextUtils.isEmpty(cursor.getString(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_IMG))))
 //            note.setImagePath(cursor.getString(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_IMG)));

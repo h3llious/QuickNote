@@ -35,6 +35,7 @@ public class NoteManager {
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_CONTENT, note.getContent());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, System.currentTimeMillis());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME, System.currentTimeMillis());
+        values.put(NoteContract.NoteEntry.COLUMN_NOTE_SYNC, NoteContract.NoteEntry.NOT_SYNCED);
 
         //test new img path
 //        if (!TextUtils.isEmpty(note.getImagePath()))

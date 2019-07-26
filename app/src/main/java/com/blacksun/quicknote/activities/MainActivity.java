@@ -12,9 +12,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,6 +34,7 @@ import com.blacksun.quicknote.adapters.NoteRecyclerAdapter;
 import com.blacksun.quicknote.data.NoteManager;
 import com.blacksun.quicknote.models.DriveFileHolder;
 import com.blacksun.quicknote.models.Note;
+import com.blacksun.quicknote.services.SyncService;
 import com.blacksun.quicknote.thread.SyncDownTask;
 import com.blacksun.quicknote.thread.SyncManager;
 import com.blacksun.quicknote.thread.SyncUpTask;
@@ -88,9 +91,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private static final String SIGN_IN_TAG = "SignIn";
 
-//    //TODO clean up
-//    private static final String DRIVE_TAG = "GDrive";
-
     TextView googleEmailText, googleNameText;
     ImageView googleAvatarImg;
 
@@ -105,6 +105,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public static String PACKAGE_NAME;
     public static File DIRECTORY;
+
+    ProgressBar progressBar;
+    View dimView;
 
 
     @Override
@@ -204,6 +207,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         googleAvatarImg = navigationView.getHeaderView(0).findViewById(R.id.google_avatar);
         googleEmailText = navigationView.getHeaderView(0).findViewById(R.id.google_email);
         googleNameText = navigationView.getHeaderView(0).findViewById(R.id.google_username);
+
+        progressBar = findViewById(R.id.progress_icon);
+        dimView = findViewById(R.id.dim);
     }
 
     private void onSignOut() {
@@ -360,6 +366,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         } else if (id == R.id.nav_tools) {
 
+
         } else if (id == R.id.nav_upload) {
 
             //testing: upload database into drive.
@@ -372,14 +379,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //            final String FOLDER_NAME = "files";
 
 //            SyncUpTask syncUpTask = new SyncUpTask(driveServiceHelper, getApplicationContext());
+            loadingIndicator();
+
             syncData(SyncManager.UP_DATA);
         } else if (id == R.id.nav_download) {
-//
 
+            loadingIndicator();
 
 
             //download database into drive.
             syncData(SyncManager.DOWN_DATA);
+
 
             //test delete
 //            try {
@@ -480,6 +490,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void loadingIndicator() {
+        progressBar.setVisibility(View.VISIBLE);
+        dimView.setVisibility(View.VISIBLE);
+
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
     }
 
     private void syncData(String type) {

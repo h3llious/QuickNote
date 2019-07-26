@@ -10,6 +10,7 @@ import com.blacksun.quicknote.models.DriveFileHolder;
 import com.blacksun.quicknote.utils.DriveServiceHelper;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
@@ -35,6 +36,20 @@ public class SyncDownTask implements Runnable {
     @Override
     public void run() {
         try {
+            //delete old local files
+            File[] files = DIRECTORY.listFiles();
+            Log.d("Files", "Size: " + files.length);
+            for (File child : files) {
+                String name = child.getName();
+                Log.d("Files",  " Deleting FileName:" + child.getName());
+                if (!name.equals("instant-run")) {
+//                                    allFilesPath.add(name);
+                    child.delete();
+                }
+
+            }
+
+
 
             //database
             SearchTask searchDbTask = new SearchTask(driveServiceHelper, MIME_TYPE_DB, DATABASE_NAME, null);
@@ -104,7 +119,7 @@ public class SyncDownTask implements Runnable {
             SyncManager.getSyncManager().getMainThreadExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(context, "Finished downloading data into Drive", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "Finished downloading data from Drive", Toast.LENGTH_LONG).show();
 
                     Intent startActivity = new Intent();
                     startActivity.setClass(context, MainActivity.class);

@@ -8,6 +8,7 @@ import android.util.Log;
 import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
+import com.blacksun.quicknote.activities.MainActivity;
 import com.blacksun.quicknote.models.DriveFileHolder;
 import com.blacksun.quicknote.utils.DriveServiceHelper;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
@@ -118,6 +119,14 @@ public class SyncUpTask implements Runnable {
                 @Override
                 public void run() {
                     Toast.makeText(context, "Finished uploading data into Drive", Toast.LENGTH_LONG).show();
+                    //just reload the screen
+                    Intent startActivity = new Intent();
+                    startActivity.setClass(context, MainActivity.class);
+                    startActivity.setAction(MainActivity.class.getName());
+                    startActivity.setFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK
+                                    | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+                    context.startActivity(startActivity);
                 }
             });
 
@@ -134,6 +143,7 @@ public class SyncUpTask implements Runnable {
                     @Override
                     public void run() {
                         Toast.makeText(context, "Please grant permissions and try again", Toast.LENGTH_LONG).show();
+
                     }
                 });
             }
