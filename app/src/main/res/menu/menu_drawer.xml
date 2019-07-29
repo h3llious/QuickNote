@@ -24,6 +24,11 @@
                 android:id="@+id/nav_download"
                 android:icon="@android:drawable/ic_menu_send"
                 android:title="Sync data from Drive" />
+
+            <item
+                android:id="@+id/nav_sync"
+                android:icon="@drawable/ic_baseline_sync_24px"
+                android:title="Sync"/>
         </menu>
     </item>
 

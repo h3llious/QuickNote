@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapter.ViewHolder> {
-    ArrayList<Note> notes;
+    private ArrayList<Note> notes;
 
     public NoteRecyclerAdapter(ArrayList<Note> notes) {
         this.notes = notes;

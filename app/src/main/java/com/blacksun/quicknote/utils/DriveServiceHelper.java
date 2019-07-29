@@ -54,13 +54,74 @@ public class DriveServiceHelper {
     }
 
 
+    public String searchSingle(String mime, String name, String parentId) throws IOException {
+        DriveFileHolder driveFile = new DriveFileHolder();
+
+        String query;
+//        boolean isUnique = false;
+        if (parentId == null) {
+            query = "mimeType='" + mime + "' and name = '" + name + "'";
+
+        } else {
+
+            if (mime != null && name != null)
+                query = "mimeType='" + mime + "' and name = '" + name + "' and '" + parentId + "' in parents";
+            else
+                query = "'" + parentId + "' in parents";
+
+//            if (mime.equals(MIME_TYPE_DB) || mime.equals(MIME_TYPE_FOLDER)) {
+//                isUnique = true;
+//            }
+
+        }
+
+        String pageToken = null;
+        do {
+            FileList result = googleServiceDrive.files().list()
+                    .setQ(query)
+                    .setSpaces("drive")
+                    .setFields("nextPageToken, files(id, name)")
+                    .setPageToken(pageToken)
+                    .execute();
+
+            //if unique file is found, return
+            boolean isFound = false;
+
+            for (com.google.api.services.drive.model.File file : result.getFiles()) {
+//                DriveFileHolder holder = new DriveFileHolder();
+                driveFile.setId(file.getId());
+                driveFile.setName(file.getName());
+//                driveFiles.add(holder);
+
+//                if (isUnique) {
+                isFound = true;
+                break;
+//                }
+            }
+
+            if (isFound) {
+                break;
+            }
+
+            pageToken = result.getNextPageToken();
+            Log.d(DRIVE_TAG, "Searching...");
+        } while (pageToken != null);
+        Log.d(DRIVE_TAG, "Searching completed");
+        String id = null;
+        id = driveFile.getId();
+        return id;
+    }
+
     public ArrayList<DriveFileHolder> search(String mime, String name, String parentId) throws IOException {
         ArrayList<DriveFileHolder> driveFiles = new ArrayList<>();
 
         String query;
         boolean isUnique = false;
         if (parentId != null) {
-            query = "'" + parentId + "' in parents";
+            if (mime == null && name == null)
+                query = "'" + parentId + "' in parents";
+            else
+                query = "mimeType='" + mime + "' and name = '" + name + "' and '" + parentId + "' in parents";
         } else {
             query = "mimeType='" + mime + "' and name = '" + name + "'";
 
@@ -134,7 +195,7 @@ public class DriveServiceHelper {
     public String createFolder(String name, String parentId) throws IOException {
         com.google.api.services.drive.model.File folderMetadata = new com.google.api.services.drive.model.File();
         if (parentId != null)
-            folderMetadata.setParents(Collections.singletonList("appDataFolder"));
+            folderMetadata.setParents(Collections.singletonList(parentId));
         folderMetadata.setMimeType(DriveFolder.MIME_TYPE);
         folderMetadata.setName(name);
 
@@ -148,7 +209,7 @@ public class DriveServiceHelper {
         return newFilesFolder.getId();
     }
 
-    public void deleteFile(String fileId) throws  IOException {
+    public void deleteFile(String fileId) throws IOException {
         googleServiceDrive.files().delete(fileId).execute();
     }
 

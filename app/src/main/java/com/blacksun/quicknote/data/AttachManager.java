@@ -8,6 +8,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.blacksun.quicknote.models.Attachment;
+import com.blacksun.quicknote.models.Note;
 
 import java.util.ArrayList;
 
@@ -78,6 +79,35 @@ public class AttachManager {
 
 
         Cursor cursor = mContext.getContentResolver().query(NoteContract.AttachEntry.CONTENT_URI, null, selection, selectionArgs, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                attaches.add(Attachment.getAttachFromCursor(cursor));
+                cursor.moveToNext();
+            }
+            cursor.close();
+        }
+        return attaches;
+    }
+
+//    public boolean isExist(long attachId) {
+////        ArrayList<Attachment> attaches = new ArrayList<Attachment>();
+//
+//        String selection = NoteContract.AttachEntry.ID + "=?";
+//        String[] selectionArgs = new String[]{
+//                Long.toString(attachId)
+//        };
+//
+//        Cursor cursor = mContext.getContentResolver().query(NoteContract.AttachEntry.CONTENT_URI, null, selection, selectionArgs, null);
+//        if (cursor.getCount() > 0) {
+//            return true;
+//        } else
+//            return false;
+//    }
+
+    public ArrayList<Attachment> getAllAttaches() {
+        ArrayList<Attachment> attaches = new ArrayList<>();
+        Cursor cursor = mContext.getContentResolver().query(NoteContract.AttachEntry.CONTENT_URI, null, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {

@@ -30,6 +30,8 @@ public class SyncManager {
 
     public static final String DOWN_DATA = "down";
     public static final String UP_DATA = "up";
+    public static final String SYNC_DATA = "sync";
+
 
     private SyncManager(){
         syncWorkQueue = new LinkedBlockingQueue<Runnable>();

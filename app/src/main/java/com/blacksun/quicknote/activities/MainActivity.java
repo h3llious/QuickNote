@@ -37,6 +37,7 @@ import com.blacksun.quicknote.models.Note;
 import com.blacksun.quicknote.services.SyncService;
 import com.blacksun.quicknote.thread.SyncDownTask;
 import com.blacksun.quicknote.thread.SyncManager;
+import com.blacksun.quicknote.thread.SyncTask;
 import com.blacksun.quicknote.thread.SyncUpTask;
 import com.blacksun.quicknote.utils.DriveServiceHelper;
 import com.blacksun.quicknote.utils.UtilHelper;
@@ -485,6 +486,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //
 //            }
 
+        } else if (id == R.id.nav_sync) {
+            syncData(SyncManager.SYNC_DATA);
+            Toast.makeText(this, "Start syncing", Toast.LENGTH_LONG).show();
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -520,6 +524,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 syncTask = new SyncDownTask(driveServiceHelper, getApplicationContext());
             } else if (type.equals(SyncManager.UP_DATA)) {
                 syncTask = new SyncUpTask(driveServiceHelper, getApplicationContext());
+            } else if (type.equals(SyncManager.SYNC_DATA)) {
+                syncTask = new SyncTask(driveServiceHelper, getApplicationContext());
             }
 
             SyncManager.getSyncManager().runSync(syncTask);

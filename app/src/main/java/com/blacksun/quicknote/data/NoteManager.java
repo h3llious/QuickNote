@@ -1,5 +1,6 @@
 package com.blacksun.quicknote.data;
 
+import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.models.Note;
 
 import android.content.ContentValues;
@@ -64,6 +65,24 @@ public class NoteManager {
             cursor.close();
         }
         return notes;
+    }
+
+    public Note getNote(long noteId) {
+        Note note = null;
+
+        String selection = NoteContract.NoteEntry._ID + "=?";
+        String[] selectionArgs = new String[]{
+                Long.toString(noteId)
+        };
+
+
+        Cursor cursor = mContext.getContentResolver().query(NoteContract.NoteEntry.CONTENT_URI, null, selection, selectionArgs, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            note = Note.getNoteFromCursor(cursor);
+            cursor.close();
+        }
+        return note;
     }
 
     //CR(U)D
