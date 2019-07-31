@@ -123,6 +123,47 @@ public class SyncTask implements Runnable {
                         Note local = localNotes.get(i);
                         long noteLocalId = local.getId();
 
+
+
+
+                        //add to fix overwriting new note
+                        if (local.getSync() == 0) { //new note
+                            //upload new attaches into Cloud
+                            ArrayList<Future<Boolean>> results = new ArrayList<>();
+                            for (int iAttach = localAttaches.size() - 1; iAttach >= 0; iAttach--) {
+
+                                Attachment attach = localAttaches.get(iAttach);
+                                if (attach.getNote_id() == noteLocalId) {
+                                    File newFile = new File(attach.getPath());
+                                    UploadTask uploadAttaches = new UploadTask(driveServiceHelper, newFile, getMIMEType(newFile), filesFolderId);
+                                    Future<Boolean> res = SyncManager.getSyncManager().callSyncBool(uploadAttaches);
+                                    results.add(res);
+                                }
+                            }
+                            for (Future<Boolean> res : results) {
+                                res.get();
+                            }
+
+                            //add new note into db
+                            long newNoteId = noteManager.create(local);
+                            Log.d(DRIVE_TAG, "new note from local created with id "+newNoteId);
+                            localNotes.remove(i);
+
+                            //...along with its attaches
+                            for (int iNew = localAttaches.size() - 1; iNew >= 0; iNew--) {
+                                Attachment newAttach = localAttaches.get(iNew);
+                                if (noteLocalId == newAttach.getNote_id()) {
+                                    newAttach.setNote_id(newNoteId);
+                                    attachManager.create(newAttach);
+                                    localAttaches.remove(iNew);
+                                }
+                            }
+                            continue;
+                        }
+
+
+
+
                         Note cloudNote = noteManager.getNote(noteLocalId);
 
 
@@ -157,39 +198,42 @@ public class SyncTask implements Runnable {
                                         localAttaches.remove(iAttach);
                                     }
                                 }
-                            } else if (synced == 0) { //new note
-
-                                //upload new attaches into Cloud
-                                ArrayList<Future<Boolean>> results = new ArrayList<>();
-                                for (int iAttach = localAttaches.size() - 1; iAttach >= 0; iAttach--) {
-
-                                    Attachment attach = localAttaches.get(iAttach);
-                                    if (attach.getNote_id() == noteLocalId) {
-                                        File newFile = new File(attach.getPath());
-                                        UploadTask uploadAttaches = new UploadTask(driveServiceHelper, newFile, getMIMEType(newFile), filesFolderId);
-                                        Future<Boolean> res = SyncManager.getSyncManager().callSyncBool(uploadAttaches);
-                                        results.add(res);
-                                    }
-                                }
-                                for (Future<Boolean> res : results) {
-                                    res.get();
-                                }
-
-                                //add new note into db
-                                long newNoteId = noteManager.create(local);
-                                localNotes.remove(i);
-
-                                //...along with its attaches
-                                for (int iNew = localAttaches.size() - 1; iNew >= 0; iNew--) {
-                                    Attachment newAttach = localAttaches.get(iNew);
-                                    if (noteLocalId == newAttach.getNote_id()) {
-                                        newAttach.setNote_id(newNoteId);
-                                        attachManager.create(newAttach);
-                                        localAttaches.remove(iNew);
-                                    }
-                                }
-
                             }
+
+//                            else if (synced == 0) { //new note
+//
+//                                //upload new attaches into Cloud
+//                                ArrayList<Future<Boolean>> results = new ArrayList<>();
+//                                for (int iAttach = localAttaches.size() - 1; iAttach >= 0; iAttach--) {
+//
+//                                    Attachment attach = localAttaches.get(iAttach);
+//                                    if (attach.getNote_id() == noteLocalId) {
+//                                        File newFile = new File(attach.getPath());
+//                                        UploadTask uploadAttaches = new UploadTask(driveServiceHelper, newFile, getMIMEType(newFile), filesFolderId);
+//                                        Future<Boolean> res = SyncManager.getSyncManager().callSyncBool(uploadAttaches);
+//                                        results.add(res);
+//                                    }
+//                                }
+//                                for (Future<Boolean> res : results) {
+//                                    res.get();
+//                                }
+//
+//                                //add new note into db
+//                                long newNoteId = noteManager.create(local);
+//                                Log.d(DRIVE_TAG, "(obsolete)new note from local created with id "+newNoteId);
+//                                localNotes.remove(i);
+//
+//                                //...along with its attaches
+//                                for (int iNew = localAttaches.size() - 1; iNew >= 0; iNew--) {
+//                                    Attachment newAttach = localAttaches.get(iNew);
+//                                    if (noteLocalId == newAttach.getNote_id()) {
+//                                        newAttach.setNote_id(newNoteId);
+//                                        attachManager.create(newAttach);
+//                                        localAttaches.remove(iNew);
+//                                    }
+//                                }
+//
+//                            }
                         }
 
                     }
