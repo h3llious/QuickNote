@@ -8,7 +8,7 @@ import com.blacksun.quicknote.data.NoteContract;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "quick_note.db";
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
 
 
     public DatabaseHelper(Context context) {
@@ -37,7 +37,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + NoteContract.NoteEntry.COLUMN_NOTE_CONTENT + " text, "
             + NoteContract.NoteEntry.COLUMN_NOTE_MODTIME + " integer NOT NULL, "
             + NoteContract.NoteEntry.COLUMN_NOTE_CRETIME + " integer NOT NULL, "
-            + NoteContract.NoteEntry.COLUMN_NOTE_SYNC + " integer NOT NULL"
+            + NoteContract.NoteEntry.COLUMN_NOTE_SYNC + " integer NOT NULL, "
+            + NoteContract.NoteEntry.COLUMN_NOTE_DELETED + " integer NOT NULL"
 //            +","+ NoteContract.NoteEntry.COLUMN_NOTE_IMG + " text" + ")";
             + ")";
     private static final String CREATE_TABLE_ATTACHMENT = "CREATE TABLE "

@@ -37,6 +37,7 @@ public class NoteManager {
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, System.currentTimeMillis());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME, System.currentTimeMillis());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_SYNC, NoteContract.NoteEntry.NOT_SYNCED);
+        values.put(NoteContract.NoteEntry.COLUMN_NOTE_DELETED, NoteContract.NoteEntry.NOT_DELETED);
 
         //test new img path
 //        if (!TextUtils.isEmpty(note.getImagePath()))
@@ -60,6 +61,7 @@ public class NoteManager {
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, note.getDateCreated());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME, note.getDateModified());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_SYNC, NoteContract.NoteEntry.SYNCED);
+        values.put(NoteContract.NoteEntry.COLUMN_NOTE_DELETED, note.getDeleted());
         values.put(NoteContract.NoteEntry.ID, note.getId());
         Uri result = mContext.getContentResolver().insert(NoteContract.NoteEntry.CONTENT_URI, values);
         if (result != null) {
@@ -125,6 +127,20 @@ public class NoteManager {
 //        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CONTENT, note.getContent());
 //        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, note.getDateCreated());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_SYNC, NoteContract.NoteEntry.SYNCED);
+//        if (!TextUtils.isEmpty(note.getImagePath()))
+//            values.put(NoteContract.NoteEntry.COLUMN_NOTE_IMG, note.getImagePath());
+
+        mContext.getApplicationContext().getContentResolver().update(NoteContract.NoteEntry.CONTENT_URI,
+                values, NoteContract.NoteEntry.ID + "=" + note.getId(), null);
+
+    }
+
+    public void disable(Note note) {
+        ContentValues values = new ContentValues();
+        values.put(NoteContract.NoteEntry.COLUMN_NOTE_TITLE, "(DELETED)" + note.getTitle());
+//        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CONTENT, note.getContent());
+//        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, note.getDateCreated());
+        values.put(NoteContract.NoteEntry.COLUMN_NOTE_DELETED, NoteContract.NoteEntry.DELETED);
 //        if (!TextUtils.isEmpty(note.getImagePath()))
 //            values.put(NoteContract.NoteEntry.COLUMN_NOTE_IMG, note.getImagePath());
 

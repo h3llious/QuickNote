@@ -599,8 +599,9 @@ public class DetailActivity extends AppCompatActivity {
                 AttachManager.newInstance(this).delete(curAttach);
             }
 
-
-            NoteManager.newInstance(this).delete(currentNote);
+            //keeping for deleting later in Drive
+            //NoteManager.newInstance(this).delete(currentNote);
+            NoteManager.newInstance(this).disable(currentNote);
         }
         return true;
 

@@ -43,6 +43,11 @@ public class NoteContract {
         public final static int NOT_SYNCED = 0;
         public final static int SYNCED = 1;
 
+        //new column to track deleted notes
+        public final static String COLUMN_NOTE_DELETED = "deleted";
+        public final static int NOT_DELETED = 0;
+        public final static int DELETED = 1;
+
 
         //public final static String COLUMN_NOTE_IMG = "image_path";
 
@@ -71,4 +76,6 @@ public class NoteContract {
         public final static String IMAGE_TYPE = "image";
         public final static String ANY_TYPE = "any";
     }
+
+
 }

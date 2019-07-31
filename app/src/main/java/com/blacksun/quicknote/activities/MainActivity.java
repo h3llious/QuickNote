@@ -31,6 +31,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.adapters.NoteRecyclerAdapter;
+import com.blacksun.quicknote.data.NoteContract;
 import com.blacksun.quicknote.data.NoteManager;
 import com.blacksun.quicknote.models.DriveFileHolder;
 import com.blacksun.quicknote.models.Note;
@@ -269,7 +270,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void getInfo() {
         ArrayList<Note> newNotes = NoteManager.newInstance(this).getAllNotes();
         notes.clear();
-        notes.addAll(newNotes);
+
+        for (Note note: newNotes) {
+            if (note.getDeleted() == NoteContract.NoteEntry.NOT_DELETED){
+                notes.add(note);
+            }
+        }
+
+        //notes.addAll(newNotes);
+
+
+
+
         emptyView.setVisibility(View.GONE);
         if (notes.size() == 0) {
             emptyView.setVisibility(View.VISIBLE);

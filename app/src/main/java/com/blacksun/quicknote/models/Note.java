@@ -12,7 +12,7 @@ public class Note {
     private long dateCreated;
     private long dateModified;
     private int sync;
-    private String imagePath;
+    private int deleted;
 
     //    public Note(String title, String content, long id, long dateCreated, long dateModified, String imagePath) {
     public Note(String title, String content, long id, long dateCreated, long dateModified) {
@@ -33,6 +33,14 @@ public class Note {
 //    }
 
     public Note() {
+    }
+
+    public int getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(int deleted) {
+        this.deleted = deleted;
     }
 
     public int getSync() {
@@ -91,7 +99,7 @@ public class Note {
         note.setDateCreated(cursor.getLong(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME)));
         note.setDateModified(cursor.getLong(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME)));
         note.setSync(cursor.getInt(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_SYNC)));
-
+        note.setDeleted(cursor.getInt(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_DELETED)));
 //        if (!TextUtils.isEmpty(cursor.getString(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_IMG))))
 //            note.setImagePath(cursor.getString(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_IMG)));
 //        else
