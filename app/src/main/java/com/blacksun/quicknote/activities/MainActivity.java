@@ -380,12 +380,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //            final String FOLDER_NAME = "files";
 
 //            SyncUpTask syncUpTask = new SyncUpTask(driveServiceHelper, getApplicationContext());
-            loadingIndicator();
+//            loadingIndicator();
 
             syncData(SyncManager.UP_DATA);
         } else if (id == R.id.nav_download) {
 
-            loadingIndicator();
+//            loadingIndicator();
 
 
             //download database into drive.
@@ -487,6 +487,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //            }
 
         } else if (id == R.id.nav_sync) {
+//            loadingIndicator();
+
             syncData(SyncManager.SYNC_DATA);
             Toast.makeText(this, "Start syncing", Toast.LENGTH_LONG).show();
         }
@@ -518,6 +520,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (driveServiceHelper == null) {
                 driveServiceHelper = new DriveServiceHelper(googleServiceDrive, this);
             }
+
+            loadingIndicator();
 
             Runnable syncTask = null;
             if (type.equals(SyncManager.DOWN_DATA)) {

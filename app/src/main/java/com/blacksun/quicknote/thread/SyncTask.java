@@ -9,6 +9,7 @@ import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
 import com.blacksun.quicknote.R;
+import com.blacksun.quicknote.activities.MainActivity;
 import com.blacksun.quicknote.data.AttachManager;
 import com.blacksun.quicknote.data.NoteContract;
 import com.blacksun.quicknote.data.NoteManager;
@@ -28,6 +29,7 @@ import static com.blacksun.quicknote.activities.MainActivity.DIRECTORY;
 import static com.blacksun.quicknote.utils.DatabaseHelper.DATABASE_NAME;
 import static com.blacksun.quicknote.utils.DriveServiceHelper.DRIVE_TAG;
 import static com.blacksun.quicknote.utils.UtilHelper.DATABASE_PATH;
+import static com.blacksun.quicknote.utils.UtilHelper.FILE_DATABASE;
 import static com.blacksun.quicknote.utils.UtilHelper.FOLDER_NAME;
 import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_DB;
 import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_FOLDER;
@@ -52,57 +54,83 @@ public class SyncTask implements Runnable {
             boolean isCreatedAppFolder;
 
             if (appFolderId == null) {
-                CreateFolderTask createAppFolder = new CreateFolderTask(driveServiceHelper, context.getString(R.string.app_name));
+                //create new app folder in Drive
+                CreateFolderTask createAppFolder = new CreateFolderTask(driveServiceHelper, context.getString(R.string.app_name), null);
                 Future<String> resFolderId = SyncManager.getSyncManager().callSyncString(createAppFolder);
                 appFolderId = resFolderId.get();
+                Log.d(DRIVE_TAG, "Created new database");
                 isCreatedAppFolder = false;
             } else {
                 isCreatedAppFolder = true;
+                Log.d(DRIVE_TAG, "Database already exist");
             }
 
+            boolean isCreatedFilesFolder = true;
+
+            //search 'files' folder
             SearchSingleTask searchFilesFolderTask = new SearchSingleTask(driveServiceHelper, MIME_TYPE_FOLDER, FOLDER_NAME, appFolderId);
             Future<String> resFilesFolderId = SyncManager.getSyncManager().callSyncString(searchFilesFolderTask);
             String filesFolderId = resFilesFolderId.get();
 
             if (filesFolderId == null) {
-                CreateFolderTask createFilesFolder = new CreateFolderTask(driveServiceHelper, FOLDER_NAME);
+                //create new 'files' folder if not exist
+                isCreatedFilesFolder = false;
+                CreateFolderTask createFilesFolder = new CreateFolderTask(driveServiceHelper, FOLDER_NAME, appFolderId);
                 Future<String> resFolderId = SyncManager.getSyncManager().callSyncString(createFilesFolder);
                 filesFolderId = resFolderId.get();
+                Log.d(DRIVE_TAG, "Created new 'files' folder");
             }
+
+
+            //for deleting later
+            String dbId = null;
 
             if (isCreatedAppFolder) {
                 //search db
                 //database
                 SearchSingleTask searchDbTask = new SearchSingleTask(driveServiceHelper, MIME_TYPE_DB, DATABASE_NAME, appFolderId);
                 Future<String> resDbId = SyncManager.getSyncManager().callSyncString(searchDbTask);
-                String dbId = resDbId.get();
+                dbId = resDbId.get();
 
 
                 Future<Boolean> resDb;
                 //download db for further usage
                 if (dbId != null) {
                     //get all notes before overwriting existing db
-                    ArrayList<Note> localNotes = NoteManager.newInstance(context).getAllNotes();
-                    Log.d(DRIVE_TAG, "size test: " + localNotes.size());
+                    final NoteManager noteManager = NoteManager.newInstance(context);
+                    ArrayList<Note> localNotes = noteManager.getAllNotes();
+                    Log.d(DRIVE_TAG, "Old database found! Size notes: " + localNotes.size());
 
                     //get all attaches
-                    ArrayList<Attachment> localAttaches = AttachManager.newInstance(context).getAllAttaches();
+                    final AttachManager attachManager = AttachManager.newInstance(context);
+                    ArrayList<Attachment> localAttaches = attachManager.getAllAttaches();
                     Log.d(DRIVE_TAG, "size attaches test: " + localAttaches.size());
+
+                    //backup local db
+
 
                     //cloud db
                     DownloadTask downloadDbTask = new DownloadTask(driveServiceHelper, DATABASE_PATH, dbId);
                     resDb = SyncManager.getSyncManager().callSyncBool(downloadDbTask);
                     resDb.get();
 
+
+                    //check if there are some attachments missing
+                    boolean isMissing = false;
+
                     //for each id in local db
-                    for (int i = 0; i < localNotes.size(); i++) {
+                    for (int i = localNotes.size() - 1; i >= 0; i--) {
                         Note local = localNotes.get(i);
                         long noteLocalId = local.getId();
 
-                        Note cloudNote = NoteManager.newInstance(context).getNote(noteLocalId);
+                        Note cloudNote = noteManager.getNote(noteLocalId);
+
 
 
                         if (cloudNote != null) { //exist note satisfied conditions
+
+                            ArrayList<Attachment> cloudAttachesOfANote = attachManager.getAttach(cloudNote.getId(), NoteContract.AttachEntry.ANY_TYPE);
+
                             long localModTime = local.getDateModified();
                             long cloudModTime = cloudNote.getDateModified();
 
@@ -112,29 +140,172 @@ public class SyncTask implements Runnable {
                                 updateLocal(local, cloudNote, localAttaches, filesFolderId);
                             }
 
-                            NoteManager.newInstance(context).delete(cloudNote); //reduce size of cloud db until only new notes left
+                            noteManager.delete(cloudNote); //reduce size of cloud db until only new notes left
+                            for (Attachment attach : cloudAttachesOfANote){
+                                attachManager.delete(attach);
+                            }
                         } else { //check sync
                             int synced = local.getSync();
 
                             if (synced == 1) { //note deleted on cloud
                                 //delete note in localNotes
+                                localNotes.remove(i);
 
                                 //delete attaches in localAttaches
+                                for (int iAttach = localAttaches.size() - 1; iAttach >= 0; iAttach--) {
+                                    if (localAttaches.get(iAttach).getNote_id() == noteLocalId) {
+                                        localAttaches.remove(iAttach);
+                                    }
+                                }
                             } else if (synced == 0) { //new note
+
                                 //upload new attaches into Cloud
+                                ArrayList<Future<Boolean>> results = new ArrayList<>();
+                                for (int iAttach = localAttaches.size() - 1; iAttach >= 0; iAttach--) {
+
+                                    Attachment attach = localAttaches.get(iAttach);
+                                    if (attach.getNote_id() == noteLocalId) {
+                                        File newFile = new File(attach.getPath());
+                                        UploadTask uploadAttaches = new UploadTask(driveServiceHelper, newFile, getMIMEType(newFile), filesFolderId);
+                                        Future<Boolean> res = SyncManager.getSyncManager().callSyncBool(uploadAttaches);
+                                        results.add(res);
+                                    }
+                                }
+                                for (Future<Boolean> res : results) {
+                                    res.get();
+                                }
+
+                                //add new note into db
+                                long newNoteId = noteManager.create(local);
+                                localNotes.remove(i);
+
+                                //...along with its attaches
+                                for (int iNew = localAttaches.size() - 1; iNew >= 0; iNew--) {
+                                    Attachment newAttach = localAttaches.get(iNew);
+                                    if (noteLocalId == newAttach.getNote_id()) {
+                                        newAttach.setNote_id(newNoteId);
+                                        attachManager.create(newAttach);
+                                        localAttaches.remove(iNew);
+                                    }
+                                }
 
                             }
                         }
 
                     }
 
-                    //for the rest in cloud...
+                    //for the rest in cloud... TODO may need to check deleted note in local
+                    //notes and attachments are still in db, no need to add again
+                    ArrayList<Attachment> cloudAttaches = attachManager.getAllAttaches(); //download all new attachments
+                    String filesDir = DIRECTORY.getAbsolutePath();
 
+                    ArrayList<Future<Boolean>> addResults = new ArrayList<>();
+
+                    for (Attachment attach : cloudAttaches) {
+
+                        File addedFile = new File(attach.getPath());
+                        String fileName = addedFile.getName();
+
+                        SearchSingleTask searchFileTask = new SearchSingleTask(driveServiceHelper, getMIMEType(addedFile), fileName, filesFolderId);
+                        Future<String> resFileId = SyncManager.getSyncManager().callSyncString(searchFileTask);
+                        String fileId = resFileId.get();
+
+                        if (fileId != null) {
+                            DownloadTask downloadAttachTask = new DownloadTask(driveServiceHelper, filesDir + "/" + fileName, fileId);
+                            Future<Boolean> resAttach = SyncManager.getSyncManager().callSyncBool(downloadAttachTask);
+                            addResults.add(resAttach);
+                            Log.d(DRIVE_TAG, "new file downloaded to local: " + fileName);
+                        } else {
+                            isMissing = true;
+                        }
+
+
+                    }
+
+                    for (Future<Boolean> res : addResults) {
+                        res.get();
+                    }
+
+                    //change notes into synced
+                    ArrayList<Note> newCloudNotes = noteManager.getAllNotes();
+                    for (Note note : newCloudNotes) {
+                        note.setSync(NoteContract.NoteEntry.SYNCED);
+                        noteManager.sync(note);
+                    }
 
                     //add info into database
+                    for (int iNote = 0; iNote < localNotes.size(); iNote++) {
+                        noteManager.add(localNotes.get(iNote));
+                        Log.d(DRIVE_TAG, "push note " + localNotes.get(iNote).getId());
+                    }
+                    for (int iAttach = 0; iAttach < localAttaches.size(); iAttach++) {
+                        attachManager.add(localAttaches.get(iAttach));
+                        Log.d(DRIVE_TAG, "push attach " + localAttaches.get(iAttach).getNote_id());
+                    }
 
+                    if (isMissing) {
+                        SyncManager.getSyncManager().getMainThreadExecutor().execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "Attachment(s) missing!", Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
                 }
             }
+
+
+            //upload db into Drive
+            UploadTask uploadDb = new UploadTask(driveServiceHelper, FILE_DATABASE, MIME_TYPE_DB, appFolderId);
+            Future<Boolean> resDb = SyncManager.getSyncManager().callSyncBool(uploadDb);
+            resDb.get();
+
+
+            if (dbId != null) {
+                //delete old db
+                DeleteFileTask deleteFileTask = new DeleteFileTask(driveServiceHelper, dbId);
+                SyncManager.getSyncManager().callSyncBool(deleteFileTask); //no waiting
+                Log.d(DRIVE_TAG, "Old database deleted " + dbId);
+            }
+
+            //when first created or folder is missing
+            if (!isCreatedAppFolder || !isCreatedFilesFolder) {
+                File[] files = DIRECTORY.listFiles();
+                Log.d("Files", "Size: " + files.length);
+
+                ArrayList<Future<Boolean>> results = new ArrayList<>();
+
+                for (File child : files) {
+                    String name = child.getName();
+                    if (!name.equals("instant-run")) {
+//                                    allFilesPath.add(name);
+                        UploadTask uploadAttaches = new UploadTask(driveServiceHelper, child, getMIMEType(child), filesFolderId);
+                        Future<Boolean> res = SyncManager.getSyncManager().callSyncBool(uploadAttaches);
+                        results.add(res);
+                    }
+                    Log.d("Files", getMIMEType(child) + " FileName:" + child.getName());
+                }
+
+                for (Future<Boolean> res : results) {
+                    Log.d(DRIVE_TAG, "block thread");
+                    res.get();
+                }
+            }
+
+            SyncManager.getSyncManager().getMainThreadExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context, "Finished syncing data!", Toast.LENGTH_LONG).show();
+                    //just reload the screen
+                    Intent startActivity = new Intent();
+                    startActivity.setClass(context, MainActivity.class);
+                    startActivity.setAction(MainActivity.class.getName());
+                    startActivity.setFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK
+                                    | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+                    context.startActivity(startActivity);
+                }
+            });
 
 
         } catch (InterruptedException e) {
@@ -173,6 +344,7 @@ public class SyncTask implements Runnable {
 
                 boolean isExist = false;
 
+                //check if attachment has already existed in cloud db
                 for (int iCloud = 0; iCloud < cloudAttaches.size(); iCloud++) {
                     Attachment cloudAttach = cloudAttaches.get(iCloud);
                     if (currentAttach.getId() == cloudAttach.getId()) {
@@ -215,10 +387,10 @@ public class SyncTask implements Runnable {
             Future<Boolean> resAttach = SyncManager.getSyncManager().callSyncBool(downloadAttachTask);
             addResults.add(resAttach);
 
-            Log.d(DRIVE_TAG, "new file downloaded to local: "+fileName);
+            Log.d(DRIVE_TAG, "new file updated to local: " + fileName);
         }
 
-        for (Future<Boolean> res: addResults) {
+        for (Future<Boolean> res : addResults) {
             res.get();
         }
 

@@ -41,6 +41,20 @@ public class AttachManager {
         return id;
     }
 
+
+    public long add(Attachment attach) {
+        ContentValues values = new ContentValues();
+        values.put(NoteContract.AttachEntry.COLUMN_ATTACH_NOTE_ID, attach.getNote_id());
+        values.put(NoteContract.AttachEntry.COLUMN_ATTACH_TYPE, attach.getType());
+        values.put(NoteContract.AttachEntry.COLUMN_ATTACH_PATH, attach.getPath());
+        values.put(NoteContract.AttachEntry.ID, attach.getId());
+
+        Uri result = mContext.getContentResolver().insert(NoteContract.AttachEntry.CONTENT_URI, values);
+        long id = Long.parseLong(result.getLastPathSegment());
+        Log.i("Log Cursor", " Add existing attach name  " + id + " ");
+        return id;
+    }
+
     public void update(Attachment attach) {
         ContentValues values = new ContentValues();
         values.put(NoteContract.AttachEntry.COLUMN_ATTACH_NOTE_ID, attach.getNote_id());

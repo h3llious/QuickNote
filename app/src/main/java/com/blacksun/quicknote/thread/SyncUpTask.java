@@ -90,7 +90,7 @@ public class SyncUpTask implements Runnable {
             Future<Boolean> resDb = SyncManager.getSyncManager().callSyncBool(uploadDb);
 
             //maybe no need wrapper for folderID if have another runnable
-            CreateFolderTask createFilesFolder = new CreateFolderTask(driveServiceHelper, FOLDER_NAME);
+            CreateFolderTask createFilesFolder = new CreateFolderTask(driveServiceHelper, FOLDER_NAME, null);
             Future<String> resFolderId = SyncManager.getSyncManager().callSyncString(createFilesFolder);
             String folderId = resFolderId.get();
 

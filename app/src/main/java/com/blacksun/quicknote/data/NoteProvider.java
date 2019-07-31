@@ -42,7 +42,7 @@ public class NoteProvider extends ContentProvider {
         switch (match) {
             case NOTES:
                 cursor = database.query(NoteContract.NoteEntry.TABLE_NAME, projection
-                        , null, null, null, null, sortOrder);
+                        , selection, selectionArgs, null, null, sortOrder);
                 break;
             case NOTE:
                 selection = NoteContract.NoteEntry._ID + "=?";
