@@ -72,6 +72,25 @@ public class NoteManager {
             return -1;
     }
 
+    // add existing note into db with new id
+    public long addWithNewId(Note note) {
+        ContentValues values = new ContentValues();
+        values.put(NoteContract.NoteEntry.COLUMN_NOTE_TITLE, note.getTitle());
+        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CONTENT, note.getContent());
+        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, note.getDateCreated());
+        values.put(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME, note.getDateModified());
+        values.put(NoteContract.NoteEntry.COLUMN_NOTE_SYNC, NoteContract.NoteEntry.SYNCED);
+        values.put(NoteContract.NoteEntry.COLUMN_NOTE_DELETED, note.getDeleted());
+//        values.put(NoteContract.NoteEntry.ID, note.getId());
+        Uri result = mContext.getContentResolver().insert(NoteContract.NoteEntry.CONTENT_URI, values);
+        if (result != null) {
+            long id = Long.parseLong(result.getLastPathSegment());
+            Log.i("Log Cursor", " Add existing note name  " + id + " ");
+            return id;
+        } else
+            return -1;
+    }
+
     //C(R)UD
     public ArrayList<Note> getAllNotes() {
         ArrayList<Note> notes = new ArrayList<>();

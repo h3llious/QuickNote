@@ -175,6 +175,50 @@ public class SyncTask implements Runnable {
                             long noteLocalId = local.getId();
 
 
+                            Note cloudNote = noteManager.getNote(noteLocalId);
+
+                            //check deleted
+                            int isDeleted = local.getDeleted();
+                            if (isDeleted == NoteContract.NoteEntry.DELETED) {
+
+                                //delete attachments on Drive
+                                ArrayList<Future<Boolean>> delResults = new ArrayList<>();
+                                ArrayList<Attachment> cloudAttaches = AttachManager.newInstance(context).getAttach(noteLocalId, NoteContract.AttachEntry.ANY_TYPE);
+                                for (Attachment attach : cloudAttaches) {
+                                    File deletedFile = new File(attach.getPath());
+                                    String fileName = deletedFile.getName();
+
+                                    Log.d(DRIVE_TAG, "file deleted on Drive " + fileName);
+
+                                    SearchSingleTask searchFileTask = new SearchSingleTask(driveServiceHelper, getMIMEType(deletedFile), fileName, filesFolderId);
+                                    Future<String> resFileId = SyncManager.getSyncManager().callSyncString(searchFileTask);
+                                    String fileId = resFileId.get();
+
+                                    DeleteFileTask deleteFileTask = new DeleteFileTask(driveServiceHelper, fileId);
+                                    Future<Boolean> resDelFile = SyncManager.getSyncManager().callSyncBool(deleteFileTask);
+                                    //TODO check if needed or not
+                                    delResults.add(resDelFile);
+
+
+                                    //delete attachment in db
+                                    attachManager.delete(attach);
+                                }
+                                for (Future<Boolean> res : delResults) {
+                                    res.get();
+                                }
+
+                                //delete in cloud db
+                                if (cloudNote != null)
+                                    noteManager.delete(cloudNote);
+
+
+                                //delete local notes
+                                localNotes.remove(i);
+
+                                continue;
+
+                            }
+
                             //add to fix overwriting new note
                             if (local.getSync() == 0) { //new note
                                 //upload new attaches into Cloud
@@ -194,7 +238,7 @@ public class SyncTask implements Runnable {
                                 }
 
                                 //add new note into db
-                                long newNoteId = noteManager.create(local);
+                                long newNoteId = noteManager.addWithNewId(local);
                                 Log.d(DRIVE_TAG, "new note from local created with id " + newNoteId);
                                 localNotes.remove(i);
 
@@ -211,51 +255,7 @@ public class SyncTask implements Runnable {
                             }
 
 
-                            Note cloudNote = noteManager.getNote(noteLocalId);
-
-
                             if (cloudNote != null) { //exist note satisfied conditions
-
-                                //check deleted
-                                int isDeleted = local.getDeleted();
-                                if (isDeleted == NoteContract.NoteEntry.DELETED) {
-
-                                    //delete attachments on Drive
-                                    ArrayList<Future<Boolean>> delResults = new ArrayList<>();
-                                    ArrayList<Attachment> cloudAttaches = AttachManager.newInstance(context).getAttach(noteLocalId, NoteContract.AttachEntry.ANY_TYPE);
-                                    for (Attachment attach : cloudAttaches) {
-                                        File deletedFile = new File(attach.getPath());
-                                        String fileName = deletedFile.getName();
-
-                                        Log.d(DRIVE_TAG, "file deleted on Drive " + fileName);
-
-                                        SearchSingleTask searchFileTask = new SearchSingleTask(driveServiceHelper, getMIMEType(deletedFile), fileName, filesFolderId);
-                                        Future<String> resFileId = SyncManager.getSyncManager().callSyncString(searchFileTask);
-                                        String fileId = resFileId.get();
-
-                                        DeleteFileTask deleteFileTask = new DeleteFileTask(driveServiceHelper, fileId);
-                                        Future<Boolean> resDelFile = SyncManager.getSyncManager().callSyncBool(deleteFileTask);
-                                        //TODO check if needed or not
-                                        delResults.add(resDelFile);
-
-
-                                        //delete attachment in db
-                                        attachManager.delete(attach);
-                                    }
-                                    for (Future<Boolean> res : delResults) {
-                                        res.get();
-                                    }
-
-                                    //delete in cloud db
-                                    noteManager.delete(cloudNote);
-
-
-                                    //delete local notes
-                                    localNotes.remove(i);
-
-                                    continue;
-
-                                }
 
 
                                 ArrayList<Attachment> cloudAttachesOfANote = attachManager.getAttach(cloudNote.getId(), NoteContract.AttachEntry.ANY_TYPE);
@@ -378,19 +378,19 @@ public class SyncTask implements Runnable {
                         //the place temporary moved to back TODO backup database
                     }
 
-                        //add info into database
-                        for (int iNote = 0; iNote < localNotes.size(); iNote++) {
+                    //add info into database
+                    for (int iNote = 0; iNote < localNotes.size(); iNote++) {
 
-                            Note existedNote = localNotes.get(iNote);
-                            if (existedNote.getDeleted() == NoteContract.NoteEntry.NOT_DELETED) {
-                                noteManager.add(existedNote);
-                                Log.d(DRIVE_TAG, "push note " + existedNote.getId());
-                            }
+                        Note existedNote = localNotes.get(iNote);
+                        if (existedNote.getDeleted() == NoteContract.NoteEntry.NOT_DELETED) {
+                            noteManager.add(existedNote);
+                            Log.d(DRIVE_TAG, "push note " + existedNote.getId());
                         }
-                        for (int iAttach = 0; iAttach < localAttaches.size(); iAttach++) {
-                            attachManager.add(localAttaches.get(iAttach));
-                            Log.d(DRIVE_TAG, "push attach " + localAttaches.get(iAttach).getNote_id());
-                        }
+                    }
+                    for (int iAttach = 0; iAttach < localAttaches.size(); iAttach++) {
+                        attachManager.add(localAttaches.get(iAttach));
+                        Log.d(DRIVE_TAG, "push attach " + localAttaches.get(iAttach).getNote_id());
+                    }
 //                    }
                 }
             }
