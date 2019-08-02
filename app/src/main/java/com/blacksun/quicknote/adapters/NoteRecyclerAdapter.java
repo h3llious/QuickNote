@@ -54,7 +54,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         final Note note = notes.get(position);
         holder.textTitle.setText(note.getTitle());
         holder.textContent.setText(note.getContent());
-        holder.textTime.setText(getDate(note.getDateModified(), "dd/MM/yyyy HH:mm"));
+//        holder.textTime.setText(getDate(note.getDateModified(), "dd/MM/yyyy HH:mm"));
         holder.textTimeCreated.setText(getDate(note.getDateCreated(), "dd/MM/yyyy HH:mm"));
 
         ArrayList<Attachment> curAttaches = AttachManager.newInstance(holder.itemView.getContext()).getAttach(note.getId(), NoteContract.AttachEntry.ANY_TYPE);
@@ -92,7 +92,20 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         } else {
             holder.img.setImageDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
-        //TODO: change date time to x mins ago if possible
+        //change date time to x mins ago if possible
+        long moddedTime = note.getDateModified();
+        long currentTime = System.currentTimeMillis();
+
+        long timeDiff = currentTime - moddedTime;
+
+        if (timeDiff< 60000) {
+            holder.textTime.setText("Recently");
+        } else if (timeDiff < 3600000) {
+            long minute = timeDiff / 60000;
+            holder.textTime.setText(minute + " minutes ago");
+        } else {
+            holder.textTime.setText(getDate(note.getDateModified(), "dd/MM/yyyy HH:mm"));
+        }
 
         holder.itemView.setTag(position);
     }

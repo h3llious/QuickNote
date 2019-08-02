@@ -68,6 +68,7 @@ import static com.blacksun.quicknote.utils.UtilHelper.isInternetAvailable;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+    public static final String REQUEST_RESTART = "restart";
     ArrayList<Note> notes;
     RecyclerView noteList;
     NoteRecyclerAdapter noteRecyclerAdapter;
@@ -242,6 +243,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         //check if already logged in
         checkLoggedIn();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        if (intent.getAction().equals(REQUEST_RESTART)) {
+            getInfo();
+            noteRecyclerAdapter.notifyDataSetChanged();
+
+            progressBar.setVisibility(View.GONE);
+            dimView.setVisibility(View.GONE);
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+        }
+
+        super.onNewIntent(intent);
     }
 
     private void checkLoggedIn() {

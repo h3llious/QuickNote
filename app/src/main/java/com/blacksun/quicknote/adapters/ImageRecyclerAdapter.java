@@ -20,12 +20,15 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.blacksun.quicknote.R;
+import com.blacksun.quicknote.activities.DetailActivity;
 import com.blacksun.quicknote.controllers.AttachManager;
 import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.utils.UtilHelper;
 
 import java.io.File;
 import java.util.ArrayList;
+
+import static com.blacksun.quicknote.activities.DetailActivity.REQUEST_CHANGE;
 
 public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdapter.ViewHolder> {
     ArrayList<Attachment> images;
@@ -103,6 +106,12 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
                 images.remove(position);
                 notifyItemRemoved(position);
                 notifyItemRangeChanged(position, images.size());
+
+
+                //check changes in Notes
+                Intent intent = new Intent(context, DetailActivity.class);
+                intent.setAction(REQUEST_CHANGE);
+                context.startActivity(intent);
             }
         });
     }

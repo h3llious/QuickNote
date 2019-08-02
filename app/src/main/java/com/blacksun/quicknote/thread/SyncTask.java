@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import static com.blacksun.quicknote.activities.MainActivity.DIRECTORY;
+import static com.blacksun.quicknote.activities.MainActivity.REQUEST_RESTART;
 import static com.blacksun.quicknote.utils.DatabaseHelper.DATABASE_NAME;
 import static com.blacksun.quicknote.utils.DriveServiceHelper.CHANNEL_ID;
 import static com.blacksun.quicknote.utils.DriveServiceHelper.DRIVE_TAG;
@@ -40,6 +41,7 @@ import static com.blacksun.quicknote.utils.UtilHelper.FILE_DATABASE;
 import static com.blacksun.quicknote.utils.UtilHelper.FOLDER_NAME;
 import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_DB;
 import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_FOLDER;
+import static com.blacksun.quicknote.utils.UtilHelper.copy;
 import static com.blacksun.quicknote.utils.UtilHelper.isInternetAvailable;
 
 public class SyncTask implements Runnable {
@@ -61,7 +63,10 @@ public class SyncTask implements Runnable {
         Log.d(DRIVE_TAG, "Internet connected");
 
         Intent intent = new Intent(context, MainActivity.class);
+
+        intent.setAction(MainActivity.class.getName());
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 
 
@@ -72,9 +77,12 @@ public class SyncTask implements Runnable {
                 .setStyle(new NotificationCompat.BigTextStyle()
                         .bigText("Synchronizing data..."))
                 .setOngoing(true)
-//                .setContentIntent(pendingIntent)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setContentIntent(pendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1) {
+            builder.setDefaults(NotificationCompat.DEFAULT_ALL);
+        }
 
         int PROGRESS_MAX = 100;
         int PROGRESS_CURRENT = 0;
@@ -156,7 +164,10 @@ public class SyncTask implements Runnable {
                     int localVersion = sqlDb.getVersion();
 
 
-                    //TODO backup local db
+//                    TODO backup local db
+                    File from = new File(DATABASE_PATH);
+                    File to = new File(DATABASE_PATH + "_backup");
+                    copy(Uri.fromFile(from), to, context);
 
 
                     //cloud db
@@ -270,6 +281,12 @@ public class SyncTask implements Runnable {
                                 //delete local notes
                                 localNotes.remove(i);
 
+                                //notification
+                                if (PROGRESS_CURRENT < 80)
+                                    PROGRESS_CURRENT += 1;
+                                builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+                                notificationManager.notify(notificationId, builder.build());
+
                                 continue;
 
                             }
@@ -305,12 +322,25 @@ public class SyncTask implements Runnable {
                                         attachManager.create(newAttach);
                                         localAttaches.remove(iNew);
                                     }
+
+
+                                    //notification
+                                    if (PROGRESS_CURRENT < 80)
+                                        PROGRESS_CURRENT += 1;
+                                    builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+                                    notificationManager.notify(notificationId, builder.build());
                                 }
                                 continue;
                             }
 
 
                             if (cloudNote != null) { //exist note satisfied conditions
+
+                                //notification
+                                if (PROGRESS_CURRENT < 80)
+                                    PROGRESS_CURRENT += 1;
+                                builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+                                notificationManager.notify(notificationId, builder.build());
 
 
                                 ArrayList<Attachment> cloudAttachesOfANote = attachManager.getAttach(cloudNote.getId(), NoteContract.AttachEntry.ANY_TYPE);
@@ -339,6 +369,12 @@ public class SyncTask implements Runnable {
                                     for (int iAttach = localAttaches.size() - 1; iAttach >= 0; iAttach--) {
                                         if (localAttaches.get(iAttach).getNote_id() == noteLocalId) {
                                             localAttaches.remove(iAttach);
+
+                                            //notification
+                                            if (PROGRESS_CURRENT < 80)
+                                                PROGRESS_CURRENT += 1;
+                                            builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+                                            notificationManager.notify(notificationId, builder.build());
                                         }
                                     }
                                 }
@@ -402,6 +438,14 @@ public class SyncTask implements Runnable {
                                 Future<Boolean> resAttach = SyncManager.getSyncManager().callSyncBool(downloadAttachTask);
                                 addResults.add(resAttach);
                                 Log.d(DRIVE_TAG, "new file downloaded to local: " + fileName);
+
+
+                                //notification
+                                if (PROGRESS_CURRENT < 80)
+                                    PROGRESS_CURRENT += 1;
+                                builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+                                notificationManager.notify(notificationId, builder.build());
+
                             } else {
                                 isMissing = true;
                             }
@@ -430,7 +474,7 @@ public class SyncTask implements Runnable {
                             });
                         }
 
-                        //the place temporary moved to back TODO backup database
+                        //the place temporary moved to back
                     }
 
                     //add info into database
@@ -481,6 +525,7 @@ public class SyncTask implements Runnable {
                         UploadTask uploadAttaches = new UploadTask(driveServiceHelper, child, getMIMEType(child), filesFolderId);
                         Future<Boolean> res = SyncManager.getSyncManager().callSyncBool(uploadAttaches);
                         results.add(res);
+
                     }
                     Log.d("Files", getMIMEType(child) + " FileName:" + child.getName());
                 }
@@ -488,6 +533,13 @@ public class SyncTask implements Runnable {
                 for (Future<Boolean> res : results) {
                     Log.d(DRIVE_TAG, "block thread");
                     res.get();
+
+
+                    //notification
+                    if (PROGRESS_CURRENT < 100)
+                        PROGRESS_CURRENT += 1;
+                    builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+                    notificationManager.notify(notificationId, builder.build());
                 }
             }
 
@@ -500,20 +552,8 @@ public class SyncTask implements Runnable {
                     .setAutoCancel(true);
             notificationManager.notify(notificationId, builder.build());
 
-            SyncManager.getSyncManager().getMainThreadExecutor().execute(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(context, "Finished syncing data!", Toast.LENGTH_LONG).show();
-                    //just reload the screen
-                    Intent startActivity = new Intent();
-                    startActivity.setClass(context, MainActivity.class);
-                    startActivity.setAction(MainActivity.class.getName());
-                    startActivity.setFlags(
-                            Intent.FLAG_ACTIVITY_NEW_TASK
-                                    | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-                    context.startActivity(startActivity);
-                }
-            });
+
+            SyncManager.getSyncManager().getMainThreadExecutor().execute(command);
 
 
         } catch (InterruptedException e) {
@@ -532,9 +572,35 @@ public class SyncTask implements Runnable {
 
                     }
                 });
+            } else {
+                File from = new File(DATABASE_PATH+"_backup");
+                File to = new File(DATABASE_PATH);
+                copy(Uri.fromFile(from), to, context);
+                Log.d(DRIVE_TAG, "Backup db");
+                SyncManager.getSyncManager().getMainThreadExecutor().execute(command);
+                notificationManager.cancel(notificationId);
             }
         }
     }
+
+    Runnable command = new Runnable() {
+        @Override
+        public void run() {
+            Toast.makeText(context, "Finished syncing data!", Toast.LENGTH_LONG).show();
+            //just reload the screen
+            Intent startActivity = new Intent();
+
+
+            startActivity.setClass(context, MainActivity.class);
+            startActivity.setAction(REQUEST_RESTART);
+            startActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+//                    startActivity.setFlags(
+//                            Intent.FLAG_ACTIVITY_NEW_TASK
+//                                    | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+            context.startActivity(startActivity);
+        }
+    };
 
     private void updateLocal(Note local, Note cloudNote, ArrayList<Attachment> localAttaches, String filesFolderId) throws ExecutionException, InterruptedException {
         local.setTitle(cloudNote.getTitle());

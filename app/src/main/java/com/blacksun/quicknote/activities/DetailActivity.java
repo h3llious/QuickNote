@@ -79,6 +79,10 @@ public class DetailActivity extends AppCompatActivity {
 
     boolean isAttaching = false;
 
+    public final static String REQUEST_CHANGE = "changed";
+
+    boolean isChanged = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -523,7 +527,7 @@ public class DetailActivity extends AppCompatActivity {
                     currentAttach.setNote_id(newId);
                     AttachManager.newInstance(this).create(currentAttach);
                 }
-                Log.d("saveState", "is adding images with size "+images.size());
+                Log.d("saveState", "is adding images with size " + images.size());
             }
 
             if (files != null) {
@@ -541,7 +545,13 @@ public class DetailActivity extends AppCompatActivity {
 //            newFiles.addAll(files);
 
         } else {
-            currentNote.setTitle(title);
+            if (currentNote.getTitle().equals(title) && currentNote.getContent().equals(content)
+                    && newImages.size() == 0 && newFiles.size() == 0 && !isChanged) {
+                return false;
+            }
+
+
+                currentNote.setTitle(title);
             if (!TextUtils.isEmpty(content))
                 currentNote.setContent(content);
 //            currentNote.setImagePath(currentPhotoPath);
@@ -690,5 +700,14 @@ public class DetailActivity extends AppCompatActivity {
         } else
             isAttaching = false;
         //just implement create new note or something
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        if (intent.getAction().equals(REQUEST_CHANGE)) {
+            isChanged = true;
+        }
+
+        super.onNewIntent(intent);
     }
 }
