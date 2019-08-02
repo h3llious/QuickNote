@@ -62,6 +62,9 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 
+import static com.blacksun.quicknote.utils.DriveServiceHelper.DRIVE_TAG;
+import static com.blacksun.quicknote.utils.UtilHelper.isInternetAvailable;
+
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -490,7 +493,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //            loadingIndicator();
 
             syncData(SyncManager.SYNC_DATA);
-            Toast.makeText(this, "Start syncing", Toast.LENGTH_LONG).show();
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -521,7 +523,34 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 driveServiceHelper = new DriveServiceHelper(googleServiceDrive, this);
             }
 
-            loadingIndicator();
+            Thread checkInternetThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+
+                    if (!isInternetAvailable()) {
+                        Log.d(DRIVE_TAG, "No internet connection");
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getBaseContext(), "No internet connection", Toast.LENGTH_LONG).show();
+                            }
+                        });
+                        return;
+                    }
+                    Log.d(DRIVE_TAG, "Internet connected");
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            loadingIndicator();
+
+                            Toast.makeText(getBaseContext(), "Start syncing", Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            });
+            checkInternetThread.start();
+
 
             Runnable syncTask = null;
             if (type.equals(SyncManager.DOWN_DATA)) {

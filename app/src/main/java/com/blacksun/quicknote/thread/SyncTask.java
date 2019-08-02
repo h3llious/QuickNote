@@ -40,6 +40,7 @@ import static com.blacksun.quicknote.utils.UtilHelper.FILE_DATABASE;
 import static com.blacksun.quicknote.utils.UtilHelper.FOLDER_NAME;
 import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_DB;
 import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_FOLDER;
+import static com.blacksun.quicknote.utils.UtilHelper.isInternetAvailable;
 
 public class SyncTask implements Runnable {
     private DriveServiceHelper driveServiceHelper;
@@ -52,6 +53,12 @@ public class SyncTask implements Runnable {
 
     @Override
     public void run() {
+
+        if (!isInternetAvailable()) {
+            Log.d(DRIVE_TAG, "No internet connection");
+            return;
+        }
+        Log.d(DRIVE_TAG, "Internet connected");
 
         Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);

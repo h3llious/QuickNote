@@ -18,6 +18,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 
 import static com.blacksun.quicknote.activities.MainActivity.PACKAGE_NAME;
 import static com.blacksun.quicknote.utils.DatabaseHelper.DATABASE_NAME;
@@ -56,6 +57,17 @@ public class UtilHelper {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static boolean isInternetAvailable() {
+        try {
+            InetAddress ipAddr = InetAddress.getByName("google.com");
+            //You can replace it with your name
+            return !ipAddr.equals("");
+
+        } catch (Exception e) {
+            return false;
         }
     }
 }
