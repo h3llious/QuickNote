@@ -17,7 +17,7 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.blacksun.quicknote.R;
-import com.blacksun.quicknote.data.AttachManager;
+import com.blacksun.quicknote.controllers.AttachManager;
 import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.utils.UtilHelper;
 

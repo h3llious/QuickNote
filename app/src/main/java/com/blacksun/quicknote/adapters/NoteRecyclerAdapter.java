@@ -1,20 +1,17 @@
 package com.blacksun.quicknote.adapters;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.media.ThumbnailUtils;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -24,8 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.activities.DetailActivity;
-import com.blacksun.quicknote.activities.MainActivity;
-import com.blacksun.quicknote.data.AttachManager;
+import com.blacksun.quicknote.controllers.AttachManager;
 import com.blacksun.quicknote.data.NoteContract;
 import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.models.Note;

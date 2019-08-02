@@ -1,33 +1,39 @@
 package com.blacksun.quicknote.thread;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.activities.MainActivity;
-import com.blacksun.quicknote.data.AttachManager;
+import com.blacksun.quicknote.controllers.AttachManager;
 import com.blacksun.quicknote.data.NoteContract;
-import com.blacksun.quicknote.data.NoteManager;
+import com.blacksun.quicknote.controllers.NoteManager;
 import com.blacksun.quicknote.models.Attachment;
-import com.blacksun.quicknote.models.DriveFileHolder;
 import com.blacksun.quicknote.models.Note;
 import com.blacksun.quicknote.utils.DriveServiceHelper;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import static com.blacksun.quicknote.activities.MainActivity.DIRECTORY;
 import static com.blacksun.quicknote.utils.DatabaseHelper.DATABASE_NAME;
+import static com.blacksun.quicknote.utils.DriveServiceHelper.CHANNEL_ID;
 import static com.blacksun.quicknote.utils.DriveServiceHelper.DRIVE_TAG;
 import static com.blacksun.quicknote.utils.UtilHelper.DATABASE_PATH;
 import static com.blacksun.quicknote.utils.UtilHelper.FILE_DATABASE;
@@ -46,6 +52,33 @@ public class SyncTask implements Runnable {
 
     @Override
     public void run() {
+
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_stat_name)
+                .setContentTitle("QuickNote")
+                .setContentText("Synchronizing data...")
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText("Synchronizing data..."))
+                .setOngoing(true)
+//                .setContentIntent(pendingIntent)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        int PROGRESS_MAX = 100;
+        int PROGRESS_CURRENT = 0;
+        builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+
+// notificationId is a unique int for each notification that you must define
+        int notificationId = 10;
+        notificationManager.notify(notificationId, builder.build());
+
         try {
             //search app folder
             SearchSingleTask searchAppFolderTask = new SearchSingleTask(driveServiceHelper, MIME_TYPE_FOLDER, context.getString(R.string.app_name), null);
@@ -82,6 +115,9 @@ public class SyncTask implements Runnable {
                 Log.d(DRIVE_TAG, "Created new 'files' folder");
             }
 
+            PROGRESS_CURRENT = 10;
+            builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+            notificationManager.notify(notificationId, builder.build());
 
             //for deleting later
             String dbId = null;
@@ -120,6 +156,11 @@ public class SyncTask implements Runnable {
                     DownloadTask downloadDbTask = new DownloadTask(driveServiceHelper, DATABASE_PATH, dbId);
                     resDb = SyncManager.getSyncManager().callSyncBool(downloadDbTask);
                     resDb.get();
+
+
+                    PROGRESS_CURRENT = 20;
+                    builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+                    notificationManager.notify(notificationId, builder.build());
 
 
                     //check db version
@@ -173,6 +214,13 @@ public class SyncTask implements Runnable {
                         for (int i = localNotes.size() - 1; i >= 0; i--) {
                             Note local = localNotes.get(i);
                             long noteLocalId = local.getId();
+
+
+                            //notification
+                            if (PROGRESS_CURRENT < 80)
+                                PROGRESS_CURRENT += 5;
+                            builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+                            notificationManager.notify(notificationId, builder.build());
 
 
                             Note cloudNote = noteManager.getNote(noteLocalId);
@@ -395,6 +443,9 @@ public class SyncTask implements Runnable {
                 }
             }
 
+            PROGRESS_CURRENT = 90;
+            builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+            notificationManager.notify(notificationId, builder.build());
 
             //upload db into Drive
             UploadTask uploadDb = new UploadTask(driveServiceHelper, FILE_DATABASE, MIME_TYPE_DB, appFolderId);
@@ -432,6 +483,15 @@ public class SyncTask implements Runnable {
                     res.get();
                 }
             }
+
+            builder.setProgress(0, 0, false)
+                    .setContentText("Synchronizing data finished")
+                    .setStyle(new NotificationCompat.BigTextStyle()
+                            .bigText("Synchronizing data finished"))
+                    .setOngoing(false)
+                    .setContentIntent(pendingIntent)
+                    .setAutoCancel(true);
+            notificationManager.notify(notificationId, builder.build());
 
             SyncManager.getSyncManager().getMainThreadExecutor().execute(new Runnable() {
                 @Override
@@ -617,4 +677,6 @@ public class SyncTask implements Runnable {
         }
         return mimeType;
     }
+
+
 }

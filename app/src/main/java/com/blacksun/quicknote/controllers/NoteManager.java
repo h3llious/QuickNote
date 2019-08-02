@@ -1,13 +1,12 @@
-package com.blacksun.quicknote.data;
+package com.blacksun.quicknote.controllers;
 
-import com.blacksun.quicknote.models.Attachment;
+import com.blacksun.quicknote.data.NoteContract;
 import com.blacksun.quicknote.models.Note;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.ArrayList;

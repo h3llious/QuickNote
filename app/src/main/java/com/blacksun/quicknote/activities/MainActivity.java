@@ -32,10 +32,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.adapters.NoteRecyclerAdapter;
 import com.blacksun.quicknote.data.NoteContract;
-import com.blacksun.quicknote.data.NoteManager;
-import com.blacksun.quicknote.models.DriveFileHolder;
+import com.blacksun.quicknote.controllers.NoteManager;
 import com.blacksun.quicknote.models.Note;
-import com.blacksun.quicknote.services.SyncService;
 import com.blacksun.quicknote.thread.SyncDownTask;
 import com.blacksun.quicknote.thread.SyncManager;
 import com.blacksun.quicknote.thread.SyncTask;
@@ -48,16 +46,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -66,13 +61,6 @@ import java.util.Arrays;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
-
-import static com.blacksun.quicknote.utils.DatabaseHelper.DATABASE_NAME;
-import static com.blacksun.quicknote.utils.DriveServiceHelper.DRIVE_TAG;
-import static com.blacksun.quicknote.utils.UtilHelper.DATABASE_PATH;
-import static com.blacksun.quicknote.utils.UtilHelper.FOLDER_NAME;
-import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_DB;
-import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_FOLDER;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
