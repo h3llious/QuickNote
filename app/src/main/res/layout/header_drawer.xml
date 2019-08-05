@@ -21,7 +21,7 @@
 
     <TextView
         android:id="@+id/google_username"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
         android:layout_below="@id/google_avatar"

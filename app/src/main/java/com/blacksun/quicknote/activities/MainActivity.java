@@ -3,6 +3,7 @@ package com.blacksun.quicknote.activities;
 
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -16,6 +17,7 @@ import android.view.WindowManager;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +27,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
+import androidx.core.view.MenuCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -57,6 +60,9 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Map;
 
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
@@ -103,6 +109,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ProgressBar progressBar;
     View dimView;
 
+    SharedPreferences sharedPreferences;
+
+    boolean sortByTime, sortDescending;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,7 +122,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         PACKAGE_NAME = getPackageName();
         DIRECTORY = getFilesDir();
 
-        initialize();
+        setSharedPref();
+
+        initializeView();
 
         //sign in, sign out by google account
         setUpGoogleAccount();
@@ -144,6 +155,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         retrieveNoteList();
 
+    }
+
+    private void setSharedPref() {
+        sharedPreferences = getPreferences(MODE_PRIVATE);
+        sortByTime = sharedPreferences.getBoolean(getResources().getString(R.string.isSortedByTime), true);
+        sortDescending = sharedPreferences.getBoolean(getResources().getString(R.string.isDescending), true);
     }
 
     private void retrieveNoteList() {
@@ -189,7 +206,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
-    private void initialize() {
+    private void initializeView() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -247,7 +264,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onNewIntent(Intent intent) {
-        if (intent.getAction().equals(REQUEST_RESTART)) {
+        if (intent.getAction().equals(REQUEST_RESTART)) { //after syncing
             getInfo();
             noteRecyclerAdapter.notifyDataSetChanged();
 
@@ -274,18 +291,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void getInfo() {
-        ArrayList<Note> newNotes = NoteManager.newInstance(this).getAllNotes();
+        String sortOrder;
+        String sortType;
+
+        if (sortByTime) {
+            sortOrder = NoteContract.NoteEntry.COLUMN_NOTE_MODTIME;
+        } else {
+            sortOrder = NoteContract.NoteEntry.COLUMN_NOTE_TITLE;
+        }
+
+        if (sortDescending) {
+            sortType = " DESC";
+        } else {
+            sortType = " ASC";
+        }
+
+
+        ArrayList<Note> newNotes = NoteManager.newInstance(this).getAllNotes(sortOrder + sortType);
         notes.clear();
 
-        for (Note note: newNotes) {
-            if (note.getDeleted() == NoteContract.NoteEntry.NOT_DELETED){
+        for (Note note : newNotes) {
+            if (note.getDeleted() == NoteContract.NoteEntry.NOT_DELETED) {
                 notes.add(note);
             }
         }
 
         //notes.addAll(newNotes);
-
-
 
 
         emptyView.setVisibility(View.GONE);
@@ -314,11 +345,109 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id) {
+            case R.id.action_settings:
+                return true;
+            case R.id.action_sort:
+                showSortPopup(id);
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showSortPopup(int id) {
+        View menuItemView = findViewById(id);
+        PopupMenu popupMenu = new PopupMenu(this, menuItemView);
+        popupMenu.inflate(R.menu.menu_sort);
+
+        if (!sortByTime) {
+            popupMenu.getMenu().findItem(R.id.sort_title).setChecked(true);
+        }
+
+        if (!sortDescending) {
+            popupMenu.getMenu().findItem(R.id.sort_asc).setChecked(true);
+        }
+
+
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                item.setChecked(!item.isChecked());
+
+                // Do other stuff
+                switch (item.getItemId()) {
+                    case R.id.sort_time:
+                        if (!sortByTime) {
+                            Collections.sort(notes, new Comparator<Note>() {
+                                @Override
+                                public int compare(Note o1, Note o2) {
+                                    return Long.compare(o1.getDateModified(), o2.getDateModified());
+                                }
+                            });
+
+                            //check asc or desc
+                            if (sortDescending)
+                                Collections.reverse(notes);
+
+                            sharedPreferences.edit().putBoolean(getResources().getString(R.string.isSortedByTime), true).apply();
+                            sortByTime = true;
+                        }
+                        break;
+                    case R.id.sort_title:
+                        if (sortByTime) {
+                            Collections.sort(notes, new Comparator<Note>() {
+                                @Override
+                                public int compare(Note o1, Note o2) {
+                                    return o1.getTitle().compareTo(o2.getTitle());
+                                }
+                            });
+
+                            //check asc or desc
+                            if (sortDescending)
+                                Collections.reverse(notes);
+
+                            sharedPreferences.edit().putBoolean(getResources().getString(R.string.isSortedByTime), false).apply();
+                            sortByTime = false;
+                        }
+                        break;
+                    case R.id.sort_desc:
+                        if (!sortDescending) {
+                            Collections.reverse(notes);
+                            sharedPreferences.edit().putBoolean(getResources().getString(R.string.isDescending), true).apply();
+                            sortDescending = true;
+                        }
+                        break;
+                    case R.id.sort_asc:
+                        if (sortDescending) {
+                            Collections.reverse(notes);
+                            sharedPreferences.edit().putBoolean(getResources().getString(R.string.isDescending), false).apply();
+                            sortDescending = false;
+                        }
+                        break;
+                }
+                noteRecyclerAdapter.notifyDataSetChanged();
+                // Keep the popup menu open
+                item.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+                item.setActionView(new View(getBaseContext()));
+                item.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+                    @Override
+                    public boolean onMenuItemActionExpand(MenuItem item) {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onMenuItemActionCollapse(MenuItem item) {
+                        return false;
+                    }
+                });
+
+                return false;
+            }
+        });
+        popupMenu.show();
+
+        MenuCompat.setGroupDividerEnabled(popupMenu.getMenu(), true);
     }
 
     @Override

@@ -1,7 +1,5 @@
 package com.blacksun.quicknote.thread;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -150,7 +148,7 @@ public class SyncTask implements Runnable {
                 if (dbId != null) {
                     //get all notes before overwriting existing db
                     final NoteManager noteManager = NoteManager.newInstance(context);
-                    ArrayList<Note> localNotes = noteManager.getAllNotes();
+                    ArrayList<Note> localNotes = noteManager.getAllNotes(null);
                     Log.d(DRIVE_TAG, "Old database found! Size notes: " + localNotes.size());
 
                     //get all attaches
@@ -164,7 +162,7 @@ public class SyncTask implements Runnable {
                     int localVersion = sqlDb.getVersion();
 
 
-//                    TODO backup local db
+//                    backup local db
                     File from = new File(DATABASE_PATH);
                     File to = new File(DATABASE_PATH + "_backup");
                     copy(Uri.fromFile(from), to, context);
@@ -458,7 +456,7 @@ public class SyncTask implements Runnable {
                         }
 
                         //change notes into synced
-                        ArrayList<Note> newCloudNotes = noteManager.getAllNotes();
+                        ArrayList<Note> newCloudNotes = noteManager.getAllNotes(null);
                         for (Note note : newCloudNotes) {
                             note.setSync(NoteContract.NoteEntry.SYNCED);
                             noteManager.sync(note);

@@ -91,9 +91,10 @@ public class NoteManager {
     }
 
     //C(R)UD
-    public ArrayList<Note> getAllNotes() {
+    public ArrayList<Note> getAllNotes(String order) {
         ArrayList<Note> notes = new ArrayList<>();
-        Cursor cursor = mContext.getContentResolver().query(NoteContract.NoteEntry.CONTENT_URI, null, null, null, null);
+        Cursor cursor = mContext.getContentResolver().query(NoteContract.NoteEntry.CONTENT_URI,
+                null, null, null, order);
         if (cursor != null) {
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {

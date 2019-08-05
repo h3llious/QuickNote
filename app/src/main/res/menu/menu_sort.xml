@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:id="@+id/group_sort_by"
+        android:checkableBehavior="single">
+        <item android:id="@+id/sort_time"
+            android:checked="true"
+        android:title="Sort by time" />
+        <item android:id="@+id/sort_title"
+            android:title="Sort by title" />
+    </group>
+    <group android:id="@+id/group_sort_type"
+        android:checkableBehavior="single">
+        <item android:id="@+id/sort_asc"
+            android:title="Ascending" />
+        <item android:id="@+id/sort_desc"
+            android:title="Descending"
+            android:checked="true"/>
+    </group>
+</menu>

@@ -11,7 +11,7 @@ This project is intended to develop a functional note taking app.
     * Uploading new local notes into Drive
     * Downloading notes from Drive into local database
     * Updating notes if there have been changes
-    
+* Sort notes by time modified or title, ascending or descending.
 
 ## Planned features
 * Simple, easy to use layout yet having necessary functions.

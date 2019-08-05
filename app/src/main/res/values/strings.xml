@@ -107,4 +107,6 @@
     <string name="menu_send">Send</string>
 
     <string name="channel">Channel</string>
+    <string name="isSortedByTime">isSortedByTime</string>
+    <string name="isDescending">isDescending</string>
 </resources>
