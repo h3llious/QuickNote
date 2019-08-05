@@ -661,8 +661,11 @@ public class DetailActivity extends AppCompatActivity {
 //                                .setAction("Action", null).show();
                         Toast.makeText(this, "Update successfully", Toast.LENGTH_SHORT).show();
 //                        finish();
-                    } else
-                        finish();
+                    } else {
+//                        finish();
+                        Toast.makeText(this, "No change was made", Toast.LENGTH_SHORT).show();
+                    }
+
 //                        Snackbar.make(getWindow().getDecorView(), "Encounter error(s) when updating", Snackbar.LENGTH_LONG)
 //                                .setAction("Action", null).show();
                     //Toast.makeText(this, "Encounter error(s) when updating", Toast.LENGTH_SHORT).show();

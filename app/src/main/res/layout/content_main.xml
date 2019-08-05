@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/constraint_layout_main_activity"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -11,7 +12,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/note_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"></androidx.recyclerview.widget.RecyclerView>
+        android:layout_height="match_parent"/>
 
     <!-- Empty view for the list -->
     <RelativeLayout
@@ -32,6 +33,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
+            android:contentDescription="@string/no_notes"
             app:srcCompat="@drawable/ic_notepad"/>
 
         <TextView
@@ -42,7 +44,7 @@
             android:layout_centerHorizontal="true"
             android:fontFamily="sans-serif-medium"
             android:paddingTop="16dp"
-            android:text="Nothing here..."
+            android:text="@string/no_notes"
             android:textAppearance="?android:textAppearanceMedium"/>
 
         <TextView
@@ -53,7 +55,7 @@
             android:layout_centerHorizontal="true"
             android:fontFamily="sans-serif"
             android:paddingTop="8dp"
-            android:text="Create a note now!"
+            android:text="@string/promote_creating_note"
             android:textAppearance="?android:textAppearanceSmall"
             android:textColor="#45494E"/>
     </RelativeLayout>

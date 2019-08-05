@@ -156,4 +156,18 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         calendar.setTimeInMillis(milliSeconds);
         return formatter.format(calendar.getTime());
     }
+
+    public void removeItem(int position) {
+        notes.remove(position);
+        // notify the item removed by position
+        // to perform recycler view delete animations
+        // NOTE: don't call notifyDataSetChanged()
+        notifyItemRemoved(position);
+    }
+
+    public void restoreItem(Note item, int position) {
+        notes.add(position, item);
+        // notify item added by position
+        notifyItemInserted(position);
+    }
 }

@@ -109,4 +109,6 @@
     <string name="channel">Channel</string>
     <string name="isSortedByTime">isSortedByTime</string>
     <string name="isDescending">isDescending</string>
+    <string name="no_notes">Nothing here...</string>
+    <string name="promote_creating_note">Create a note now!</string>
 </resources>
