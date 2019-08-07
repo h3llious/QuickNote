@@ -20,6 +20,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
+import androidx.appcompat.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -64,6 +65,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -118,6 +120,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     boolean sortByTime, sortDescending;
     ConstraintLayout constraintLayout;
+
+    SearchView searchView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -279,7 +284,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
+        if (!searchView.isIconified()) {
+            searchView.setIconified(true);
+        } else if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
@@ -379,7 +386,43 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        MenuItem search = menu.findItem(R.id.action_search);
+
+        searchView = (SearchView) search.getActionView();
+        search(searchView);
+
         return true;
+    }
+
+    private void search(SearchView searchView) {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText.length() == 0) {
+                    getInfo();
+                    noteRecyclerAdapter.notifyDataSetChanged();
+                } else {
+
+                    newText = newText.toLowerCase();
+                    ArrayList<Note> newList = new ArrayList<>();
+                    for (Note note : notes) {
+                        String title = note.getTitle().toLowerCase();
+                        String content = note.getContent().toLowerCase();
+                        if (title.contains(newText) || content.contains(newText)) {
+                            newList.add(note);
+                        }
+                    }
+                    noteRecyclerAdapter.setFilter(newList);
+                }    return true;
+
+            }
+        });
     }
 
     @Override

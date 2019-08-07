@@ -170,4 +170,10 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         // notify item added by position
         notifyItemInserted(position);
     }
+
+    public void setFilter(ArrayList<Note> newList){
+        notes.clear();
+        notes.addAll(newList);
+        notifyDataSetChanged();
+    }
 }
