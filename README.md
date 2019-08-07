@@ -5,6 +5,7 @@ This project is intended to develop a functional note taking app.
 
 ## Implemented features
 * Creating new notes, viewing, updating and deleting exist notes.
+    * Swipe to delete and undo in main activity.
 * Adding text, pictures, files into notes.
 * Synchronizing data using Drive API v3:
     * Deleting notes on Drive if synced local notes have been deleted and vice versa

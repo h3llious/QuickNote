@@ -2,6 +2,8 @@ package com.blacksun.quicknote.utils;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.View;
@@ -54,12 +56,24 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
         ColorDrawable colorDrawableBackground = new ColorDrawable(ContextCompat.getColor(viewHolder.itemView.getContext(), R.color.colorAccent));
 
         View itemView = viewHolder.itemView;
+
+        //new text delete
+        Rect bounds = new Rect();
+        Paint paint = new Paint();
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(60);
+        //            paint.setTextAlign(Paint.Align.CENTER);
+        String sDelete = itemView.getContext().getResources().getString(R.string.delete);
+        paint.getTextBounds(sDelete,0, sDelete.length(), bounds);
+
+
         int iconMarginVertical = (viewHolder.itemView.getHeight() - deleteIcon.getIntrinsicHeight()) / 2;
 
         if (dX > 0) {
             colorDrawableBackground.setBounds(itemView.getLeft(), itemView.getTop(), Math.round(dX), itemView.getBottom());
             deleteIcon.setBounds(itemView.getLeft() + iconMarginVertical, itemView.getTop() + iconMarginVertical,
                     itemView.getLeft() + iconMarginVertical + deleteIcon.getIntrinsicWidth(), itemView.getBottom() - iconMarginVertical);
+
         } else {
             colorDrawableBackground.setBounds(itemView.getRight() + Math.round(dX), itemView.getTop(), itemView.getRight(), itemView.getBottom());
             deleteIcon.setBounds(itemView.getRight() - iconMarginVertical - deleteIcon.getIntrinsicWidth(), itemView.getTop() + iconMarginVertical,
@@ -71,15 +85,22 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
 
         c.save();
 
-        if (dX > 0)
+        if (dX > 0) {
             c.clipRect(itemView.getLeft(), itemView.getTop(), Math.round(dX), itemView.getBottom());
-        else
+
+            c.drawText(sDelete, itemView.getLeft() + iconMarginVertical + deleteIcon.getIntrinsicWidth(),
+                    (itemView.getTop() + itemView.getBottom()) / 2 + (- itemView.getTop() + itemView.getBottom()) / 10 , paint);
+        } else {
             c.clipRect(itemView.getRight() + Math.round(dX), itemView.getTop(), itemView.getRight(), itemView.getBottom());
+
+            c.drawText(sDelete, itemView.getRight() - iconMarginVertical - deleteIcon.getIntrinsicWidth() - bounds.width(),
+                    (itemView.getTop() + itemView.getBottom()) / 2 + (- itemView.getTop() + itemView.getBottom()) / 10 , paint);
+        }
 
         deleteIcon.draw(c);
 
-        c.restore();
 
+        c.restore();
 
 
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);

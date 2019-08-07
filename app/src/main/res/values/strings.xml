@@ -111,4 +111,6 @@
     <string name="isDescending">isDescending</string>
     <string name="no_notes">Nothing here...</string>
     <string name="promote_creating_note">Create a note now!</string>
+
+    <string name="delete">Delete</string>
 </resources>
