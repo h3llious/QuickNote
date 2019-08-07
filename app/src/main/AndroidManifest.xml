@@ -3,51 +3,59 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.blacksun.quicknote">
 
-    <uses-feature android:name="android.hardware.camera"
-        android:required="false"/>
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
+        android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:ignore = 'GoogleAppIndexingWarning'>
+        tools:ignore="GoogleAppIndexingWarning">
         <activity
-            android:name=".activities.DetailActivity"
-            android:label="@string/title_activity_detail"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustResize"
-            android:launchMode="singleTop"/>
-        <activity
-            android:name=".activities.MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:launchMode="singleTop">
+            android:name=".activities.SplashActivity"
+            android:theme="@style/AppTheme.Launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".activities.AboutActivity" />
+        <activity
+            android:name=".activities.DetailActivity"
+            android:label="@string/title_activity_detail"
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".activities.MainActivity"
+            android:label="@string/app_name"
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+
         <provider
+            android:name=".data.NoteProvider"
             android:authorities="com.blacksun.quicknote.data.NoteProvider"
-            android:name=".data.NoteProvider"/>
+            android:exported="false" />
         <provider
+            android:name=".data.AttachProvider"
             android:authorities="com.blacksun.quicknote.data.AttachProvider"
-            android:name=".data.AttachProvider"/>
+            android:exported="false" />
         <provider
-            android:authorities="com.blacksun.quicknote.fileprovider"
             android:name="androidx.core.content.FileProvider"
-            android:grantUriPermissions="true"
-            android:exported="false">
+            android:authorities="com.blacksun.quicknote.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths">
-            </meta-data>
+                android:resource="@xml/file_paths" />
         </provider>
     </application>
 

@@ -61,6 +61,7 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
         Rect bounds = new Rect();
         Paint paint = new Paint();
         paint.setColor(Color.WHITE);
+        paint.setAntiAlias(true);
         paint.setTextSize(60);
         //            paint.setTextAlign(Paint.Align.CENTER);
         String sDelete = itemView.getContext().getResources().getString(R.string.delete);

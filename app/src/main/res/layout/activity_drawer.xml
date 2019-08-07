@@ -14,6 +14,16 @@
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/header_drawer"
-        app:menu="@menu/menu_drawer" />
+        app:menu="@menu/menu_drawer" >
+        <TextView
+            android:id="@+id/logout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:gravity="center"
+            android:layout_margin="5dp"
+            android:background="@color/white"
+            android:text="@string/version" />
+    </com.google.android.material.navigation.NavigationView>
 
 </androidx.drawerlayout.widget.DrawerLayout>

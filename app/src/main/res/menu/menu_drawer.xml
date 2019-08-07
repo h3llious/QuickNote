@@ -9,26 +9,31 @@
             android:icon="@drawable/ic_home"
             android:title="@string/menu_home" />
         <item
-            android:id="@+id/nav_tools"
-            android:icon="@android:drawable/ic_menu_manage"
-            android:title="@string/menu_tools" />
+            android:id="@+id/nav_about"
+            android:icon="@android:drawable/ic_dialog_info"
+            android:title="@string/menu_about" />
     </group>
 
-    <item android:title="Communicate">
+    <item android:title="@string/backup">
         <menu>
             <item
                 android:id="@+id/nav_upload"
                 android:icon="@android:drawable/ic_menu_share"
-                android:title="Upload data into Google Drive" />
+                android:title="@string/upload" />
             <item
                 android:id="@+id/nav_download"
                 android:icon="@android:drawable/ic_menu_send"
-                android:title="Sync data from Drive" />
+                android:title="@string/download" />
 
             <item
                 android:id="@+id/nav_sync"
                 android:icon="@drawable/ic_baseline_sync_24px"
-                android:title="Sync"/>
+                android:title="@string/sync" />
+
+            <item
+                android:id="@+id/nav_dummy"
+                android:title=""
+                android:enabled="false"/>
         </menu>
     </item>
 
