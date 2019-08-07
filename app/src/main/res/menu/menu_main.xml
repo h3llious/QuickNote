@@ -16,8 +16,7 @@
     <item
         android:id="@+id/action_sort"
         android:title="Sort"
-        android:icon="@android:drawable/ic_menu_sort_by_size"
+        android:icon="@drawable/ic_sort_button_with_three_lines"
         app:showAsAction="ifRoom"/>
-
 
 </menu>

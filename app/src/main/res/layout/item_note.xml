@@ -54,14 +54,14 @@
             android:paddingLeft="10dp"
             android:text="10 mins ago" />
 
-        <TextView
-            android:id="@+id/note_time_created"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentBottom="true"
-            android:paddingRight="10dp"
-            android:text="10 mins ago" />
+        <!--<TextView-->
+            <!--android:id="@+id/note_time_created"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_alignParentRight="true"-->
+            <!--android:layout_alignParentBottom="true"-->
+            <!--android:paddingRight="10dp"-->
+            <!--android:text="10 mins ago" />-->
 
 
     </RelativeLayout>

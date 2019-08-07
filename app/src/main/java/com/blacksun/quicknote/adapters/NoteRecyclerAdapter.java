@@ -55,7 +55,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         holder.textTitle.setText(note.getTitle());
         holder.textContent.setText(note.getContent());
 //        holder.textTime.setText(getDate(note.getDateModified(), "dd/MM/yyyy HH:mm"));
-        holder.textTimeCreated.setText(getDate(note.getDateCreated(), "dd/MM/yyyy HH:mm"));
+//        holder.textTimeCreated.setText(getDate(note.getDateCreated(), "dd/MM/yyyy HH:mm"));
 
         ArrayList<Attachment> curAttaches = AttachManager.newInstance(holder.itemView.getContext()).getAttach(note.getId(), NoteContract.AttachEntry.ANY_TYPE);
 
@@ -117,7 +117,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
 
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        TextView textTitle, textContent, textTime, textTimeCreated;
+        TextView textTitle, textContent, textTime;
         ImageView img;
 
         public ViewHolder(@NonNull View itemView) {
@@ -127,7 +127,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
 
             textContent = itemView.findViewById(R.id.note_content);
             textTime = itemView.findViewById(R.id.note_time);
-            textTimeCreated = itemView.findViewById(R.id.note_time_created);
+//            textTimeCreated = itemView.findViewById(R.id.note_time_created);
             img = itemView.findViewById(R.id.note_img);
 
             itemView.setOnClickListener(new View.OnClickListener() {
