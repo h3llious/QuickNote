@@ -277,7 +277,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         googleSignOutButton.setVisibility(View.GONE);
         googleEmailText.setText("");
         googleNameText.setText(R.string.app_name);
-        googleAvatarImg.setImageDrawable(getResources().getDrawable(R.mipmap.ic_launcher_round));
+        googleAvatarImg.setImageDrawable(getResources().getDrawable(R.mipmap.ic_avatar_round));
         loadedAvatar = null;
     }
 
@@ -790,21 +790,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-
-    //needed for Drive upload
-    public String getMIMEType(File child) {
-        String mimeType;
-        Uri uri = Uri.fromFile(child);
-        if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
-            ContentResolver cr = getApplication().getContentResolver();
-            mimeType = cr.getType(uri);
-        } else {
-            String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
-            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
-                    fileExtension.toLowerCase());
-        }
-        return mimeType;
-    }
 
     private static class DownloadImgTask extends AsyncTask<String, Void, Bitmap> {
         private WeakReference<MainActivity> activityReference;

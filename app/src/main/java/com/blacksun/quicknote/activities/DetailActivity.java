@@ -515,6 +515,8 @@ public class DetailActivity extends AppCompatActivity {
 
             if (!TextUtils.isEmpty(content))
                 note.setContent(content);
+            else
+                note.setContent("");
 //            note.setImagePath(currentPhotoPath);
             long newId = NoteManager.newInstance(this).create(note);
 
