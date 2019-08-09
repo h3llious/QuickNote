@@ -140,7 +140,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         initializeView();
 
-
         //Remove temp files
         removeTempFiles();
 
@@ -210,6 +209,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position) {
         if (viewHolder instanceof NoteRecyclerAdapter.ViewHolder) {
+
+
             // backup of removed item for undo purpose
             final int deletedIndex = viewHolder.getAdapterPosition();
             final Note deletedItem = notes.get(deletedIndex);
@@ -252,12 +253,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             //NoteManager.newInstance(this).delete(currentNote);
             NoteManager.newInstance(this).disable(deletedItem);
 
+            //empty view
+            if (notes.size() == 0) {
+                emptyView.setVisibility(View.VISIBLE);
+            }
+
+
             // showing snack bar with Undo option
             Snackbar snackbar = Snackbar
                     .make(constraintLayout, name + " removed!", Snackbar.LENGTH_LONG);
             snackbar.setAction("UNDO", new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+
+                    if (notes.size() == 0) {
+                        emptyView.setVisibility(View.GONE);
+                    }
 
                     // undo is selected, restore the deleted item
                     noteRecyclerAdapter.restoreItem(deletedItem, deletedIndex);

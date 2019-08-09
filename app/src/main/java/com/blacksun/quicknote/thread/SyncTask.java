@@ -490,6 +490,35 @@ public class SyncTask implements Runnable {
                     }
 //                    }
                 }
+            } else { //if not created app folder
+                //get all notes before overwriting existing db
+                final NoteManager noteManager = NoteManager.newInstance(context);
+                ArrayList<Note> localNotes = noteManager.getAllNotes(null);
+                Log.d(DRIVE_TAG, "Old database found! Size notes: " + localNotes.size());
+
+                //get all attaches
+                final AttachManager attachManager = AttachManager.newInstance(context);
+                ArrayList<Attachment> localAttaches = attachManager.getAllAttaches();
+                Log.d(DRIVE_TAG, "size attaches test: " + localAttaches.size());
+
+                for (int i = localNotes.size() - 1; i >= 0; i--) {
+                    Note local = localNotes.get(i);
+                    long noteLocalId = local.getId();
+
+                    //check deleted
+                    int isDeleted = local.getDeleted();
+                    if (isDeleted == NoteContract.NoteEntry.DELETED) {
+
+                        //delete local notes
+                        localNotes.remove(i);
+                        noteManager.delete(local);
+
+                        continue;
+
+                    }
+
+                    noteManager.sync(local);
+                }
             }
 
             PROGRESS_CURRENT = 90;
@@ -558,6 +587,7 @@ public class SyncTask implements Runnable {
             Log.e(DRIVE_TAG, "error interrupted " + e);
         } catch (ExecutionException e) {
             Log.e(DRIVE_TAG, "error execution " + e);
+            e.printStackTrace();
             Throwable throwable = e.getCause();
             if (throwable instanceof UserRecoverableAuthIOException) {
                 Intent errorIntent = ((UserRecoverableAuthIOException) throwable).getIntent();
@@ -571,7 +601,7 @@ public class SyncTask implements Runnable {
                     }
                 });
             } else {
-                File from = new File(DATABASE_PATH+"_backup");
+                File from = new File(DATABASE_PATH + "_backup");
                 File to = new File(DATABASE_PATH);
                 copy(Uri.fromFile(from), to, context);
                 Log.d(DRIVE_TAG, "Backup db");

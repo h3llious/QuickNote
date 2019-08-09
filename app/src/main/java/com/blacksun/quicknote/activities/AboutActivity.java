@@ -48,6 +48,7 @@ public class AboutActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MainActivity.class);
         intent.setAction(REQUEST_TAB);
         startActivity(intent);
+        finish();
     }
 
     @Override
