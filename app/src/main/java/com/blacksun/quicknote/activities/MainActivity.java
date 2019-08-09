@@ -492,7 +492,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             Collections.sort(notes, new Comparator<Note>() {
                                 @Override
                                 public int compare(Note o1, Note o2) {
-                                    return o1.getTitle().compareTo(o2.getTitle());
+                                    return o1.getTitle().toLowerCase().compareTo(o2.getTitle().toLowerCase());
                                 }
                             });
 
