@@ -38,8 +38,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.adapters.NoteRecyclerAdapter;
+import com.blacksun.quicknote.controllers.AttachManager;
 import com.blacksun.quicknote.data.NoteContract;
 import com.blacksun.quicknote.controllers.NoteManager;
+import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.models.Note;
 import com.blacksun.quicknote.thread.SyncDownTask;
 import com.blacksun.quicknote.thread.SyncManager;
@@ -76,6 +78,7 @@ import com.google.api.services.drive.DriveScopes;
 
 import static com.blacksun.quicknote.utils.DriveServiceHelper.DRIVE_TAG;
 import static com.blacksun.quicknote.utils.UtilHelper.isInternetAvailable;
+import static com.blacksun.quicknote.utils.UtilHelper.removeTempFiles;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
@@ -137,6 +140,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         initializeView();
 
+
+        //Remove temp files
+        removeTempFiles();
+
+
         //sign in, sign out by google account
         setUpGoogleAccount();
 
@@ -167,6 +175,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         retrieveNoteList();
 
     }
+
+
 
     private void setSharedPref() {
         sharedPreferences = getPreferences(MODE_PRIVATE);
@@ -200,15 +210,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position) {
         if (viewHolder instanceof NoteRecyclerAdapter.ViewHolder) {
-            // get the removed item name to display it in snack bar
-            String name = notes.get(viewHolder.getAdapterPosition()).getTitle();
-
             // backup of removed item for undo purpose
-            final Note deletedItem = notes.get(viewHolder.getAdapterPosition());
             final int deletedIndex = viewHolder.getAdapterPosition();
+            final Note deletedItem = notes.get(deletedIndex);
+
+            // get the removed item name to display it in snack bar
+            String name = deletedItem.getTitle();
 
             // remove the item from recycler view
-            noteRecyclerAdapter.removeItem(viewHolder.getAdapterPosition());
+            noteRecyclerAdapter.removeItem(deletedIndex);
+
+            //delete note
+            long noteId = deletedItem.getId();
+            ArrayList<Attachment> currentAttachments = AttachManager.newInstance(this).getAttach(noteId, NoteContract.AttachEntry.ANY_TYPE);
+            Log.d("attach", "sizeDel " + currentAttachments.size());
+
+            for (int attachPos = 0; attachPos < currentAttachments.size(); attachPos++) {
+                Attachment curAttach = currentAttachments.get(attachPos);
+//                long curAttachId = curAttach.getId();
+                String curPath = curAttach.getPath();
+
+                File delFile = new File(curPath);
+
+                //rename not delete
+                File tempFile = new File(curPath+"(.temp)");
+
+
+
+                boolean res = delFile.renameTo(tempFile);
+
+                //boolean res = delFile.delete();
+                if (res)
+                    Log.d("attach", "file deleted");
+                else
+                    Log.d("attach", "file not deleted");
+
+                AttachManager.newInstance(this).delete(curAttach);
+            }
+
+            //keeping for deleting later in Drive
+            //NoteManager.newInstance(this).delete(currentNote);
+            NoteManager.newInstance(this).disable(deletedItem);
 
             // showing snack bar with Undo option
             Snackbar snackbar = Snackbar
@@ -219,6 +261,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     // undo is selected, restore the deleted item
                     noteRecyclerAdapter.restoreItem(deletedItem, deletedIndex);
+
+                    //add note again
+                    NoteManager.newInstance(getApplication()).enable(deletedItem);
+                    for (int attachPos = 0; attachPos < currentAttachments.size(); attachPos++) {
+                        Attachment curAttach = currentAttachments.get(attachPos);
+                        // long curAttachId = curAttach.getId();
+                        String curPath = curAttach.getPath();
+
+                        File delFile = new File(curPath+"(.temp)");
+                        //rename not delete
+                        File tempFile = new File(curPath);
+
+                        boolean res = delFile.renameTo(tempFile);
+
+                        //boolean res = delFile.delete();
+                        if (res)
+                            Log.d("attach", "file restored");
+                        else
+                            Log.d("attach", "file not restored");
+
+                        AttachManager.newInstance(getApplication()).add(curAttach);
+                    }
+
                 }
             });
             snackbar.setActionTextColor(Color.YELLOW);

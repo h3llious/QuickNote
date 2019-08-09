@@ -12,6 +12,7 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 import android.net.Uri;
 import android.os.Environment;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -20,6 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 
+import static com.blacksun.quicknote.activities.MainActivity.DIRECTORY;
 import static com.blacksun.quicknote.activities.MainActivity.PACKAGE_NAME;
 import static com.blacksun.quicknote.utils.DatabaseHelper.DATABASE_NAME;
 
@@ -68,6 +70,21 @@ public class UtilHelper {
 
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    public static void removeTempFiles() {
+        File[] files = DIRECTORY.listFiles();
+        Log.d("Files", "Temp file: ");
+        for (File child : files) {
+            String name = child.getName();
+            if (name.length() >= 7) {
+                String ext = name.substring(name.length()-7);
+                if (ext.equals("(.temp)")) {
+//                                    allFilesPath.add(name);
+                    child.delete();
+                }
+            }
         }
     }
 }

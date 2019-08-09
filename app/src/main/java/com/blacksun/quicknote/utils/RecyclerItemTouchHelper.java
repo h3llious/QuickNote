@@ -65,7 +65,7 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
         paint.setTextSize(60);
         //            paint.setTextAlign(Paint.Align.CENTER);
         String sDelete = itemView.getContext().getResources().getString(R.string.delete);
-        paint.getTextBounds(sDelete,0, sDelete.length(), bounds);
+        paint.getTextBounds(sDelete, 0, sDelete.length(), bounds);
 
 
         int iconMarginVertical = (viewHolder.itemView.getHeight() - deleteIcon.getIntrinsicHeight()) / 2;
@@ -90,12 +90,12 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
             c.clipRect(itemView.getLeft(), itemView.getTop(), Math.round(dX), itemView.getBottom());
 
             c.drawText(sDelete, itemView.getLeft() + iconMarginVertical + deleteIcon.getIntrinsicWidth(),
-                    (itemView.getTop() + itemView.getBottom()) / 2 + (- itemView.getTop() + itemView.getBottom()) / 10 , paint);
+                    (itemView.getTop() + itemView.getBottom()) / 2 + bounds.height() / 2, paint);
         } else {
             c.clipRect(itemView.getRight() + Math.round(dX), itemView.getTop(), itemView.getRight(), itemView.getBottom());
 
             c.drawText(sDelete, itemView.getRight() - iconMarginVertical - deleteIcon.getIntrinsicWidth() - bounds.width(),
-                    (itemView.getTop() + itemView.getBottom()) / 2 + (- itemView.getTop() + itemView.getBottom()) / 10 , paint);
+                    (itemView.getTop() + itemView.getBottom()) / 2 + bounds.height() / 2, paint);
         }
 
         deleteIcon.draw(c);

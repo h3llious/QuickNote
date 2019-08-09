@@ -168,6 +168,20 @@ public class NoteManager {
 
     }
 
+    public void enable(Note note) {
+        ContentValues values = new ContentValues();
+        values.put(NoteContract.NoteEntry.COLUMN_NOTE_TITLE, note.getTitle());
+//        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CONTENT, note.getContent());
+//        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, note.getDateCreated());
+        values.put(NoteContract.NoteEntry.COLUMN_NOTE_DELETED, NoteContract.NoteEntry.NOT_DELETED);
+//        if (!TextUtils.isEmpty(note.getImagePath()))
+//            values.put(NoteContract.NoteEntry.COLUMN_NOTE_IMG, note.getImagePath());
+
+        mContext.getApplicationContext().getContentResolver().update(NoteContract.NoteEntry.CONTENT_URI,
+                values, NoteContract.NoteEntry.ID + "=" + note.getId(), null);
+
+    }
+
     //CRU(D)
     public void delete(Note note) {
         mContext.getContentResolver().delete(
