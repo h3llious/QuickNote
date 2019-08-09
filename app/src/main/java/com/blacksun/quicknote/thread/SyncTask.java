@@ -366,6 +366,10 @@ public class SyncTask implements Runnable {
                                     //delete attaches in localAttaches
                                     for (int iAttach = localAttaches.size() - 1; iAttach >= 0; iAttach--) {
                                         if (localAttaches.get(iAttach).getNote_id() == noteLocalId) {
+
+                                            File delAttach = new File(localAttaches.get(iAttach).getPath());
+                                            delAttach.delete();
+
                                             localAttaches.remove(iAttach);
 
                                             //notification
