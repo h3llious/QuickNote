@@ -11,10 +11,18 @@ import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
+import android.text.Editable;
+import android.text.Selection;
+import android.text.Spannable;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.ImageSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -22,6 +30,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
@@ -83,6 +92,8 @@ public class DetailActivity extends AppCompatActivity {
 
     boolean isChanged = false;
 
+    public static final String SPANNABLE_TAG = "spannable";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,7 +109,7 @@ public class DetailActivity extends AppCompatActivity {
         setUpRecyclerView();
 
         //existed note content
-        setUpAppBar();
+        setUpCurrentNote();
 
     }
 
@@ -239,7 +250,6 @@ public class DetailActivity extends AppCompatActivity {
 //                    File tobedeleted = new File(oldPhotoPath);
 //                    tobedeleted.delete();
 //                }
-                createThumbnail(currentPhotoPath);
 
                 //new RecyclerView
                 Attachment newAttach = new Attachment();
@@ -255,6 +265,10 @@ public class DetailActivity extends AppCompatActivity {
                     images.add(newAttach);
                 }
                 imageRecyclerAdapter.notifyItemInserted(images.size() - 1);
+
+                //spannable test
+                spannableImage(newAttach);
+
             } else if (resultCode == RESULT_CANCELED) {
                 if (!TextUtils.isEmpty(currentPhotoPath)) {
                     File tobedeleted = new File(currentPhotoPath);
@@ -349,7 +363,10 @@ public class DetailActivity extends AppCompatActivity {
 
 
                     Log.d("filepath", filePath + ": " + fileName);
-                    createThumbnail(filePath);
+//                    createThumbnail(filePath);
+
+                    //spannable test
+                    spannableImage(newAttach);
                 } catch (IOException e) {
                     Log.e("saveFile", "error saving file");
                 }
@@ -357,24 +374,51 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
-    private void createThumbnail(final String path) {
-        Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(path), 500, 500);
-//        testImage.setImageBitmap(thumbImage);
-//
-//        testImage.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                File file = new File(path);
-//                Intent intent = new Intent();
-//                intent.setAction(android.content.Intent.ACTION_VIEW);
-//                Uri fileUri = FileProvider.getUriForFile(v.getContext(),
-//                        "com.blacksun.quicknote.fileprovider",
-//                        file);
-//                intent.setData(fileUri);
-//                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-//                startActivity(intent);
-//            }
-//        });
+    private void spannableImage(Attachment newAttach) {
+        int cursorLoc = detailContent.getSelectionStart();
+
+        if (cursorLoc != -1) {
+            Bitmap thumb = createThumbnail(currentPhotoPath);
+
+            Log.d(SPANNABLE_TAG, "cursor location: " + cursorLoc);
+
+            Editable content = detailContent.getText();
+
+
+            String attachName = newAttach.getPath().substring(newAttach.getPath().lastIndexOf('/') + 1);
+            //cursor +1 is the position of imageSpan
+            content.insert(cursorLoc, "\n$" + attachName + "$\n");
+
+            //update position to change into image
+            cursorLoc++;
+
+
+            Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(cursorLoc, cursorLoc + attachName.length() + 1));
+
+
+            //+2 for cursor+1 and length+1
+            content.setSpan(new ImageSpan(this, thumb), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            content.setSpan(new ClickableSpan() {
+                @Override
+                public void onClick(@NonNull View widget) {
+                    File file = new File(newAttach.getPath());
+                    Intent intent = new Intent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
+                            "com.blacksun.quicknote.fileprovider",
+                            file);
+                    intent.setData(fileUri);
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    widget.getContext().startActivity(intent);
+                }
+            }, cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            detailContent.setText(content);
+        }
+    }
+
+    private Bitmap createThumbnail(final String path) {
+        return ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(path), 500, 500);
     }
 
     private void dispatchTakePictureIntent() {
@@ -402,7 +446,7 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     //Set title of the note and attributes of collapsing toolbar with corresponding attachments
-    private void setUpAppBar() {
+    private void setUpCurrentNote() {
         if (getIntent() != null && getIntent().getExtras() != null) {
             Bundle bundle = getIntent().getExtras();
             if (bundle.getString("title") != null) {
@@ -446,6 +490,38 @@ public class DetailActivity extends AppCompatActivity {
 //                currentNote = new Note(title, content, id, dateCreated, dateModified, img);
                 currentNote = new Note(title, content, id, dateCreated, dateModified);
 //                isSaved = false;
+
+
+                //spannable test
+                Editable contentSpan = detailContent.getText();
+                String contentString = contentSpan.toString();
+                for (Attachment image : images) {
+                    String attachName = image.getPath().substring(image.getPath().lastIndexOf('/') + 1);
+
+
+                    if (contentString.contains("$" + attachName + "$")) {
+                        int idxStart = contentString.indexOf("$" + attachName + "$");
+
+                        Bitmap thumb = createThumbnail(image.getPath());
+
+                        contentSpan.setSpan(new ImageSpan(this, thumb), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        contentSpan.setSpan(new ClickableSpan() {
+                            @Override
+                            public void onClick(@NonNull View widget) {
+                                File file = new File(image.getPath());
+                                Intent intent = new Intent();
+                                intent.setAction(android.content.Intent.ACTION_VIEW);
+                                Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
+                                        "com.blacksun.quicknote.fileprovider",
+                                        file);
+                                intent.setData(fileUri);
+                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                widget.getContext().startActivity(intent);
+                            }
+                        }, idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                }
+                detailContent.setText(contentSpan);
             }
         } else {
             collapsingToolbar.setTitle("New note");
@@ -455,6 +531,7 @@ public class DetailActivity extends AppCompatActivity {
         collapsingToolbar.setCollapsedTitleTextColor(ContextCompat.getColor(this, R.color.white));
         collapsingToolbar.setExpandedTitleColor(ContextCompat.getColor(this, R.color.transparent));
     }
+
 
     private void initialize() {
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -479,6 +556,16 @@ public class DetailActivity extends AppCompatActivity {
 
         imageList = findViewById(R.id.detail_images);
         fileList = findViewById(R.id.detail_files);
+
+        //spannable test
+        detailContent.setMovementMethod(new LinkMovementMethod() {
+            @Override
+            public boolean onTouchEvent(TextView widget, Spannable buffer, MotionEvent event) {
+                Selection.removeSelection(buffer);
+//                widget.setHighlightColor(Color.argb(50,100,0,0));
+                return super.onTouchEvent(widget, buffer, event);
+            }
+        });
     }
 
     private boolean saveNote() {
@@ -517,7 +604,6 @@ public class DetailActivity extends AppCompatActivity {
                 note.setContent(content);
             else
                 note.setContent("");
-//            note.setImagePath(currentPhotoPath);
             long newId = NoteManager.newInstance(this).create(note);
 
             if (newId == -1)
@@ -553,7 +639,7 @@ public class DetailActivity extends AppCompatActivity {
             }
 
 
-                currentNote.setTitle(title);
+            currentNote.setTitle(title);
             if (!TextUtils.isEmpty(content))
                 currentNote.setContent(content);
 //            currentNote.setImagePath(currentPhotoPath);
@@ -711,6 +797,16 @@ public class DetailActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         if (intent.getAction().equals(REQUEST_CHANGE)) {
             isChanged = true;
+
+            //delete attaches in content
+            String attachName = intent.getStringExtra(NoteContract.AttachEntry.COLUMN_ATTACH_PATH);
+            String contentString = detailContent.getText().toString();
+            String attachFormat = "$" + attachName + "$";
+            if (contentString.contains(attachFormat)) {
+                int startIdx = contentString.indexOf(attachFormat);
+                Editable changedContent = detailContent.getText().delete(startIdx,startIdx + 1 + attachFormat.length());
+                detailContent.setText(changedContent);
+            }
         }
 
         super.onNewIntent(intent);

@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.activities.DetailActivity;
 import com.blacksun.quicknote.controllers.AttachManager;
+import com.blacksun.quicknote.data.NoteContract;
 import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.utils.UtilHelper;
 
@@ -111,6 +112,7 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
                 //check changes in Notes
                 Intent intent = new Intent(context, DetailActivity.class);
                 intent.setAction(REQUEST_CHANGE);
+                intent.putExtra(NoteContract.AttachEntry.COLUMN_ATTACH_PATH, curFile.getName());
                 context.startActivity(intent);
             }
         });
