@@ -22,13 +22,10 @@ import android.text.style.AlignmentSpan;
 import android.text.style.ClickableSpan;
 import android.text.style.ImageSpan;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -59,6 +56,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -480,6 +478,16 @@ public class DetailActivity extends AppCompatActivity {
                 Log.d("attach", "id " + id + ", number " + images.size());
                 imageRecyclerAdapter.notifyDataSetChanged();
 
+                //change header image
+                if (images.size() == 0) {
+                    changeHeaderImageDefault();
+                } else {
+                    ImageView toolbarImage = findViewById(R.id.toolbar_image);
+                    Bitmap imgHeader = ThumbnailUtils.extractThumbnail(
+                            BitmapFactory.decodeFile(images.get(0).getPath()), 500, 500);
+                    toolbarImage.setImageBitmap(imgHeader);
+                }
+
 
                 newImages = new ArrayList<>();
                 newFiles = new ArrayList<>();
@@ -530,6 +538,7 @@ public class DetailActivity extends AppCompatActivity {
             }
         } else {
             collapsingToolbar.setTitle("New note");
+            changeHeaderImageDefault();
         }
 
 
@@ -813,5 +822,16 @@ public class DetailActivity extends AppCompatActivity {
         }
 
         super.onNewIntent(intent);
+    }
+
+    private void changeHeaderImageDefault(){
+        ImageView toolbarImage = findViewById(R.id.toolbar_image);
+        Calendar rightNow = Calendar.getInstance();
+        int currentHourIn24Format = rightNow.get(Calendar.HOUR_OF_DAY);
+        if (currentHourIn24Format >= 6 && currentHourIn24Format <18) {
+            toolbarImage.setImageDrawable(getResources().getDrawable(R.drawable.day));
+        } else {
+            toolbarImage.setImageDrawable(getResources().getDrawable(R.drawable.night));
+        }
     }
 }
