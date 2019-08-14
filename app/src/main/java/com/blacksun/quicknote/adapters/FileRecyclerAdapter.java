@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.activities.DetailActivity;
 import com.blacksun.quicknote.controllers.AttachManager;
+import com.blacksun.quicknote.data.NoteContract;
 import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.utils.UtilHelper;
 
@@ -31,10 +32,12 @@ import static com.blacksun.quicknote.activities.DetailActivity.REQUEST_CHANGE;
 
 public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapter.ViewHolder> {
     ArrayList<Attachment> files;
+    ArrayList<Attachment> newFiles;
     Context context;
 
-    public FileRecyclerAdapter(ArrayList<Attachment> files, Context context) {
+    public FileRecyclerAdapter(ArrayList<Attachment> files, ArrayList<Attachment> newFiles, Context context) {
         this.files = files;
+        this.newFiles = newFiles;
         this.context = context;
     }
 
@@ -136,10 +139,19 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, files.size());
 
+        for (int i = newFiles.size() - 1; i >= 0; i--) {
+            if (newFiles.get(i).getPath().equals(curPath)) {
+                newFiles.remove(i);
+                break;
+            }
+        }
+
 
         //check changes in Notes
         Intent intent = new Intent(context, DetailActivity.class);
         intent.setAction(REQUEST_CHANGE);
+        intent.putExtra(NoteContract.AttachEntry.COLUMN_ATTACH_TYPE, NoteContract.AttachEntry.IMAGE_TYPE);
+        intent.putExtra(NoteContract.AttachEntry.COLUMN_ATTACH_PATH, curPath);
         context.startActivity(intent);
     }
 

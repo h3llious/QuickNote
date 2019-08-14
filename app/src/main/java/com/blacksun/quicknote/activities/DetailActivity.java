@@ -1,11 +1,10 @@
 package com.blacksun.quicknote.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
@@ -21,11 +20,13 @@ import android.text.method.LinkMovementMethod;
 import android.text.style.AlignmentSpan;
 import android.text.style.ClickableSpan;
 import android.text.style.ImageSpan;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -95,6 +96,8 @@ public class DetailActivity extends AppCompatActivity {
     public static final String SPANNABLE_TAG = "spannable";
     public static final String ATTACH_TAG = "attach";
 
+    DisplayMetrics displayMetrics = new DisplayMetrics();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -115,15 +118,18 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void setUpRecyclerView() {
+        newImages = new ArrayList<>();
+        newFiles = new ArrayList<>();
+
         images = new ArrayList<>();
-        imageRecyclerAdapter = new ImageRecyclerAdapter(images, this);
+        imageRecyclerAdapter = new ImageRecyclerAdapter(images, newImages, this);
 
         imageList.setHasFixedSize(false);
         imageList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         imageList.setAdapter(imageRecyclerAdapter);
 
         files = new ArrayList<>();
-        fileRecyclerAdapter = new FileRecyclerAdapter(files, this);
+        fileRecyclerAdapter = new FileRecyclerAdapter(files, newFiles, this);
 
         fileList.setHasFixedSize(false); //size change with content
         fileList.setLayoutManager(new LinearLayoutManager(this));
@@ -379,7 +385,7 @@ public class DetailActivity extends AppCompatActivity {
         int cursorLoc = detailContent.getSelectionStart();
 
         if (cursorLoc != -1) {
-            Bitmap thumb = createThumbnail(currentPhotoPath);
+            Bitmap thumb = UtilHelper.createThumbnail(currentPhotoPath, 500, 500);
 
             Log.d(SPANNABLE_TAG, "cursor location: " + cursorLoc);
 
@@ -388,10 +394,10 @@ public class DetailActivity extends AppCompatActivity {
 
             String attachName = newAttach.getPath().substring(newAttach.getPath().lastIndexOf('/') + 1);
             //cursor +1 is the position of imageSpan
-            content.insert(cursorLoc, "\n $" + attachName + "$ \n");
+            content.insert(cursorLoc, "\n$" + attachName + "$ \n");
 
             //update position to change into image
-            cursorLoc += 2;
+            cursorLoc += 1;
 
 
             Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(cursorLoc, cursorLoc + attachName.length() + 1));
@@ -417,10 +423,6 @@ public class DetailActivity extends AppCompatActivity {
 
             detailContent.setText(content);
         }
-    }
-
-    private Bitmap createThumbnail(final String path) {
-        return ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(path), 500, 500);
     }
 
     private void dispatchTakePictureIntent() {
@@ -465,11 +467,11 @@ public class DetailActivity extends AppCompatActivity {
                 long id = bundle.getLong("noteID");
                 String img = bundle.getString("imagePath");
                 currentPhotoPath = img;
-                if (!TextUtils.isEmpty(img)) {
-                    File currentImg = new File(currentPhotoPath);
-                    if (currentImg.exists())
-                        createThumbnail(currentPhotoPath);
-                }
+//                if (!TextUtils.isEmpty(img)) {
+//                    File currentImg = new File(currentPhotoPath);
+//                    if (currentImg.exists())
+//                        UtilHelper.createThumbnail(currentPhotoPath, 300, 300);
+//                }
 
 
                 ArrayList<Attachment> currentImages = AttachManager.newInstance(this).getAttach(id, NoteContract.AttachEntry.IMAGE_TYPE);
@@ -482,15 +484,18 @@ public class DetailActivity extends AppCompatActivity {
                 if (images.size() == 0) {
                     changeHeaderImageDefault();
                 } else {
+
+                    float scale = getResources().getDisplayMetrics().density;
+                    int dpAsPixels = (int) (180 * scale + 0.5f);
+
                     ImageView toolbarImage = findViewById(R.id.toolbar_image);
-                    Bitmap imgHeader = ThumbnailUtils.extractThumbnail(
-                            BitmapFactory.decodeFile(images.get(0).getPath()), 500, 500);
+                    Bitmap imgHeader = UtilHelper.createThumbnail(images.get(0).getPath(), displayMetrics.widthPixels, dpAsPixels);
+                    Log.d("bitmap", "display width "+ displayMetrics.widthPixels);
                     toolbarImage.setImageBitmap(imgHeader);
                 }
 
 
-                newImages = new ArrayList<>();
-                newFiles = new ArrayList<>();
+
 
                 ArrayList<Attachment> currentFiles = AttachManager.newInstance(this).getAttach(id, NoteContract.AttachEntry.FILE_TYPE);
                 files.clear();
@@ -514,7 +519,7 @@ public class DetailActivity extends AppCompatActivity {
                     if (contentString.contains("$" + attachName + "$")) {
                         int idxStart = contentString.indexOf("$" + attachName + "$");
 
-                        Bitmap thumb = createThumbnail(image.getPath());
+                        Bitmap thumb = UtilHelper.createThumbnail(image.getPath(), displayMetrics.widthPixels/2, displayMetrics.widthPixels/2);
 
                         contentSpan.setSpan(new ImageSpan(this, thumb), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -577,6 +582,10 @@ public class DetailActivity extends AppCompatActivity {
                 return super.onTouchEvent(widget, buffer, event);
             }
         });
+
+        //size pixel
+        WindowManager windowmanager = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+        windowmanager.getDefaultDisplay().getMetrics(displayMetrics);
     }
 
 
@@ -807,18 +816,41 @@ public class DetailActivity extends AppCompatActivity {
 
     @Override
     protected void onNewIntent(Intent intent) {
-        if (intent.getAction().equals(REQUEST_CHANGE)) {
+        if (intent.getAction()!= null && intent.getAction().equals(REQUEST_CHANGE)) {
             isChanged = true;
+            String attachType = intent.getStringExtra(NoteContract.AttachEntry.COLUMN_ATTACH_TYPE);
 
             //delete attaches in content
-            String attachName = intent.getStringExtra(NoteContract.AttachEntry.COLUMN_ATTACH_PATH);
-            String contentString = detailContent.getText().toString();
-            String attachFormat = "$" + attachName + "$";
-            if (contentString.contains(attachFormat)) {
-                int startIdx = contentString.indexOf(attachFormat);
-                Editable changedContent = detailContent.getText().delete(startIdx, startIdx + 1 + attachFormat.length());
-                detailContent.setText(changedContent);
+            String attachPath = intent.getStringExtra(NoteContract.AttachEntry.COLUMN_ATTACH_PATH);
+
+            if (attachType.equals(NoteContract.AttachEntry.IMAGE_TYPE)) {
+                File curFile = new File(attachPath);
+                String attachName = curFile.getName();
+                String contentString = detailContent.getText().toString();
+                String attachFormat = "$" + attachName + "$";
+                if (contentString.contains(attachFormat)) {
+                    int startIdx = contentString.indexOf(attachFormat);
+                    Editable changedContent = detailContent.getText().delete(startIdx, startIdx + 1 + attachFormat.length());
+                    detailContent.setText(changedContent);
+                }
             }
+
+            //delete in newAttaches
+//            if (attachType.equals(NoteContract.AttachEntry.IMAGE_TYPE)) {
+//                for (int i = newImages.size() - 1; i >= 0; i--) {
+//                    if (newImages.get(i).getPath().equals(attachPath)) {
+//                        newImages.remove(i);
+//                        break;
+//                    }
+//                }
+//            } else if (attachType.equals(NoteContract.AttachEntry.FILE_TYPE)){
+//                for (int i = newFiles.size() - 1; i >= 0; i--) {
+//                    if (newFiles.get(i).getPath().equals(attachPath)) {
+//                        newFiles.remove(i);
+//                        break;
+//                    }
+//                }
+//            }
         }
 
         super.onNewIntent(intent);

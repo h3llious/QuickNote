@@ -35,10 +35,12 @@ import static com.blacksun.quicknote.activities.DetailActivity.REQUEST_CHANGE;
 
 public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdapter.ViewHolder> {
     ArrayList<Attachment> images;
+    ArrayList<Attachment> newImages;
     Context context;
 
-    public ImageRecyclerAdapter(ArrayList<Attachment> images, Context context) {
+    public ImageRecyclerAdapter(ArrayList<Attachment> images, ArrayList<Attachment> newImages, Context context) {
         this.images = images;
+        this.newImages = newImages;
         this.context = context;
     }
 
@@ -53,7 +55,10 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
     @Override
     public void onBindViewHolder(@NonNull ImageRecyclerAdapter.ViewHolder holder, final int position) {
         final Attachment attach = images.get(position);
-        Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(attach.getPath()), 300, 300);
+
+        Bitmap imageFile = UtilHelper.decodeSampledBitmapFromFile(attach.getPath(), 300, 300);
+
+        Bitmap thumbImage = ThumbnailUtils.extractThumbnail(imageFile, 300, 300);
         holder.image.setImageBitmap(thumbImage);
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -123,11 +128,19 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, images.size());
 
+        for (int i = newImages.size() - 1; i >= 0; i--) {
+            if (newImages.get(i).getPath().equals(curPath)) {
+                newImages.remove(i);
+                break;
+            }
+        }
+
 
         //check changes in Notes
         Intent intent = new Intent(context, DetailActivity.class);
         intent.setAction(REQUEST_CHANGE);
-        intent.putExtra(NoteContract.AttachEntry.COLUMN_ATTACH_PATH, curFile.getName());
+        intent.putExtra(NoteContract.AttachEntry.COLUMN_ATTACH_PATH, curPath);
+        intent.putExtra(NoteContract.AttachEntry.COLUMN_ATTACH_TYPE, NoteContract.AttachEntry.IMAGE_TYPE);
         context.startActivity(intent);
     }
 

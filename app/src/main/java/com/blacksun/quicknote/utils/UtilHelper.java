@@ -2,6 +2,7 @@ package com.blacksun.quicknote.utils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -10,6 +11,7 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
@@ -35,12 +37,12 @@ public class UtilHelper {
     public static Bitmap getRoundedCornerBitmap(Bitmap bitmap) {
         Bitmap circleBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
 
-        BitmapShader shader = new BitmapShader(bitmap,  Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+        BitmapShader shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
         Paint paint = new Paint();
         paint.setShader(shader);
         paint.setAntiAlias(true);
         Canvas c = new Canvas(circleBitmap);
-        c.drawCircle((float) (bitmap.getWidth())/2, (float)bitmap.getHeight()/2, (float)bitmap.getWidth()/2, paint);
+        c.drawCircle((float) (bitmap.getWidth()) / 2, (float) bitmap.getHeight() / 2, (float) bitmap.getWidth() / 2, paint);
 
 
         return circleBitmap;
@@ -79,12 +81,55 @@ public class UtilHelper {
         for (File child : files) {
             String name = child.getName();
             if (name.length() >= 7) {
-                String ext = name.substring(name.length()-7);
+                String ext = name.substring(name.length() - 7);
                 if (ext.equals("(.temp)")) {
 //                                    allFilesPath.add(name);
                     child.delete();
                 }
             }
         }
+    }
+
+    public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) >= reqHeight
+                    && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
+    public static Bitmap decodeSampledBitmapFromFile(String filePath,
+                                                         int reqWidth, int reqHeight) {
+
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(filePath, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeFile(filePath, options);
+    }
+
+    public static Bitmap createThumbnail(String path, int width, int height) {
+        Bitmap imageFile = decodeSampledBitmapFromFile(path, width, height);
+        return ThumbnailUtils.extractThumbnail(imageFile, width, height);
     }
 }
