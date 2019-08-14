@@ -119,4 +119,7 @@
     <string name="download">Download data from Drive</string>
     <string name="sync">Sync</string>
     <string name="version">v1.0.0</string>
+    <string name="menu_open_attach">Open</string>
+    <string name="menu_save_attach">Save</string>
+    <string name="menu_delete_attach">Delete</string>
 </resources>

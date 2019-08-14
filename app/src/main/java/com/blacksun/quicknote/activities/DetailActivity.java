@@ -12,18 +12,23 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.text.Editable;
+import android.text.Layout;
 import android.text.Selection;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
+import android.text.style.AlignmentSpan;
 import android.text.style.ClickableSpan;
 import android.text.style.ImageSpan;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -73,12 +78,9 @@ public class DetailActivity extends AppCompatActivity {
     static final int REQUEST_FILE_CHOOSER = 2;
     static final int REQUEST_IMAGE_CHOOSER = 3;
 
-    ImageView testImage;
     String currentPhotoPath;
     String currentPhotoName;
     String oldPhotoPath;
-
-    TextView testFile;
 
     RecyclerView imageList, fileList;
 
@@ -93,6 +95,7 @@ public class DetailActivity extends AppCompatActivity {
     boolean isChanged = false;
 
     public static final String SPANNABLE_TAG = "spannable";
+    public static final String ATTACH_TAG = "attach";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -387,10 +390,10 @@ public class DetailActivity extends AppCompatActivity {
 
             String attachName = newAttach.getPath().substring(newAttach.getPath().lastIndexOf('/') + 1);
             //cursor +1 is the position of imageSpan
-            content.insert(cursorLoc, "\n$" + attachName + "$\n");
+            content.insert(cursorLoc, "\n $" + attachName + "$ \n");
 
             //update position to change into image
-            cursorLoc++;
+            cursorLoc += 2;
 
 
             Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(cursorLoc, cursorLoc + attachName.length() + 1));
@@ -398,6 +401,7 @@ public class DetailActivity extends AppCompatActivity {
 
             //+2 for cursor+1 and length+1
             content.setSpan(new ImageSpan(this, thumb), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            content.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             content.setSpan(new ClickableSpan() {
                 @Override
                 public void onClick(@NonNull View widget) {
@@ -505,6 +509,7 @@ public class DetailActivity extends AppCompatActivity {
                         Bitmap thumb = createThumbnail(image.getPath());
 
                         contentSpan.setSpan(new ImageSpan(this, thumb), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         contentSpan.setSpan(new ClickableSpan() {
                             @Override
                             public void onClick(@NonNull View widget) {
@@ -532,7 +537,6 @@ public class DetailActivity extends AppCompatActivity {
         collapsingToolbar.setExpandedTitleColor(ContextCompat.getColor(this, R.color.transparent));
     }
 
-
     private void initialize() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -550,15 +554,13 @@ public class DetailActivity extends AppCompatActivity {
         detailFile = findViewById(R.id.detail_file);
         detailCheckbox = findViewById(R.id.detail_checkbox);
 
-        //just test changed into recyclerView
-//        testImage = findViewById(R.id.test_image);
-//        testFile = findViewById(R.id.test_file);
-
         imageList = findViewById(R.id.detail_images);
         fileList = findViewById(R.id.detail_files);
 
         //spannable test
         detailContent.setMovementMethod(new LinkMovementMethod() {
+
+
             @Override
             public boolean onTouchEvent(TextView widget, Spannable buffer, MotionEvent event) {
                 Selection.removeSelection(buffer);
@@ -567,6 +569,7 @@ public class DetailActivity extends AppCompatActivity {
             }
         });
     }
+
 
     private boolean saveNote() {
         String title = detailTitle.getText().toString();
@@ -804,7 +807,7 @@ public class DetailActivity extends AppCompatActivity {
             String attachFormat = "$" + attachName + "$";
             if (contentString.contains(attachFormat)) {
                 int startIdx = contentString.indexOf(attachFormat);
-                Editable changedContent = detailContent.getText().delete(startIdx,startIdx + 1 + attachFormat.length());
+                Editable changedContent = detailContent.getText().delete(startIdx, startIdx + 1 + attachFormat.length());
                 detailContent.setText(changedContent);
             }
         }

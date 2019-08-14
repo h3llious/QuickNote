@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
@@ -13,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -71,35 +73,41 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                File file = new File(files.get(position).getPath());
-                Intent intent = new Intent();
-                intent.setAction(android.content.Intent.ACTION_VIEW);
-                Uri fileUri = FileProvider.getUriForFile(v.getContext(),
-                        "com.blacksun.quicknote.fileprovider",
-                        file);
-                intent.setData(fileUri);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                v.getContext().startActivity(intent);
+                openAttach(v, position);
             }
         });
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                File file = new File(filePath);
-                Uri fileUri = FileProvider.getUriForFile(v.getContext(),
-                        "com.blacksun.quicknote.fileprovider",
-                        file);
-                String filename = file.getName();
+                //creating a popup menu
+                PopupMenu popup = new PopupMenu(context, holder.itemView);
+                //inflating menu from xml resource
+                popup.inflate(R.menu.menu_attach);
+                //adding click listener
+                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        switch (item.getItemId()) {
+                            case R.id.action_open_attach:
+                                openAttach(v, position);
+                                return true;
+                            case R.id.action_save_attach:
+                                saveAttach(v, filePath);
+                                return true;
+                            case R.id.action_delete_attach:
+                                deleteAttach(position);
+                                return true;
+                            default:
+                                return false;
+                        }
+                    }
+                });
+                //displaying the popup
+                popup.show();
 
-                File storageLoc = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                File savedFile = new File(storageLoc, filename);
 
-                UtilHelper.copy(fileUri, savedFile, context);
-
-                Log.d("saveFile", ""+savedFile);
-
-                Toast.makeText(context, "File saved", Toast.LENGTH_SHORT).show();
+//                saveAttach(v, filePath);
                 return true;
             }
         });
@@ -107,28 +115,61 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
         holder.deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Attachment curAttach = files.get(position);
-                String curPath = curAttach.getPath();
-                File curFile = new File(curPath);
-                curFile.delete();
-
-                long curId = curAttach.getId();
-
-                if (curId != 0){
-                    AttachManager.newInstance(context).delete(curAttach);
-                }
-
-                files.remove(position);
-                notifyItemRemoved(position);
-                notifyItemRangeChanged(position, files.size());
-
-
-                //check changes in Notes
-                Intent intent = new Intent(context, DetailActivity.class);
-                intent.setAction(REQUEST_CHANGE);
-                context.startActivity(intent);
+                deleteAttach(position);
             }
         });
+    }
+
+    private void deleteAttach(int position) {
+        Attachment curAttach = files.get(position);
+        String curPath = curAttach.getPath();
+        File curFile = new File(curPath);
+        curFile.delete();
+
+        long curId = curAttach.getId();
+
+        if (curId != 0){
+            AttachManager.newInstance(context).delete(curAttach);
+        }
+
+        files.remove(position);
+        notifyItemRemoved(position);
+        notifyItemRangeChanged(position, files.size());
+
+
+        //check changes in Notes
+        Intent intent = new Intent(context, DetailActivity.class);
+        intent.setAction(REQUEST_CHANGE);
+        context.startActivity(intent);
+    }
+
+    private void saveAttach(View v, String filePath) {
+        File file = new File(filePath);
+        Uri fileUri = FileProvider.getUriForFile(v.getContext(),
+                "com.blacksun.quicknote.fileprovider",
+                file);
+        String filename = file.getName();
+
+        File storageLoc = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        File savedFile = new File(storageLoc, filename);
+
+        UtilHelper.copy(fileUri, savedFile, context);
+
+        Log.d("saveFile", ""+savedFile);
+
+        Toast.makeText(context, "File saved", Toast.LENGTH_SHORT).show();
+    }
+
+    private void openAttach(View v, int position) {
+        File file = new File(files.get(position).getPath());
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        Uri fileUri = FileProvider.getUriForFile(v.getContext(),
+                "com.blacksun.quicknote.fileprovider",
+                file);
+        intent.setData(fileUri);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        v.getContext().startActivity(intent);
     }
 
     @Override

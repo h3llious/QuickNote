@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/action_open_attach"
+        android:title="@string/menu_open_attach" />
+
+    <item android:id="@+id/action_save_attach"
+        android:title="@string/menu_save_attach" />
+
+    <item android:id="@+id/action_delete_attach"
+        android:title="@string/menu_delete_attach" />
+
+</menu>
