@@ -56,6 +56,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
@@ -307,6 +308,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
+                .requestScopes(new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE))
                 .build();
 
         // Build a GoogleSignInClient with the options specified by gso.
@@ -355,6 +357,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         googleNameText.setText(R.string.app_name);
         googleAvatarImg.setImageDrawable(getResources().getDrawable(R.mipmap.ic_avatar_round));
         loadedAvatar = null;
+        googleServiceDrive = null;
     }
 
     @Override

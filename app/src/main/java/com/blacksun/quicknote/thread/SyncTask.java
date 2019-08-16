@@ -489,7 +489,7 @@ public class SyncTask implements Runnable {
                         }
                     }
                     for (int iAttach = 0; iAttach < localAttaches.size(); iAttach++) {
-                        attachManager.add(localAttaches.get(iAttach));
+                        attachManager.create(localAttaches.get(iAttach));
                         Log.d(DRIVE_TAG, "push attach " + localAttaches.get(iAttach).getNote_id());
                     }
 //                    }
@@ -593,6 +593,9 @@ public class SyncTask implements Runnable {
             Log.e(DRIVE_TAG, "error execution " + e);
             e.printStackTrace();
             Throwable throwable = e.getCause();
+
+            SyncManager.getSyncManager().getMainThreadExecutor().execute(command);
+            notificationManager.cancel(notificationId);
             if (throwable instanceof UserRecoverableAuthIOException) {
                 Intent errorIntent = ((UserRecoverableAuthIOException) throwable).getIntent();
                 errorIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -609,16 +612,16 @@ public class SyncTask implements Runnable {
                 File to = new File(DATABASE_PATH);
                 copy(Uri.fromFile(from), to, context);
                 Log.d(DRIVE_TAG, "Backup db");
-                SyncManager.getSyncManager().getMainThreadExecutor().execute(command);
-                notificationManager.cancel(notificationId);
+
             }
+
         }
     }
 
     Runnable command = new Runnable() {
         @Override
         public void run() {
-            Toast.makeText(context, "Finished syncing data!", Toast.LENGTH_LONG).show();
+//            Toast.makeText(context, "Finished syncing data!", Toast.LENGTH_LONG).show();
             //just reload the screen
             Intent startActivity = new Intent();
 
