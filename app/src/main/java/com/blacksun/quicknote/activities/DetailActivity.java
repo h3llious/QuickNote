@@ -16,6 +16,7 @@ import android.text.Selection;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.text.style.AlignmentSpan;
 import android.text.style.ClickableSpan;
@@ -97,6 +98,8 @@ public class DetailActivity extends AppCompatActivity {
     public static final String ATTACH_TAG = "attach";
 
     DisplayMetrics displayMetrics = new DisplayMetrics();
+
+    ImageHandler mEmoticonHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -547,6 +550,8 @@ public class DetailActivity extends AppCompatActivity {
         }
 
 
+        mEmoticonHandler = new ImageHandler(detailContent);
+
         collapsingToolbar.setCollapsedTitleTextColor(ContextCompat.getColor(this, R.color.white));
         collapsingToolbar.setExpandedTitleColor(ContextCompat.getColor(this, R.color.transparent));
     }
@@ -577,11 +582,12 @@ public class DetailActivity extends AppCompatActivity {
 
             @Override
             public boolean onTouchEvent(TextView widget, Spannable buffer, MotionEvent event) {
-                Selection.removeSelection(buffer);
+//                Selection.removeSelection(buffer);
 //                widget.setHighlightColor(Color.argb(50,100,0,0));
                 return super.onTouchEvent(widget, buffer, event);
             }
         });
+
 
         //size pixel
         WindowManager windowmanager = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
@@ -865,5 +871,64 @@ public class DetailActivity extends AppCompatActivity {
         } else {
             toolbarImage.setImageDrawable(getResources().getDrawable(R.drawable.night));
         }
+    }
+
+    private static class ImageHandler implements TextWatcher {
+
+        private final EditText mEditor;
+        private final ArrayList<ImageSpan> mEmoticonsToRemove = new ArrayList<ImageSpan>();
+
+        public ImageHandler(EditText editor) {
+            // Attach the handler to listen for text changes.
+            mEditor = editor;
+            mEditor.addTextChangedListener(this);
+        }
+
+
+        @Override
+        public void beforeTextChanged(CharSequence text, int start, int count, int after) {
+            // Check if some text will be removed.
+            if (count > after) {
+                int end = start + count;
+                Editable message = mEditor.getEditableText();
+                ImageSpan[] list = message.getSpans(start, end, ImageSpan.class);
+
+                for (ImageSpan span : list) {
+                    // Get only the emoticons that are inside of the changed
+                    // region.
+                    int spanStart = message.getSpanStart(span);
+                    int spanEnd = message.getSpanEnd(span);
+                    if ((spanStart < end) && (spanEnd > start)) {
+                        // Add to remove list
+                        mEmoticonsToRemove.add(span);
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void afterTextChanged(Editable text) {
+            Editable message = mEditor.getEditableText();
+
+            // Commit the emoticons to be removed.
+            for (ImageSpan span : mEmoticonsToRemove) {
+                int start = message.getSpanStart(span);
+                int end = message.getSpanEnd(span);
+
+                // Remove the span
+                message.removeSpan(span);
+
+                // Remove the remaining emoticon text.
+                if (start != end) {
+                    message.delete(start, end);
+                }
+            }
+            mEmoticonsToRemove.clear();
+        }
+
+        @Override
+        public void onTextChanged(CharSequence text, int start, int before, int count) {
+        }
+
     }
 }
