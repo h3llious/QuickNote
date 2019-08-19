@@ -493,7 +493,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     for (Note note : notes) {
                         String title = note.getTitle().toLowerCase();
                         String content = note.getContent().toLowerCase();
-                        if (title.contains(newText) || content.contains(newText)) {
+                        String dateModified = NoteRecyclerAdapter.getDate(note.getDateModified(), "dd/MM/yyyy HH:mm");
+                        if (title.contains(newText) || content.contains(newText) || dateModified.contains(newText)) {
                             newList.add(note);
                         }
                     }
