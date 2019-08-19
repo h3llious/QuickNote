@@ -1,7 +1,6 @@
 package com.blacksun.quicknote.activities;
 
 
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -15,7 +14,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
@@ -68,7 +66,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -144,10 +141,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //Remove temp files
         removeTempFiles();
 
-
         //sign in, sign out by google account
         setUpGoogleAccount();
-
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -161,21 +156,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
 
 
-        FloatingActionButton createNewNote = findViewById(R.id.fab);
-        createNewNote.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-                startActivity(intent);
-            }
-        });
+        newNoteFAB();
 
         retrieveNoteList();
 
     }
 
+    private void newNoteFAB() {
+        FloatingActionButton createNewNote = findViewById(R.id.fab);
+        createNewNote.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
 
 
     private void setSharedPref() {
@@ -387,7 +383,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         getInfo();
         noteRecyclerAdapter.notifyDataSetChanged();
 
-
         //check if already logged in
         checkLoggedIn();
     }
@@ -450,9 +445,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 notes.add(note);
             }
         }
-
-        //notes.addAll(newNotes);
-
 
         emptyView.setVisibility(View.GONE);
         if (notes.size() == 0) {
@@ -652,8 +644,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         googleServiceDrive = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new GsonFactory(), credential)
                 .setApplicationName(getResources().getString(R.string.app_name))
                 .build();
-
-
     }
 
     private void onLoggedIn(GoogleSignInAccount account) {
@@ -692,28 +682,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         } else if (id == R.id.nav_upload) {
 
-            //testing: upload database into drive.
-//            final String PACKAGE_NAME = getPackageName();
-//            final String DATABASE_NAME = DatabaseHelper.DATABASE_NAME;
-////            final String DATABASE_PATH = "/data/data/" + PACKAGE_NAME + "/databases/" + DATABASE_NAME;
-//            final File FILE_DATABASE =
-//                    new File(Environment.getDataDirectory() + "/data/" + PACKAGE_NAME + "/databases/" + DATABASE_NAME);
-//            final String MIME_TYPE = "application/x-sqlite-3";
-//            final String FOLDER_NAME = "files";
-
-//            SyncUpTask syncUpTask = new SyncUpTask(driveServiceHelper, getApplicationContext());
-//            loadingIndicator();
-
             syncData(SyncManager.UP_DATA);
         } else if (id == R.id.nav_download) {
 
 //            loadingIndicator();
 
-
             //download database into drive.
             syncData(SyncManager.DOWN_DATA);
-
-
         } else if (id == R.id.nav_sync) {
 //            loadingIndicator();
 
@@ -787,85 +762,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
             SyncManager.getSyncManager().runSync(syncTask);
-
-//            //new implementation body
-//            UploadTask uploadDb = new UploadTask(driveServiceHelper, FILE_DATABASE, MIME_TYPE_DB, null);
-//            Future<Boolean> resDb = SyncManager.getSyncManager().callSyncBool(uploadDb);
-//
-//            //maybe no need wrapper for folderID if have another runnable
-//            CreateFolderTask createFilesFolder = new CreateFolderTask(driveServiceHelper);
-//            Future<String> resFolderId = SyncManager.getSyncManager().callSyncString(createFilesFolder);
-//            String folderId = resFolderId.get();
-//
-//            File[] files = DIRECTORY.listFiles();
-//            Log.d("Files", "Size: " + files.length);
-//
-//            ArrayList<Future<Boolean>> results = new ArrayList<>();
-//
-//            for (File child : files) {
-//                String name = child.getName();
-//                if (!name.equals("instant-run")) {
-////                                    allFilesPath.add(name);
-//                    UploadTask uploadAttaches = new UploadTask(driveServiceHelper, child, getMIMEType(child), folderId);
-//                    Future<Boolean> res = SyncManager.getSyncManager().callSyncBool(uploadAttaches);
-//                    results.add(res);
-//                }
-//                Log.d("Files", getMIMEType(child) + " FileName:" + child.getName());
-//            }
-//
-//            for (Future<Boolean> res: results){
-//                res.get();
-//            }
-
-//            Thread testThread = new Thread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    try {
-//                        //upload db
-//                        driveServiceHelper.upload(FILE_DATABASE, MIME_TYPE_DB, null);
-////                            driveServiceHelper.upload(FILE_DATABASE, MIME_TYPE, "appDataFolder");
-//
-//                        //create files folder on Drive
-////                            String folderID = driveServiceHelper.createFolder(FOLDER_NAME, "appDataFolder");
-//                        String folderID = driveServiceHelper.createFolder(FOLDER_NAME, null);
-//
-//                        //upload files
-//                        //File directory = getFilesDir();
-//                        File[] files = DIRECTORY.listFiles();
-//                        Log.d("Files", "Size: " + files.length);
-////                            ArrayList<String> allFilesPath = new ArrayList<>();
-//                        for (File child : files) {
-//                            String name = child.getName();
-//                            if (!name.equals("instant-run")) {
-////                                    allFilesPath.add(name);
-//                                driveServiceHelper.upload(child, getMIMEType(child), folderID);
-//                            }
-//                            Log.d("Files", getMIMEType(child) + " FileName:" + child.getName());
-//                        }
-//
-//                    } catch (UserRecoverableAuthIOException e) {
-//                        Log.e(DRIVE_TAG, "Error " + e.getMessage());
-//                        e.printStackTrace();
-//                        startActivityForResult(e.getIntent(), 6);
-//
-//                    } catch (IOException e) {
-//                        Log.e(DRIVE_TAG, "Error " + e.getMessage());
-//                        e.printStackTrace();
-//                    }
-//
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            Toast.makeText(getBaseContext(), "Finished uploading data into Drive", Toast.LENGTH_LONG).show();
-//                        }
-//                    });
-//
-//                }
-//            });
-//            testThread.start();
-
-
-//                    System.out.println("File ID: " + file.getId());
 
         }
     }
