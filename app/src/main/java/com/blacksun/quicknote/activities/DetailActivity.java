@@ -1,6 +1,7 @@
 package com.blacksun.quicknote.activities;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -35,6 +36,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
@@ -173,6 +175,36 @@ public class DetailActivity extends AppCompatActivity {
         detailCheckbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+//                int cursorLoc = detailContent.getSelectionStart();
+//
+//                if (cursorLoc != -1) {
+//
+//
+//                    Editable content = detailContent.getText();
+//
+//
+//                    //cursor is the position of imageSpan
+//                    String textCheckbox = "$checked$";
+//                    String textNoCheck = "$notChecked$";
+//                    content.insert(cursorLoc, textCheckbox);
+//
+//
+//                    //+2 for cursor+1 and length+1
+//                    content.setSpan(new ImageSpan(getBaseContext().getResources().getDrawable(android.R.drawable.checkbox_off_background)),
+//                            cursorLoc, cursorLoc + textCheckbox.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+////                    content.setSpan(new ClickableSpan() {
+////                        @Override
+////                        public void onClick(@NonNull View widget) {
+////                            content.replace(cursorLoc, cursorLoc + textCheckbox.length(), textNoCheck);
+////                        }
+////                    }, cursorLoc, cursorLoc + textCheckbox.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//
+//                    detailContent.setText(content);
+//                } else {
+//                    Toast.makeText(getBaseContext(), "Please choose a position in content box", Toast.LENGTH_SHORT).show();
+//                }
+
                 Snackbar.make(v, "Not implemented yet", Snackbar.LENGTH_SHORT)
                         .setAction("Dismiss", new View.OnClickListener() {
                             @Override
@@ -190,6 +222,7 @@ public class DetailActivity extends AppCompatActivity {
         chooseGallery = new Intent(Intent.ACTION_GET_CONTENT);
         chooseGallery.addCategory(Intent.CATEGORY_OPENABLE);
         chooseGallery.setType("image/*");
+        chooseGallery.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         intent = Intent.createChooser(chooseGallery, "Choose an image");
         startActivityForResult(intent, REQUEST_IMAGE_CHOOSER);
     }
@@ -200,6 +233,7 @@ public class DetailActivity extends AppCompatActivity {
         chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
         chooseFile.addCategory(Intent.CATEGORY_OPENABLE);
         chooseFile.setType("*/*");
+        chooseFile.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         intent = Intent.createChooser(chooseFile, "Choose a file");
         startActivityForResult(intent, REQUEST_FILE_CHOOSER);
     }
@@ -288,39 +322,45 @@ public class DetailActivity extends AppCompatActivity {
             }
         } else if (requestCode == REQUEST_FILE_CHOOSER) {
             if (resultCode == RESULT_OK) {
-                Uri uri = data.getData();
-                //String path = getPath(uri);
+                if(data.getClipData() != null) {
 
-                String id = DocumentsContract.getDocumentId(uri);
+                    int count = data.getClipData().getItemCount();
+                    int currentItem = 0;
+                    while(currentItem < count) {
 
-                String fileName = getFileName(uri);
+                        Uri uri = data.getClipData().getItemAt(currentItem).getUri();
+                        //String path = getPath(uri);
 
-                long timeStamp = (new Date()).getTime();
+                        String id = DocumentsContract.getDocumentId(uri);
 
-                File savedFile = new File(getFilesDir().getAbsolutePath() + "/" + timeStamp + "_" + fileName);
-                UtilHelper.copy(uri, savedFile, this);
-                final String filePath = savedFile.getAbsolutePath();
+                        String fileName = getFileName(uri);
 
-                Log.d("filepath", filePath + ": " + fileName);
+                        long timeStamp = (new Date()).getTime();
 
-                //files.add(new Attachment(1, 1, "FILE", filePath));
-                Attachment newAttach = new Attachment();
-                if (currentNote == null) {
-                    newAttach.setType(NoteContract.AttachEntry.FILE_TYPE);
-                    newAttach.setPath(filePath);
-                    files.add(newAttach);
-                } else {
-                    newAttach.setNote_id(currentNote.getId());
-                    newAttach.setType(NoteContract.AttachEntry.FILE_TYPE);
-                    newAttach.setPath(filePath);
-                    newFiles.add(newAttach);
-                    files.add(newAttach);
-                }
+                        File savedFile = new File(getFilesDir().getAbsolutePath() + "/" + timeStamp + "_" + fileName);
+                        UtilHelper.copy(uri, savedFile, this);
+                        final String filePath = savedFile.getAbsolutePath();
+
+                        Log.d("filepath", filePath + ": " + fileName);
+
+                        //files.add(new Attachment(1, 1, "FILE", filePath));
+                        Attachment newAttach = new Attachment();
+                        if (currentNote == null) {
+                            newAttach.setType(NoteContract.AttachEntry.FILE_TYPE);
+                            newAttach.setPath(filePath);
+                            files.add(newAttach);
+                        } else {
+                            newAttach.setNote_id(currentNote.getId());
+                            newAttach.setType(NoteContract.AttachEntry.FILE_TYPE);
+                            newAttach.setPath(filePath);
+                            newFiles.add(newAttach);
+                            files.add(newAttach);
+                        }
 
 //                fileRecyclerAdapter.notifyDataSetChanged();
-                fileRecyclerAdapter.notifyItemInserted(files.size() - 1);
+                        fileRecyclerAdapter.notifyItemInserted(files.size() - 1);
 
-                //just test get and open file, not saved into database yet
+                        //just test get and open file, not saved into database yet
 //                testFile.setText(fileName);
 //
 //                testFile.setOnClickListener(new View.OnClickListener() {
@@ -337,48 +377,136 @@ public class DetailActivity extends AppCompatActivity {
 //                        startActivity(intent);
 //                    }
 //                });
+                        currentItem++;
+                    }
+                } else {
+                    Uri uri = data.getData();
+                    //String path = getPath(uri);
+
+                    String id = DocumentsContract.getDocumentId(uri);
+
+                    String fileName = getFileName(uri);
+
+                    long timeStamp = (new Date()).getTime();
+
+                    File savedFile = new File(getFilesDir().getAbsolutePath() + "/" + timeStamp + "_" + fileName);
+                    UtilHelper.copy(uri, savedFile, this);
+                    final String filePath = savedFile.getAbsolutePath();
+
+                    Log.d("filepath", filePath + ": " + fileName);
+
+                    //files.add(new Attachment(1, 1, "FILE", filePath));
+                    Attachment newAttach = new Attachment();
+                    if (currentNote == null) {
+                        newAttach.setType(NoteContract.AttachEntry.FILE_TYPE);
+                        newAttach.setPath(filePath);
+                        files.add(newAttach);
+                    } else {
+                        newAttach.setNote_id(currentNote.getId());
+                        newAttach.setType(NoteContract.AttachEntry.FILE_TYPE);
+                        newAttach.setPath(filePath);
+                        newFiles.add(newAttach);
+                        files.add(newAttach);
+                    }
+
+//                fileRecyclerAdapter.notifyDataSetChanged();
+                    fileRecyclerAdapter.notifyItemInserted(files.size() - 1);
+                }
 
             }
         } else if (requestCode == REQUEST_IMAGE_CHOOSER) {
             if (resultCode == RESULT_OK) {
-                Uri uri = data.getData();
-                //String path = getPath(uri);
 
-                String id = DocumentsContract.getDocumentId(uri);
+                if(data.getClipData() != null) {
 
-                String fileName = getFileName(uri);
-                try {
-                    File savedFile = createImageFile();
-                    UtilHelper.copy(uri, savedFile, this);
-                    String filePath = savedFile.getAbsolutePath();
+                    int count = data.getClipData().getItemCount();
+                    int currentItem = 0;
+                    while(currentItem < count) {
 
-                    //new RecyclerView
+                        Uri uri = data.getClipData().getItemAt(currentItem).getUri();
+                        //String path = getPath(uri);
+
+                        String id = DocumentsContract.getDocumentId(uri);
+
+                        String fileName = getFileName(uri);
+                        try {
+                            File savedFile = createImageFile();
+                            UtilHelper.copy(uri, savedFile, this);
+                            String filePath = savedFile.getAbsolutePath();
+
+                            //new RecyclerView
 //                    images.add(new Attachment(1, 1, "IMAGE", filePath));
 //                    imageRecyclerAdapter.notifyDataSetChanged();
 
-                    Attachment newAttach = new Attachment();
-                    if (currentNote == null) {
-                        newAttach.setType(NoteContract.AttachEntry.IMAGE_TYPE);
-                        newAttach.setPath(currentPhotoPath);
-                        images.add(newAttach);
-                    } else {
-                        newAttach.setNote_id(currentNote.getId());
-                        newAttach.setType(NoteContract.AttachEntry.IMAGE_TYPE);
-                        newAttach.setPath(currentPhotoPath);
-                        newImages.add(newAttach);
-                        images.add(newAttach);
-                    }
-                    imageRecyclerAdapter.notifyItemInserted(images.size() - 1);
+                            Attachment newAttach = new Attachment();
+                            if (currentNote == null) {
+                                newAttach.setType(NoteContract.AttachEntry.IMAGE_TYPE);
+                                newAttach.setPath(currentPhotoPath);
+                                images.add(newAttach);
+                            } else {
+                                newAttach.setNote_id(currentNote.getId());
+                                newAttach.setType(NoteContract.AttachEntry.IMAGE_TYPE);
+                                newAttach.setPath(currentPhotoPath);
+                                newImages.add(newAttach);
+                                images.add(newAttach);
+                            }
+                            imageRecyclerAdapter.notifyItemInserted(images.size() - 1);
 //                    imageRecyclerAdapter.notifyDataSetChanged(); //BUG can't solve, change to this
 
 
-                    Log.d("filepath", filePath + ": " + fileName);
+                            Log.d("filepath", filePath + ": " + fileName);
 //                    createThumbnail(filePath);
 
-                    //spannable test
-                    spannableImage(newAttach);
-                } catch (IOException e) {
-                    Log.e("saveFile", "error saving file");
+                            //spannable test
+                            spannableImage(newAttach);
+
+                        } catch (IOException e) {
+                            Log.e("saveFile", "error saving file");
+                        }
+                        currentItem++;
+                    }
+
+                } else {
+                    Uri uri = data.getData();
+                    //String path = getPath(uri);
+
+                    String id = DocumentsContract.getDocumentId(uri);
+
+                    String fileName = getFileName(uri);
+                    try {
+                        File savedFile = createImageFile();
+                        UtilHelper.copy(uri, savedFile, this);
+                        String filePath = savedFile.getAbsolutePath();
+
+                        //new RecyclerView
+//                    images.add(new Attachment(1, 1, "IMAGE", filePath));
+//                    imageRecyclerAdapter.notifyDataSetChanged();
+
+                        Attachment newAttach = new Attachment();
+                        if (currentNote == null) {
+                            newAttach.setType(NoteContract.AttachEntry.IMAGE_TYPE);
+                            newAttach.setPath(currentPhotoPath);
+                            images.add(newAttach);
+                        } else {
+                            newAttach.setNote_id(currentNote.getId());
+                            newAttach.setType(NoteContract.AttachEntry.IMAGE_TYPE);
+                            newAttach.setPath(currentPhotoPath);
+                            newImages.add(newAttach);
+                            images.add(newAttach);
+                        }
+                        imageRecyclerAdapter.notifyItemInserted(images.size() - 1);
+//                    imageRecyclerAdapter.notifyDataSetChanged(); //BUG can't solve, change to this
+
+
+                        Log.d("filepath", filePath + ": " + fileName);
+//                    createThumbnail(filePath);
+
+                        //spannable test
+                        spannableImage(newAttach);
+
+                    } catch (IOException e) {
+                        Log.e("saveFile", "error saving file");
+                    }
                 }
             }
         }
@@ -493,11 +621,9 @@ public class DetailActivity extends AppCompatActivity {
 
                     ImageView toolbarImage = findViewById(R.id.toolbar_image);
                     Bitmap imgHeader = UtilHelper.createThumbnail(images.get(0).getPath(), displayMetrics.widthPixels, dpAsPixels);
-                    Log.d("bitmap", "display width "+ displayMetrics.widthPixels);
+                    Log.d("bitmap", "display width " + displayMetrics.widthPixels);
                     toolbarImage.setImageBitmap(imgHeader);
                 }
-
-
 
 
                 ArrayList<Attachment> currentFiles = AttachManager.newInstance(this).getAttach(id, NoteContract.AttachEntry.FILE_TYPE);
@@ -522,7 +648,7 @@ public class DetailActivity extends AppCompatActivity {
                     if (contentString.contains("$" + attachName + "$")) {
                         int idxStart = contentString.indexOf("$" + attachName + "$");
 
-                        Bitmap thumb = UtilHelper.createThumbnail(image.getPath(), displayMetrics.widthPixels/2, displayMetrics.widthPixels/2);
+                        Bitmap thumb = UtilHelper.createThumbnail(image.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2);
 
                         contentSpan.setSpan(new ImageSpan(this, thumb), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -787,16 +913,29 @@ public class DetailActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.action_delete:
-                boolean deleteCheck = deleteNote();
-                if (deleteCheck) {
-//                    Snackbar.make(getWindow().getDecorView(), "Delete successfully", Snackbar.LENGTH_LONG)
-//                            .setAction("Action", null).show();
-                    Toast.makeText(this, "Delete successfully", Toast.LENGTH_SHORT).show();
-                    finish();
-                } else
-//                    Snackbar.make(getWindow().getDecorView(), "Encounter error(s) when deleting", Snackbar.LENGTH_LONG)
-//                            .setAction("Action", null).show();
-                    Toast.makeText(this, "Encounter error(s) when deleting", Toast.LENGTH_SHORT).show();
+
+                new AlertDialog.Builder(this)
+                        .setTitle("Delete note")
+                        .setMessage("Are you sure you want to delete this note?")
+
+                        // Specifying a listener allows you to take an action before dismissing the dialog.
+                        // The dialog is automatically dismissed when a dialog button is clicked.
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Continue with delete operation
+                                boolean deleteCheck = deleteNote();
+                                if (deleteCheck) {
+                                    Toast.makeText(getBaseContext(), "Delete successfully", Toast.LENGTH_SHORT).show();
+                                    finish();
+                                } else
+                                    Toast.makeText(getBaseContext(), "Encounter error(s) when deleting", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        // A null listener allows the button to dismiss the dialog and take no further action.
+                        .setNegativeButton(android.R.string.no, null)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+
                 break;
             default:
         }
@@ -822,7 +961,7 @@ public class DetailActivity extends AppCompatActivity {
 
     @Override
     protected void onNewIntent(Intent intent) {
-        if (intent.getAction()!= null && intent.getAction().equals(REQUEST_CHANGE)) {
+        if (intent.getAction() != null && intent.getAction().equals(REQUEST_CHANGE)) {
             isChanged = true;
             String attachType = intent.getStringExtra(NoteContract.AttachEntry.COLUMN_ATTACH_TYPE);
 
@@ -862,11 +1001,11 @@ public class DetailActivity extends AppCompatActivity {
         super.onNewIntent(intent);
     }
 
-    private void changeHeaderImageDefault(){
+    private void changeHeaderImageDefault() {
         ImageView toolbarImage = findViewById(R.id.toolbar_image);
         Calendar rightNow = Calendar.getInstance();
         int currentHourIn24Format = rightNow.get(Calendar.HOUR_OF_DAY);
-        if (currentHourIn24Format >= 6 && currentHourIn24Format <18) {
+        if (currentHourIn24Format >= 6 && currentHourIn24Format < 18) {
             toolbarImage.setImageDrawable(getResources().getDrawable(R.drawable.day));
         } else {
             toolbarImage.setImageDrawable(getResources().getDrawable(R.drawable.night));

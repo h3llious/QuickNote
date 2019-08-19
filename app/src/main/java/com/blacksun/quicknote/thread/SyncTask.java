@@ -618,7 +618,7 @@ public class SyncTask implements Runnable {
         }
     }
 
-    Runnable command = new Runnable() {
+    private Runnable command = new Runnable() {
         @Override
         public void run() {
 //            Toast.makeText(context, "Finished syncing data!", Toast.LENGTH_LONG).show();
