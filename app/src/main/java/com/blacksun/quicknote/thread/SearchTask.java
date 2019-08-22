@@ -1,12 +1,8 @@
 package com.blacksun.quicknote.thread;
 
-import android.util.Log;
-
 import com.blacksun.quicknote.models.DriveFileHolder;
 import com.blacksun.quicknote.utils.DriveServiceHelper;
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 

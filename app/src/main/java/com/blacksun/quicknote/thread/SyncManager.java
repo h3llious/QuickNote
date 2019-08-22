@@ -1,7 +1,5 @@
 package com.blacksun.quicknote.thread;
 
-import android.telecom.Call;
-
 import com.blacksun.quicknote.models.DriveFileHolder;
 
 import java.util.ArrayList;

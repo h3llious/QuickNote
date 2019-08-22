@@ -13,7 +13,6 @@ import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.text.Editable;
 import android.text.Layout;
-import android.text.Selection;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -120,6 +119,7 @@ public class DetailActivity extends AppCompatActivity {
         //existed note content
         setUpCurrentNote();
 
+        Log.d(DetailActivity.class.getName(), "onCreate Activity");
     }
 
     private void setUpRecyclerView() {
@@ -473,6 +473,7 @@ public class DetailActivity extends AppCompatActivity {
                 }
             }
         }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void spannableImage(Attachment newAttach) {
@@ -556,8 +557,8 @@ public class DetailActivity extends AppCompatActivity {
                 long dateCreated = bundle.getLong("dateCreated");
                 long dateModified = bundle.getLong("dateModified");
                 long id = bundle.getLong("noteID");
-                String img = bundle.getString("imagePath");
-                currentPhotoPath = img;
+//                String img = bundle.getString("imagePath");
+//                currentPhotoPath = img;
 
                 ArrayList<Attachment> currentImages = AttachManager.newInstance(this).getAttach(id, NoteContract.AttachEntry.IMAGE_TYPE);
                 images.clear();
@@ -598,7 +599,8 @@ public class DetailActivity extends AppCompatActivity {
                     if (contentString.contains("$" + attachName + "$")) {
                         int idxStart = contentString.indexOf("$" + attachName + "$");
 
-                        Bitmap thumb = UtilHelper.createThumbnail(image.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2);
+                        Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
+                                UtilHelper.createThumbnail(image.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2),20);
 
                         contentSpan.setSpan(new ImageSpan(this, thumb), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -625,6 +627,7 @@ public class DetailActivity extends AppCompatActivity {
             changeHeaderImageDefault();
         }
 
+        //handle remove image when backspacing
         mEmoticonHandler = new ImageHandler(detailContent);
 
         collapsingToolbar.setCollapsedTitleTextColor(ContextCompat.getColor(this, R.color.white));

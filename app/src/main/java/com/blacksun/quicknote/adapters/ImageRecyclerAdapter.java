@@ -3,7 +3,6 @@ package com.blacksun.quicknote.adapters;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Environment;
@@ -56,9 +55,9 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
     public void onBindViewHolder(@NonNull ImageRecyclerAdapter.ViewHolder holder, final int position) {
         final Attachment attach = images.get(position);
 
-        Bitmap imageFile = UtilHelper.decodeSampledBitmapFromFile(attach.getPath(), 300, 300);
+//        Bitmap imageFile = UtilHelper.decodeSampledBitmapFromFile(attach.getPath(), 300, 300);
 
-        Bitmap thumbImage = ThumbnailUtils.extractThumbnail(imageFile, 300, 300);
+        Bitmap thumbImage = UtilHelper.createThumbnail(attach.getPath(), 300, 300);
         holder.image.setImageBitmap(thumbImage);
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {

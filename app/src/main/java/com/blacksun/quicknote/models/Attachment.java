@@ -1,7 +1,6 @@
 package com.blacksun.quicknote.models;
 
 import android.database.Cursor;
-import android.text.TextUtils;
 
 import com.blacksun.quicknote.data.NoteContract;
 

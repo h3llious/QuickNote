@@ -2,39 +2,23 @@ package com.blacksun.quicknote.utils;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Build;
-import android.provider.OpenableColumns;
 import android.util.Log;
-import android.webkit.MimeTypeMap;
-
-import androidx.core.util.Pair;
 
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.models.DriveFileHolder;
 import com.google.android.gms.drive.DriveFolder;
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
-import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.FileContent;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
-import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_DB;
 import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_FOLDER;

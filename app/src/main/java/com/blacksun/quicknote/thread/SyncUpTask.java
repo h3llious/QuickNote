@@ -21,7 +21,6 @@ import java.util.concurrent.Future;
 import static com.blacksun.quicknote.activities.MainActivity.DIRECTORY;
 import static com.blacksun.quicknote.utils.DatabaseHelper.DATABASE_NAME;
 import static com.blacksun.quicknote.utils.DriveServiceHelper.DRIVE_TAG;
-import static com.blacksun.quicknote.utils.UtilHelper.DATABASE_PATH;
 import static com.blacksun.quicknote.utils.UtilHelper.FILE_DATABASE;
 import static com.blacksun.quicknote.utils.UtilHelper.FOLDER_NAME;
 import static com.blacksun.quicknote.utils.UtilHelper.MIME_TYPE_DB;

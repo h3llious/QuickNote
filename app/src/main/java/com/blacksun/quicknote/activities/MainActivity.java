@@ -160,6 +160,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         retrieveNoteList();
 
+        Log.d(MainActivity.class.getName(), "onCreate Activity");
+
     }
 
     private void newNoteFAB() {
@@ -799,7 +801,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 e.printStackTrace();
             }
 
-            return bitmap;
+            return UtilHelper.getRoundedBitmap(bitmap);
         }
 
         @Override
@@ -812,10 +814,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             ImageView avatar = activity.findViewById(R.id.google_avatar);
 
-            Bitmap rounded = UtilHelper.getRoundedCornerBitmap(bitmap);
-            activity.loadedAvatar = rounded;
-
-            avatar.setImageBitmap(rounded);
+//            Bitmap rounded = UtilHelper.getRoundedBitmap(bitmap);
+//            activity.loadedAvatar = rounded;
+//
+//            avatar.setImageBitmap(rounded);
+            activity.loadedAvatar = bitmap;
+            avatar.setImageBitmap(bitmap);
         }
     }
 }

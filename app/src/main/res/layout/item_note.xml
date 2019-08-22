@@ -1,60 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="?android:attr/listPreferredItemHeightLarge"
-    android:background="@drawable/background_note"
+    android:layout_margin="5dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?android:selectableItemBackground"
-    android:layout_margin="5dp">
+    card_view:cardCornerRadius="5dp"
+    card_view:cardElevation="6dp">
 
-    <RelativeLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/note_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:ellipsize="marquee"
-            android:marqueeRepeatLimit="marquee_forever"
-            android:singleLine="true"
-            android:text="This is a testing text, so it need to be longer than usual, damn still not long enough"
-            android:textAppearance="?android:textAppearanceMedium"
-            android:textStyle="bold" />
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
 
-        <TextView
-            android:id="@+id/note_content"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/note_title"
-            android:layout_marginLeft="10dp"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:text="text holder" />
+            <TextView
+                android:id="@+id/note_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:singleLine="true"
+                android:text="This is a testing text, so it need to be longer than usual, damn still not long enough"
+                android:textAppearance="?android:textAppearanceMedium"
+                android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/note_text_update"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginLeft="10dp"
-            android:text="Updated: " />
+            <TextView
+                android:id="@+id/note_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/note_title"
+                android:layout_marginLeft="10dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:text="text holder" />
 
-        <TextView
-            android:id="@+id/note_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_toRightOf="@id/note_text_update"
-            android:paddingLeft="10dp"
-            android:text="10 mins ago" />
+            <TextView
+                android:id="@+id/note_text_update"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginLeft="10dp"
+                android:text="Updated: " />
 
-        <!--<TextView-->
+            <TextView
+                android:id="@+id/note_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_toRightOf="@id/note_text_update"
+                android:paddingLeft="10dp"
+                android:text="10 mins ago" />
+
+            <!--<TextView-->
             <!--android:id="@+id/note_time_created"-->
             <!--android:layout_width="wrap_content"-->
             <!--android:layout_height="wrap_content"-->
@@ -62,12 +68,14 @@
             <!--android:layout_alignParentBottom="true"-->
             <!--android:paddingRight="10dp"-->
             <!--android:text="10 mins ago" />-->
+        </RelativeLayout>
 
 
-    </RelativeLayout>
+        <ImageView
+            android:id="@+id/note_img"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="thumbnail"/>
 
-    <ImageView
-        android:id="@+id/note_img"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-</LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

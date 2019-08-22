@@ -25,6 +25,7 @@ import com.blacksun.quicknote.controllers.AttachManager;
 import com.blacksun.quicknote.data.NoteContract;
 import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.models.Note;
+import com.blacksun.quicknote.utils.UtilHelper;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -53,18 +54,18 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
     public void onBindViewHolder(@NonNull NoteRecyclerAdapter.ViewHolder holder, int position) {
         final Note note = notes.get(position);
         holder.textTitle.setText(note.getTitle());
-        holder.textContent.setText(note.getContent());
-//        holder.textTime.setText(getDate(note.getDateModified(), "dd/MM/yyyy HH:mm"));
-//        holder.textTimeCreated.setText(getDate(note.getDateCreated(), "dd/MM/yyyy HH:mm"));
+
+        String tempContent = note.getContent().replaceAll("\\$.*?\\$", "<IMG>");
+        holder.textContent.setText(tempContent);
 
         ArrayList<Attachment> curAttaches = AttachManager.newInstance(holder.itemView.getContext()).getAttach(note.getId(), NoteContract.AttachEntry.ANY_TYPE);
 
         if (curAttaches.size() != 0) {
 
             Attachment curAttach = curAttaches.get(curAttaches.size() - 1);
+//            float scale = holder.itemView.getContext().getResources().getDisplayMetrics().density;
             if (curAttach.getType().equals(NoteContract.AttachEntry.FILE_TYPE)) {
-                float scale = holder.itemView.getContext().getResources().getDisplayMetrics().density;
-                int dpAsPixels = (int) (20 * scale + 0.5f);
+//                int dpAsPixels = (int) (20 * scale + 0.5f);
 
                 holder.img.setImageDrawable(ContextCompat.getDrawable(holder.itemView.getContext(), R.drawable.ic_attach));
 //                holder.img.setPadding(dpAsPixels, dpAsPixels, dpAsPixels, dpAsPixels);
@@ -76,7 +77,9 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
 
                     int height = holder.itemView.getContext().getResources().getDimensionPixelSize(R.dimen.listPreferredItemHeightLarge);
 
-                    Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(curAttach.getPath()), height, height);
+//                    Bitmap imageFile = UtilHelper.decodeSampledBitmapFromFile(curAttach.getPath(), height, height);
+
+                    Bitmap thumbImage = UtilHelper.createThumbnail(curAttach.getPath(), height, height);
 
                     RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(holder.itemView.getContext().getResources(), thumbImage);
                     final float roundPx = (float) thumbImage.getWidth() * 0.1f;
