@@ -680,7 +680,21 @@ public class DetailActivity extends AppCompatActivity {
 //                isSaved = false;
 
                 //spannable test
+                //Image holder
+                Editable contentSpan = detailContent.getText();
+                String contentString = contentSpan.toString();
+                for (Attachment image : images) {
+                    String attachName = image.getPath().substring(image.getPath().lastIndexOf('/') + 1);
 
+
+                    if (contentString.contains("$" + attachName + "$")) {
+                        int idxStart = contentString.indexOf("$" + attachName + "$");
+
+                        contentSpan.setSpan(new ImageSpan(getResources().getDrawable(R.drawable.ic_temp_img)), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                }
+                detailContent.setText(contentSpan);
                 //thread implementation
                 new Thread(new Runnable() {
                     @Override
