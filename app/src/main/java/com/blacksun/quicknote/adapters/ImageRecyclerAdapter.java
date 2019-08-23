@@ -57,6 +57,11 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
     public void onBindViewHolder(@NonNull ImageRecyclerAdapter.ViewHolder holder, final int position) {
         final Attachment attach = images.get(position);
 
+        File attachFile = new File(attach.getPath());
+        if (!attachFile.exists()){
+            return;
+        }
+
 //        Bitmap imageFile = UtilHelper.decodeSampledBitmapFromFile(attach.getPath(), 300, 300);
         final Handler handler = new Handler();
         new Thread() {

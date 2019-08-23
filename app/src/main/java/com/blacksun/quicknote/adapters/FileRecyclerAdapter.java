@@ -53,6 +53,10 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
     public void onBindViewHolder(@NonNull FileRecyclerAdapter.ViewHolder holder, final int position) {
         final String filePath = files.get(position).getPath();
         File newFile = new File(filePath);
+
+        if (!newFile.exists())
+            return;
+
         final String fileName = newFile.getName();
 
         Log.d("filepath", "file recyclerView");

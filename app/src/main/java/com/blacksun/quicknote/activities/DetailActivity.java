@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
@@ -56,6 +57,7 @@ import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -292,6 +294,32 @@ public class DetailActivity extends AppCompatActivity {
         if (requestCode == REQUEST_IMAGE_CAPTURE) {
             if (resultCode == RESULT_OK) {
 
+                final BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                BitmapFactory.decodeFile(currentPhotoPath, options);
+
+                // Calculate inSampleSize
+                options.inSampleSize = UtilHelper.calculateInSampleSize(options, 960, 960);
+                int quality = 100 / options.inSampleSize;
+
+
+
+
+//                Bitmap capturedImg = UtilHelper.decodeSampledBitmapFromFile(currentPhotoPath, 720, 720);
+
+                if (quality<100) {
+                    // Decode bitmap with inSampleSize set
+                    options.inJustDecodeBounds = false;
+                    Bitmap capturedImg = BitmapFactory.decodeFile(currentPhotoPath, options);
+
+                    try (FileOutputStream out = new FileOutputStream(currentPhotoPath)) {
+                        capturedImg.compress(Bitmap.CompressFormat.JPEG, quality, out); // bmp is your Bitmap instance
+                        // PNG is a lossless format, the compression factor (100) is ignored
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
                 //new RecyclerView
                 Attachment newAttach = new Attachment();
                 if (currentNote == null) {
@@ -515,38 +543,39 @@ public class DetailActivity extends AppCompatActivity {
 
                     Log.d(SPANNABLE_TAG, "cursor location: " + cursorLoc);
 
-                    Editable content = detailContent.getText();
-
-                    String attachName = newAttach.getPath().substring(newAttach.getPath().lastIndexOf('/') + 1);
-                    //cursor onPause+1 is the position of imageSpan
-                    content.insert(cursorLoc, "\n$" + attachName + "$ \n");
-
-                    //update position to change into image
-                    int newCursorLoc = cursorLoc + 1;
-
-                    Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(newCursorLoc, newCursorLoc + attachName.length() + 1));
-
-                    //+2 for cursor+1 and length+1
-                    content.setSpan(new ImageSpan(getApplicationContext(), thumb), newCursorLoc, newCursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    content.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), newCursorLoc, newCursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    content.setSpan(new ClickableSpan() {
-                        @Override
-                        public void onClick(@NonNull View widget) {
-                            File file = new File(newAttach.getPath());
-                            Intent intent = new Intent();
-                            intent.setAction(Intent.ACTION_VIEW);
-                            Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
-                                    "com.blacksun.quicknote.fileprovider",
-                                    file);
-                            intent.setData(fileUri);
-                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            widget.getContext().startActivity(intent);
-                        }
-                    }, newCursorLoc, newCursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+
+                            Editable content = detailContent.getText();
+
+                            String attachName = newAttach.getPath().substring(newAttach.getPath().lastIndexOf('/') + 1);
+                            //cursor onPause+1 is the position of imageSpan
+                            content.insert(cursorLoc, "\n$" + attachName + "$ \n");
+
+                            //update position to change into image
+                            int newCursorLoc = cursorLoc + 1;
+
+                            Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(newCursorLoc, newCursorLoc + attachName.length() + 1));
+
+                            //+2 for cursor+1 and length+1
+                            content.setSpan(new ImageSpan(getApplicationContext(), thumb), newCursorLoc, newCursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            content.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), newCursorLoc, newCursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            content.setSpan(new ClickableSpan() {
+                                @Override
+                                public void onClick(@NonNull View widget) {
+                                    File file = new File(newAttach.getPath());
+                                    Intent intent = new Intent();
+                                    intent.setAction(Intent.ACTION_VIEW);
+                                    Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
+                                            "com.blacksun.quicknote.fileprovider",
+                                            file);
+                                    intent.setData(fileUri);
+                                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                    widget.getContext().startActivity(intent);
+                                }
+                            }, newCursorLoc, newCursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
                             detailContent.setText(content);
                         }
                     });
