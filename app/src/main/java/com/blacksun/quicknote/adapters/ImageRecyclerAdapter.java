@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -57,65 +58,24 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
         final Attachment attach = images.get(position);
 
 //        Bitmap imageFile = UtilHelper.decodeSampledBitmapFromFile(attach.getPath(), 300, 300);
-
-        Bitmap thumbImage = UtilHelper.createThumbnail(attach.getPath(), 300, 300);
-        holder.image.setImageBitmap(thumbImage);
-
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openAttach(v, position);
-            }
-        });
-
-        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-
-                //creating a popup menu
-                PopupMenu popup = new PopupMenu(context, holder.itemView);
-                //inflating menu from xml resource
-                popup.inflate(R.menu.menu_attach);
-                popup.getMenu().findItem(R.id.action_insert_img).setVisible(true);
-                //adding click listener
-                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        switch (item.getItemId()) {
-                            case R.id.action_open_attach:
-                                openAttach(v, position);
-                                return true;
-                            case R.id.action_save_attach:
-                                saveAttach(v, attach);
-                                return true;
-                            case R.id.action_delete_attach:
-                                deleteAttach(position);
-                                return true;
-                            case R.id.action_insert_img:
-                                Intent intent = new Intent(context, DetailActivity.class);
-                                intent.setAction(REQUEST_INSERT);
-                                intent.putExtra("imgPos", position);
-                                context.startActivity(intent);
-                            default:
-                                return false;
-                        }
+        final Handler handler = new Handler();
+        new Thread() {
+            public void run() {
+                // Do time-consuming initialization.
+                Bitmap thumbImage = UtilHelper.getRoundedCornerBitmap(UtilHelper.createThumbnail(attach.getPath(), 300, 300), 20);
+                // When done:
+                handler.post(new Runnable() {
+                    public void run() {
+                        // set up the real UI
+                        holder.image.setImageBitmap(thumbImage);
                     }
                 });
-                //displaying the popup
-                popup.show();
-
-
-//                saveAttach(v, attach);
-                return true;
             }
-        });
+        }.start();
+//        Bitmap thumbImage = UtilHelper.createThumbnail(attach.getPath(), 300, 300);
+//        holder.image.setImageBitmap(thumbImage);
 
-        holder.deleteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                deleteAttach(position);
-            }
-        });
+
     }
 
     private void deleteAttach(int position) {
@@ -150,8 +110,8 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
         context.startActivity(intent);
     }
 
-    private void saveAttach(View v, Attachment attach) {
-        File file = new File(attach.getPath());
+    private void saveAttach(View v, int position) {
+        File file = new File(images.get(position).getPath());
         Uri fileUri = FileProvider.getUriForFile(v.getContext(),
                 "com.blacksun.quicknote.fileprovider",
                 file);
@@ -160,7 +120,12 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
         File storageLoc = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         File savedFile = new File(storageLoc, filename);
 
-        UtilHelper.copy(fileUri, savedFile, context);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                UtilHelper.copy(fileUri, savedFile, context);
+            }
+        }).start();
 
         Log.d("saveFile", "" + savedFile);
 
@@ -193,7 +158,60 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
             image = itemView.findViewById(R.id.attach_image);
             deleteButton = itemView.findViewById(R.id.attach_close);
 
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openAttach(v, getAdapterPosition());
+                }
+            });
 
+            itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+
+                    //creating a popup menu
+                    PopupMenu popup = new PopupMenu(context, itemView);
+                    //inflating menu from xml resource
+                    popup.inflate(R.menu.menu_attach);
+                    popup.getMenu().findItem(R.id.action_insert_img).setVisible(true);
+                    //adding click listener
+                    popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            switch (item.getItemId()) {
+                                case R.id.action_open_attach:
+                                    openAttach(v, getAdapterPosition());
+                                    return true;
+                                case R.id.action_save_attach:
+                                    saveAttach(v, getAdapterPosition());
+                                    return true;
+                                case R.id.action_delete_attach:
+                                    deleteAttach(getAdapterPosition());
+                                    return true;
+                                case R.id.action_insert_img:
+                                    Intent intent = new Intent(context, DetailActivity.class);
+                                    intent.setAction(REQUEST_INSERT);
+                                    intent.putExtra("imgPos", getAdapterPosition());
+                                    context.startActivity(intent);
+                                default:
+                                    return false;
+                            }
+                        }
+                    });
+                    //displaying the popup
+                    popup.show();
+
+//                saveAttach(v, attach);
+                    return true;
+                }
+            });
+
+            deleteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    deleteAttach(getAdapterPosition());
+                }
+            });
         }
     }
 }

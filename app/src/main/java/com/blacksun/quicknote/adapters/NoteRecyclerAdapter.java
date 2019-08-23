@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.media.ThumbnailUtils;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -79,12 +80,31 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
 
 //                    Bitmap imageFile = UtilHelper.decodeSampledBitmapFromFile(curAttach.getPath(), height, height);
 
-                    Bitmap thumbImage = UtilHelper.createThumbnail(curAttach.getPath(), height, height);
 
-                    RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(holder.itemView.getContext().getResources(), thumbImage);
-                    final float roundPx = (float) thumbImage.getWidth() * 0.1f;
-                    roundedBitmapDrawable.setCornerRadius(roundPx);
-                    holder.img.setImageDrawable(roundedBitmapDrawable);
+                    final Handler handler = new Handler();
+                    new Thread() {
+                        public void run() {
+                            // Do time-consuming initialization.
+                            Bitmap thumbImage = UtilHelper.createThumbnail(curAttach.getPath(), height, height);
+
+                            RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(holder.itemView.getContext().getResources(), thumbImage);
+                            final float roundPx = (float) thumbImage.getWidth() * 0.1f;
+                            roundedBitmapDrawable.setCornerRadius(roundPx);
+                            // When done:
+                            handler.post(new Runnable() {
+                                public void run() {
+                                    // set up the real UI
+                                    holder.img.setImageDrawable(roundedBitmapDrawable);
+                                }
+                            });
+                        }
+                    }.start();
+//                    Bitmap thumbImage = UtilHelper.createThumbnail(curAttach.getPath(), height, height);
+//
+//                    RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(holder.itemView.getContext().getResources(), thumbImage);
+//                    final float roundPx = (float) thumbImage.getWidth() * 0.1f;
+//                    roundedBitmapDrawable.setCornerRadius(roundPx);
+//                    holder.img.setImageDrawable(roundedBitmapDrawable);
 
 //                holder.img.setImageBitmap(thumbImage);
                 } else {

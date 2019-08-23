@@ -73,54 +73,7 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
                 holder.file.setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_folder, 0,0,0);
         }
 
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openAttach(v, position);
-            }
-        });
 
-        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                //creating a popup menu
-                PopupMenu popup = new PopupMenu(context, holder.itemView);
-                //inflating menu from xml resource
-                popup.inflate(R.menu.menu_attach);
-                //adding click listener
-                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        switch (item.getItemId()) {
-                            case R.id.action_open_attach:
-                                openAttach(v, position);
-                                return true;
-                            case R.id.action_save_attach:
-                                saveAttach(v, filePath);
-                                return true;
-                            case R.id.action_delete_attach:
-                                deleteAttach(position);
-                                return true;
-                            default:
-                                return false;
-                        }
-                    }
-                });
-                //displaying the popup
-                popup.show();
-
-
-//                saveAttach(v, filePath);
-                return true;
-            }
-        });
-
-        holder.deleteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                deleteAttach(position);
-            }
-        });
     }
 
     private void deleteAttach(int position) {
@@ -155,8 +108,8 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
         context.startActivity(intent);
     }
 
-    private void saveAttach(View v, String filePath) {
-        File file = new File(filePath);
+    private void saveAttach(View v, int position) {
+        File file = new File(files.get(position).getPath());
         Uri fileUri = FileProvider.getUriForFile(v.getContext(),
                 "com.blacksun.quicknote.fileprovider",
                 file);
@@ -165,11 +118,16 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
         File storageLoc = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         File savedFile = new File(storageLoc, filename);
 
-        UtilHelper.copy(fileUri, savedFile, context);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                UtilHelper.copy(fileUri, savedFile, context);
+            }
+        }).start();
 
         Log.d("saveFile", ""+savedFile);
 
-        Toast.makeText(context, "File saved", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "File saved into "+savedFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
     }
 
     private void openAttach(View v, int position) {
@@ -197,6 +155,55 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
             super(itemView);
             file = itemView.findViewById(R.id.attach_file);
             deleteButton = itemView.findViewById(R.id.attach_file_close);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openAttach(v, getAdapterPosition());
+                }
+            });
+
+            itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    //creating a popup menu
+                    PopupMenu popup = new PopupMenu(context, itemView);
+                    //inflating menu from xml resource
+                    popup.inflate(R.menu.menu_attach);
+                    //adding click listener
+                    popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            switch (item.getItemId()) {
+                                case R.id.action_open_attach:
+                                    openAttach(v, getAdapterPosition());
+                                    return true;
+                                case R.id.action_save_attach:
+                                    saveAttach(v, getAdapterPosition());
+                                    return true;
+                                case R.id.action_delete_attach:
+                                    deleteAttach(getAdapterPosition());
+                                    return true;
+                                default:
+                                    return false;
+                            }
+                        }
+                    });
+                    //displaying the popup
+                    popup.show();
+
+
+//                saveAttach(v, filePath);
+                    return true;
+                }
+            });
+
+            deleteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    deleteAttach(getAdapterPosition());
+                }
+            });
         }
     }
 }

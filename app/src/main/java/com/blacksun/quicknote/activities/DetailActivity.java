@@ -334,7 +334,19 @@ public class DetailActivity extends AppCompatActivity {
                         long timeStamp = (new Date()).getTime();
 
                         File savedFile = new File(getFilesDir().getAbsolutePath() + "/" + timeStamp + "_" + fileName);
-                        UtilHelper.copy(uri, savedFile, this);
+
+                        long timeStart = System.currentTimeMillis();
+                        //thread implementation
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                UtilHelper.copy(uri, savedFile, getApplicationContext());
+                            }
+                        }).start();
+
+//                        UtilHelper.copy(uri, savedFile, this);
+                        Log.d("file", "execution time: " + (System.currentTimeMillis() - timeStart));
+
                         final String filePath = savedFile.getAbsolutePath();
 
                         Log.d("filepath", filePath + ": " + fileName);
@@ -367,7 +379,19 @@ public class DetailActivity extends AppCompatActivity {
                     long timeStamp = (new Date()).getTime();
 
                     File savedFile = new File(getFilesDir().getAbsolutePath() + "/" + timeStamp + "_" + fileName);
-                    UtilHelper.copy(uri, savedFile, this);
+
+                    long timeStart = System.currentTimeMillis();
+                    //thread implementation
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            UtilHelper.copy(uri, savedFile, getApplicationContext());
+                        }
+                    }).start();
+
+//                    UtilHelper.copy(uri, savedFile, this);
+                    Log.d("file", "execution time: " + (System.currentTimeMillis() - timeStart));
+
                     final String filePath = savedFile.getAbsolutePath();
 
                     Log.d("filepath", filePath + ": " + fileName);
@@ -478,47 +502,92 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void spannableImage(Attachment newAttach) {
-        int cursorLoc = detailContent.getSelectionStart();
+        final int cursorLoc = detailContent.getSelectionStart();
 
         if (cursorLoc != -1) {
 //            Bitmap thumb = UtilHelper.createThumbnail(currentPhotoPath, 500, 500);
 
-            Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
-                    UtilHelper.createThumbnail(currentPhotoPath, displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
-
-
-            Log.d(SPANNABLE_TAG, "cursor location: " + cursorLoc);
-
-            Editable content = detailContent.getText();
-
-            String attachName = newAttach.getPath().substring(newAttach.getPath().lastIndexOf('/') + 1);
-            //cursor onPause+1 is the position of imageSpan
-            content.insert(cursorLoc, "\n$" + attachName + "$ \n");
-
-            //update position to change into image
-            cursorLoc += 1;
-
-            Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(cursorLoc, cursorLoc + attachName.length() + 1));
-
-            //+2 for cursor+1 and length+1
-            content.setSpan(new ImageSpan(this, thumb), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            content.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            content.setSpan(new ClickableSpan() {
+            new Thread(new Runnable() {
                 @Override
-                public void onClick(@NonNull View widget) {
-                    File file = new File(newAttach.getPath());
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_VIEW);
-                    Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
-                            "com.blacksun.quicknote.fileprovider",
-                            file);
-                    intent.setData(fileUri);
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    widget.getContext().startActivity(intent);
-                }
-            }, cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                public void run() {
+                    Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
+                            UtilHelper.createThumbnail(currentPhotoPath, displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
 
-            detailContent.setText(content);
+                    Log.d(SPANNABLE_TAG, "cursor location: " + cursorLoc);
+
+                    Editable content = detailContent.getText();
+
+                    String attachName = newAttach.getPath().substring(newAttach.getPath().lastIndexOf('/') + 1);
+                    //cursor onPause+1 is the position of imageSpan
+                    content.insert(cursorLoc, "\n$" + attachName + "$ \n");
+
+                    //update position to change into image
+                    int newCursorLoc = cursorLoc + 1;
+
+                    Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(newCursorLoc, newCursorLoc + attachName.length() + 1));
+
+                    //+2 for cursor+1 and length+1
+                    content.setSpan(new ImageSpan(getApplicationContext(), thumb), newCursorLoc, newCursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    content.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), newCursorLoc, newCursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    content.setSpan(new ClickableSpan() {
+                        @Override
+                        public void onClick(@NonNull View widget) {
+                            File file = new File(newAttach.getPath());
+                            Intent intent = new Intent();
+                            intent.setAction(Intent.ACTION_VIEW);
+                            Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
+                                    "com.blacksun.quicknote.fileprovider",
+                                    file);
+                            intent.setData(fileUri);
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            widget.getContext().startActivity(intent);
+                        }
+                    }, newCursorLoc, newCursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            detailContent.setText(content);
+                        }
+                    });
+                }
+            }).start();
+
+//            Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
+//                    UtilHelper.createThumbnail(currentPhotoPath, displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
+//
+//            Log.d(SPANNABLE_TAG, "cursor location: " + cursorLoc);
+//
+//            Editable content = detailContent.getText();
+//
+//            String attachName = newAttach.getPath().substring(newAttach.getPath().lastIndexOf('/') + 1);
+//            //cursor onPause+1 is the position of imageSpan
+//            content.insert(cursorLoc, "\n$" + attachName + "$ \n");
+//
+//            //update position to change into image
+//            cursorLoc += 1;
+//
+//            Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(cursorLoc, cursorLoc + attachName.length() + 1));
+//
+//            //+2 for cursor+1 and length+1
+//            content.setSpan(new ImageSpan(this, thumb), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//            content.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//            content.setSpan(new ClickableSpan() {
+//                @Override
+//                public void onClick(@NonNull View widget) {
+//                    File file = new File(newAttach.getPath());
+//                    Intent intent = new Intent();
+//                    intent.setAction(Intent.ACTION_VIEW);
+//                    Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
+//                            "com.blacksun.quicknote.fileprovider",
+//                            file);
+//                    intent.setData(fileUri);
+//                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//                    widget.getContext().startActivity(intent);
+//                }
+//            }, cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//
+//            detailContent.setText(content);
         }
     }
 
@@ -571,6 +640,7 @@ public class DetailActivity extends AppCompatActivity {
                 Log.d("attach", "id " + id + ", number " + images.size());
                 imageRecyclerAdapter.notifyDataSetChanged();
 
+
                 //change header image
                 if (images.size() == 0) {
                     changeHeaderImageDefault();
@@ -579,9 +649,24 @@ public class DetailActivity extends AppCompatActivity {
                     int dpAsPixels = (int) (180 * scale + 0.5f);
 
                     ImageView toolbarImage = findViewById(R.id.toolbar_image);
-                    Bitmap imgHeader = UtilHelper.createThumbnail(images.get(0).getPath(), displayMetrics.widthPixels, dpAsPixels);
-                    Log.d("bitmap", "display width " + displayMetrics.widthPixels);
-                    toolbarImage.setImageBitmap(imgHeader);
+
+                    //handle loading bitmap
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Bitmap imgHeader = UtilHelper.createThumbnail(images.get(0).getPath(), displayMetrics.widthPixels, dpAsPixels);
+                            Log.d("bitmap", "display width " + displayMetrics.widthPixels);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    toolbarImage.setImageBitmap(imgHeader);
+                                }
+                            });
+                        }
+                    }).start();
+//                    Bitmap imgHeader = UtilHelper.createThumbnail(images.get(0).getPath(), displayMetrics.widthPixels, dpAsPixels);
+//                    Log.d("bitmap", "display width " + displayMetrics.widthPixels);
+//                    toolbarImage.setImageBitmap(imgHeader);
                 }
 
                 ArrayList<Attachment> currentFiles = AttachManager.newInstance(this).getAttach(id, NoteContract.AttachEntry.FILE_TYPE);
@@ -595,37 +680,83 @@ public class DetailActivity extends AppCompatActivity {
 //                isSaved = false;
 
                 //spannable test
-                Editable contentSpan = detailContent.getText();
-                String contentString = contentSpan.toString();
-                for (Attachment image : images) {
-                    String attachName = image.getPath().substring(image.getPath().lastIndexOf('/') + 1);
+
+                //thread implementation
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Editable contentSpan = detailContent.getText();
+                        String contentString = contentSpan.toString();
+                        for (Attachment image : images) {
+                            String attachName = image.getPath().substring(image.getPath().lastIndexOf('/') + 1);
 
 
-                    if (contentString.contains("$" + attachName + "$")) {
-                        int idxStart = contentString.indexOf("$" + attachName + "$");
+                            if (contentString.contains("$" + attachName + "$")) {
+                                int idxStart = contentString.indexOf("$" + attachName + "$");
 
-                        Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
-                                UtilHelper.createThumbnail(image.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
+                                Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
+                                        UtilHelper.createThumbnail(image.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
 
-                        contentSpan.setSpan(new ImageSpan(this, thumb), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        contentSpan.setSpan(new ClickableSpan() {
-                            @Override
-                            public void onClick(@NonNull View widget) {
-                                File file = new File(image.getPath());
-                                Intent intent = new Intent();
-                                intent.setAction(android.content.Intent.ACTION_VIEW);
-                                Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
-                                        "com.blacksun.quicknote.fileprovider",
-                                        file);
-                                intent.setData(fileUri);
-                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                widget.getContext().startActivity(intent);
+                                contentSpan.setSpan(new ImageSpan(getApplicationContext(), thumb), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                contentSpan.setSpan(new ClickableSpan() {
+                                    @Override
+                                    public void onClick(@NonNull View widget) {
+                                        File file = new File(image.getPath());
+                                        Intent intent = new Intent();
+                                        intent.setAction(android.content.Intent.ACTION_VIEW);
+                                        Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
+                                                "com.blacksun.quicknote.fileprovider",
+                                                file);
+                                        intent.setData(fileUri);
+                                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                        widget.getContext().startActivity(intent);
+                                    }
+                                }, idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                             }
-                        }, idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        }
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                detailContent.setText(contentSpan);
+                            }
+                        });
                     }
-                }
-                detailContent.setText(contentSpan);
+                }).start();
+
+
+//                Editable contentSpan = detailContent.getText();
+//                String contentString = contentSpan.toString();
+//                for (Attachment image : images) {
+//                    String attachName = image.getPath().substring(image.getPath().lastIndexOf('/') + 1);
+//
+//
+//                    if (contentString.contains("$" + attachName + "$")) {
+//                        int idxStart = contentString.indexOf("$" + attachName + "$");
+//
+//                        Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
+//                                UtilHelper.createThumbnail(image.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
+//
+//                        contentSpan.setSpan(new ImageSpan(this, thumb), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                        contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                        contentSpan.setSpan(new ClickableSpan() {
+//                            @Override
+//                            public void onClick(@NonNull View widget) {
+//                                File file = new File(image.getPath());
+//                                Intent intent = new Intent();
+//                                intent.setAction(android.content.Intent.ACTION_VIEW);
+//                                Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
+//                                        "com.blacksun.quicknote.fileprovider",
+//                                        file);
+//                                intent.setData(fileUri);
+//                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//                                widget.getContext().startActivity(intent);
+//                            }
+//                        }, idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                    }
+//                }
+//                detailContent.setText(contentSpan);
 
 
             }
@@ -663,10 +794,9 @@ public class DetailActivity extends AppCompatActivity {
 
         //spannable test
         detailContent.setMovementMethod(new LinkMovementMethod() {
-
-
             @Override
             public boolean onTouchEvent(TextView widget, Spannable buffer, MotionEvent event) {
+                detailContent.setSelection(0);
 //                Selection.removeSelection(buffer);
 //                widget.setHighlightColor(Color.argb(50,100,0,0));
                 return super.onTouchEvent(widget, buffer, event);
@@ -917,45 +1047,91 @@ public class DetailActivity extends AppCompatActivity {
             } else if (intent.getAction().equals(REQUEST_INSERT)) {
                 int imgPos = intent.getIntExtra("imgPos", -1);
                 if (imgPos != -1) {
-                    int cursorLoc = detailContent.getSelectionStart();
+                    final int cursorLoc = detailContent.getSelectionStart();
                     if (cursorLoc >= 0) {
-                        Attachment inserted = images.get(imgPos);
+                        final Attachment inserted = images.get(imgPos);
 
-                        Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
-                                UtilHelper.createThumbnail(inserted.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
-
-                        Log.d(SPANNABLE_TAG, "cursor location: " + cursorLoc);
-
-                        Editable content = detailContent.getText();
-
-                        String attachName = inserted.getPath().substring(inserted.getPath().lastIndexOf('/') + 1);
-                        //cursor onPause+1 is the position of imageSpan
-                        content.insert(cursorLoc, "\n$" + attachName + "$ \n");
-
-                        //update position to change into image
-                        cursorLoc += 1;
-
-                        Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(cursorLoc, cursorLoc + attachName.length() + 1));
-
-                        //+2 for cursor+1 and length+1
-                        content.setSpan(new ImageSpan(this, thumb), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        content.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        content.setSpan(new ClickableSpan() {
+                        new Thread(new Runnable() {
                             @Override
-                            public void onClick(@NonNull View widget) {
-                                File file = new File(inserted.getPath());
-                                Intent intent = new Intent();
-                                intent.setAction(Intent.ACTION_VIEW);
-                                Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
-                                        "com.blacksun.quicknote.fileprovider",
-                                        file);
-                                intent.setData(fileUri);
-                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                widget.getContext().startActivity(intent);
-                            }
-                        }, cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            public void run() {
+                                Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
+                                        UtilHelper.createThumbnail(inserted.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
 
-                        detailContent.setText(content);
+                                Log.d(SPANNABLE_TAG, "cursor location: " + cursorLoc);
+
+                                Editable content = detailContent.getText();
+
+                                String attachName = inserted.getPath().substring(inserted.getPath().lastIndexOf('/') + 1);
+                                //cursor onPause+1 is the position of imageSpan
+                                content.insert(cursorLoc, "\n$" + attachName + "$ \n");
+
+                                //update position to change into image
+                                int newCursorLoc = cursorLoc + 1;
+
+                                Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(newCursorLoc, newCursorLoc + attachName.length() + 1));
+
+                                //+2 for cursor+1 and length+1
+                                content.setSpan(new ImageSpan(getApplicationContext(), thumb), newCursorLoc, newCursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                content.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), newCursorLoc, newCursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                content.setSpan(new ClickableSpan() {
+                                    @Override
+                                    public void onClick(@NonNull View widget) {
+                                        File file = new File(inserted.getPath());
+                                        Intent intent = new Intent();
+                                        intent.setAction(Intent.ACTION_VIEW);
+                                        Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
+                                                "com.blacksun.quicknote.fileprovider",
+                                                file);
+                                        intent.setData(fileUri);
+                                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                        widget.getContext().startActivity(intent);
+                                    }
+                                }, newCursorLoc, newCursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        detailContent.setText(content);
+                                    }
+                                });
+                            }
+                        }).start();
+
+//                        Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
+//                                UtilHelper.createThumbnail(inserted.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
+//
+//                        Log.d(SPANNABLE_TAG, "cursor location: " + cursorLoc);
+//
+//                        Editable content = detailContent.getText();
+//
+//                        String attachName = inserted.getPath().substring(inserted.getPath().lastIndexOf('/') + 1);
+//                        //cursor onPause+1 is the position of imageSpan
+//                        content.insert(cursorLoc, "\n$" + attachName + "$ \n");
+//
+//                        //update position to change into image
+//                        cursorLoc += 1;
+//
+//                        Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(cursorLoc, cursorLoc + attachName.length() + 1));
+//
+//                        //+2 for cursor+1 and length+1
+//                        content.setSpan(new ImageSpan(this, thumb), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                        content.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                        content.setSpan(new ClickableSpan() {
+//                            @Override
+//                            public void onClick(@NonNull View widget) {
+//                                File file = new File(inserted.getPath());
+//                                Intent intent = new Intent();
+//                                intent.setAction(Intent.ACTION_VIEW);
+//                                Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
+//                                        "com.blacksun.quicknote.fileprovider",
+//                                        file);
+//                                intent.setData(fileUri);
+//                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//                                widget.getContext().startActivity(intent);
+//                            }
+//                        }, cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//
+//                        detailContent.setText(content);
 
 
                     } else {
