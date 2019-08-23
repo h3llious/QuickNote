@@ -31,6 +31,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 import static com.blacksun.quicknote.activities.DetailActivity.REQUEST_CHANGE;
+import static com.blacksun.quicknote.activities.DetailActivity.REQUEST_INSERT;
 
 public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdapter.ViewHolder> {
     ArrayList<Attachment> images;
@@ -75,6 +76,7 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
                 PopupMenu popup = new PopupMenu(context, holder.itemView);
                 //inflating menu from xml resource
                 popup.inflate(R.menu.menu_attach);
+                popup.getMenu().findItem(R.id.action_insert_img).setVisible(true);
                 //adding click listener
                 popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
@@ -89,6 +91,11 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
                             case R.id.action_delete_attach:
                                 deleteAttach(position);
                                 return true;
+                            case R.id.action_insert_img:
+                                Intent intent = new Intent(context, DetailActivity.class);
+                                intent.setAction(REQUEST_INSERT);
+                                intent.putExtra("imgPos", position);
+                                context.startActivity(intent);
                             default:
                                 return false;
                         }

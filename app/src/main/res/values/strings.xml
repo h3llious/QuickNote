@@ -123,4 +123,5 @@
     <string name="menu_save_attach">Save</string>
     <string name="menu_delete_attach">Delete</string>
     <string name="about_title">About</string>
+    <string name="menu_insert_img">Insert</string>
 </resources>

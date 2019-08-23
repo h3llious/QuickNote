@@ -92,6 +92,7 @@ public class DetailActivity extends AppCompatActivity {
     boolean isAttaching = false;
 
     public final static String REQUEST_CHANGE = "changed";
+    public final static String REQUEST_INSERT = "insert";
 
     boolean isChanged = false;
 
@@ -318,11 +319,11 @@ public class DetailActivity extends AppCompatActivity {
             }
         } else if (requestCode == REQUEST_FILE_CHOOSER) {
             if (resultCode == RESULT_OK) {
-                if(data.getClipData() != null) {
+                if (data.getClipData() != null) {
 
                     int count = data.getClipData().getItemCount();
                     int currentItem = 0;
-                    while(currentItem < count) {
+                    while (currentItem < count) {
 
                         Uri uri = data.getClipData().getItemAt(currentItem).getUri();
 
@@ -393,11 +394,11 @@ public class DetailActivity extends AppCompatActivity {
         } else if (requestCode == REQUEST_IMAGE_CHOOSER) {
             if (resultCode == RESULT_OK) {
 
-                if(data.getClipData() != null) {
+                if (data.getClipData() != null) {
 
                     int count = data.getClipData().getItemCount();
                     int currentItem = 0;
-                    while(currentItem < count) {
+                    while (currentItem < count) {
 
                         Uri uri = data.getClipData().getItemAt(currentItem).getUri();
                         //String path = getPath(uri);
@@ -480,7 +481,11 @@ public class DetailActivity extends AppCompatActivity {
         int cursorLoc = detailContent.getSelectionStart();
 
         if (cursorLoc != -1) {
-            Bitmap thumb = UtilHelper.createThumbnail(currentPhotoPath, 500, 500);
+//            Bitmap thumb = UtilHelper.createThumbnail(currentPhotoPath, 500, 500);
+
+            Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
+                    UtilHelper.createThumbnail(currentPhotoPath, displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
+
 
             Log.d(SPANNABLE_TAG, "cursor location: " + cursorLoc);
 
@@ -600,7 +605,7 @@ public class DetailActivity extends AppCompatActivity {
                         int idxStart = contentString.indexOf("$" + attachName + "$");
 
                         Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
-                                UtilHelper.createThumbnail(image.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2),20);
+                                UtilHelper.createThumbnail(image.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
 
                         contentSpan.setSpan(new ImageSpan(this, thumb), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -621,6 +626,8 @@ public class DetailActivity extends AppCompatActivity {
                     }
                 }
                 detailContent.setText(contentSpan);
+
+
             }
         } else {
             collapsingToolbar.setTitle("New note");
@@ -887,27 +894,76 @@ public class DetailActivity extends AppCompatActivity {
 
     @Override
     protected void onNewIntent(Intent intent) {
-        if (intent.getAction() != null && intent.getAction().equals(REQUEST_CHANGE)) {
-            isChanged = true;
-            String attachType = intent.getStringExtra(NoteContract.AttachEntry.COLUMN_ATTACH_TYPE);
+        if (intent.getAction() != null) {
+            if (intent.getAction().equals(REQUEST_CHANGE)) {
+                isChanged = true;
+                String attachType = intent.getStringExtra(NoteContract.AttachEntry.COLUMN_ATTACH_TYPE);
 
-            //delete attaches in content
-            String attachPath = intent.getStringExtra(NoteContract.AttachEntry.COLUMN_ATTACH_PATH);
+                //delete attaches in content
+                String attachPath = intent.getStringExtra(NoteContract.AttachEntry.COLUMN_ATTACH_PATH);
 
-            if (attachType.equals(NoteContract.AttachEntry.IMAGE_TYPE)) {
-                File curFile = new File(attachPath);
-                String attachName = curFile.getName();
-                String contentString = detailContent.getText().toString();
-                String attachFormat = "$" + attachName + "$";
-                if (contentString.contains(attachFormat)) {
-                    int startIdx = contentString.indexOf(attachFormat);
-                    Editable changedContent = detailContent.getText().delete(startIdx, startIdx + 1 + attachFormat.length());
-                    detailContent.setText(changedContent);
+                if (attachType.equals(NoteContract.AttachEntry.IMAGE_TYPE)) {
+                    File curFile = new File(attachPath);
+                    String attachName = curFile.getName();
+                    String contentString = detailContent.getText().toString();
+                    String attachFormat = "$" + attachName + "$";
+                    if (contentString.contains(attachFormat)) {
+                        int startIdx = contentString.indexOf(attachFormat);
+                        Editable changedContent = detailContent.getText().delete(startIdx, startIdx + 1 + attachFormat.length());
+                        detailContent.setText(changedContent);
+                    }
+                }
+
+            } else if (intent.getAction().equals(REQUEST_INSERT)) {
+                int imgPos = intent.getIntExtra("imgPos", -1);
+                if (imgPos != -1) {
+                    int cursorLoc = detailContent.getSelectionStart();
+                    if (cursorLoc >= 0) {
+                        Attachment inserted = images.get(imgPos);
+
+                        Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
+                                UtilHelper.createThumbnail(inserted.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
+
+                        Log.d(SPANNABLE_TAG, "cursor location: " + cursorLoc);
+
+                        Editable content = detailContent.getText();
+
+                        String attachName = inserted.getPath().substring(inserted.getPath().lastIndexOf('/') + 1);
+                        //cursor onPause+1 is the position of imageSpan
+                        content.insert(cursorLoc, "\n$" + attachName + "$ \n");
+
+                        //update position to change into image
+                        cursorLoc += 1;
+
+                        Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(cursorLoc, cursorLoc + attachName.length() + 1));
+
+                        //+2 for cursor+1 and length+1
+                        content.setSpan(new ImageSpan(this, thumb), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        content.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        content.setSpan(new ClickableSpan() {
+                            @Override
+                            public void onClick(@NonNull View widget) {
+                                File file = new File(inserted.getPath());
+                                Intent intent = new Intent();
+                                intent.setAction(Intent.ACTION_VIEW);
+                                Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
+                                        "com.blacksun.quicknote.fileprovider",
+                                        file);
+                                intent.setData(fileUri);
+                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                widget.getContext().startActivity(intent);
+                            }
+                        }, cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                        detailContent.setText(content);
+
+
+                    } else {
+                        Toast.makeText(this, "Please select a position in the content textbox!", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
-
         }
-
         super.onNewIntent(intent);
     }
 

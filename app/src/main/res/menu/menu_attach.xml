@@ -9,4 +9,8 @@
     <item android:id="@+id/action_delete_attach"
         android:title="@string/menu_delete_attach" />
 
+    <item android:id="@+id/action_insert_img"
+        android:title="@string/menu_insert_img"
+        android:visible="false"/>
+
 </menu>
