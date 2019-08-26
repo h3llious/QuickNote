@@ -59,6 +59,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -460,8 +461,36 @@ public class DetailActivity extends AppCompatActivity {
                         String fileName = getFileName(uri);
                         try {
                             File savedFile = createImageFile();
-                            UtilHelper.copy(uri, savedFile, this);
+//                            UtilHelper.copy(uri, savedFile, this);
                             String filePath = savedFile.getAbsolutePath();
+
+                            //smaller image size
+                            InputStream in = this.getContentResolver().openInputStream(uri);
+                            final BitmapFactory.Options options = new BitmapFactory.Options();
+                            options.inJustDecodeBounds = true;
+                            BitmapFactory.decodeStream(in, null, options);
+                            in.close();
+                            // Calculate inSampleSize
+                            options.inSampleSize = UtilHelper.calculateInSampleSize(options, 960, 960);
+                            int quality = 100 / options.inSampleSize;
+
+                            if (quality<100) {
+                                // Decode bitmap with inSampleSize set
+                                options.inJustDecodeBounds = false;
+                                in = this.getContentResolver().openInputStream(uri);
+                                Bitmap capturedImg = BitmapFactory.decodeStream(in, null, options);
+
+                                try (FileOutputStream out = new FileOutputStream(filePath)) {
+                                    capturedImg.compress(Bitmap.CompressFormat.JPEG, quality, out); // bmp is your Bitmap instance
+                                    // PNG is a lossless format, the compression factor (100) is ignored
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            } else {
+                                UtilHelper.copy(uri, savedFile, this);
+                            }
+                            in.close();
+
 
                             Attachment newAttach = new Attachment();
                             if (currentNote == null) {
@@ -497,8 +526,35 @@ public class DetailActivity extends AppCompatActivity {
                     String fileName = getFileName(uri);
                     try {
                         File savedFile = createImageFile();
-                        UtilHelper.copy(uri, savedFile, this);
+//                            UtilHelper.copy(uri, savedFile, this);
                         String filePath = savedFile.getAbsolutePath();
+
+                        //smaller image size
+                        InputStream in = this.getContentResolver().openInputStream(uri);
+                        final BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inJustDecodeBounds = true;
+                        BitmapFactory.decodeStream(in, null, options);
+                        in.close();
+                        // Calculate inSampleSize
+                        options.inSampleSize = UtilHelper.calculateInSampleSize(options, 960, 960);
+                        int quality = 100 / options.inSampleSize;
+
+                        if (quality<100) {
+                            // Decode bitmap with inSampleSize set
+                            options.inJustDecodeBounds = false;
+                            in = this.getContentResolver().openInputStream(uri);
+                            Bitmap capturedImg = BitmapFactory.decodeStream(in, null, options);
+
+                            try (FileOutputStream out = new FileOutputStream(filePath)) {
+                                capturedImg.compress(Bitmap.CompressFormat.JPEG, quality, out); // bmp is your Bitmap instance
+                                // PNG is a lossless format, the compression factor (100) is ignored
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            UtilHelper.copy(uri, savedFile, this);
+                        }
+                        in.close();
 
                         Attachment newAttach = new Attachment();
                         if (currentNote == null) {
@@ -649,17 +705,20 @@ public class DetailActivity extends AppCompatActivity {
         if (getIntent() != null && getIntent().getExtras() != null) {
             Bundle bundle = getIntent().getExtras();
             if (bundle.getString("title") != null) {
-                detailTitle.setText(bundle.getString("title"));
-                detailContent.setText(bundle.getString("content"));
-
-                //test collapsing toolbar
-                collapsingToolbar.setTitle(bundle.getString("title"));
 
                 String title = bundle.getString("title");
                 String content = bundle.getString("content");
                 long dateCreated = bundle.getLong("dateCreated");
                 long dateModified = bundle.getLong("dateModified");
                 long id = bundle.getLong("noteID");
+
+                detailTitle.setText(title);
+                detailContent.setText(content);
+
+                //test collapsing toolbar
+                collapsingToolbar.setTitle(title);
+
+
 //                String img = bundle.getString("imagePath");
 //                currentPhotoPath = img;
 
@@ -708,66 +767,69 @@ public class DetailActivity extends AppCompatActivity {
                 currentNote = new Note(title, content, id, dateCreated, dateModified);
 //                isSaved = false;
 
-                //spannable test
-                //Image holder
-                Editable contentSpan = detailContent.getText();
-                String contentString = contentSpan.toString();
-                for (Attachment image : images) {
-                    String attachName = image.getPath().substring(image.getPath().lastIndexOf('/') + 1);
+
+                if (images.size() > 0) {
+                    //spannable test
+                    //Image holder
+                    Editable contentSpan = detailContent.getText();
+                    String contentString = contentSpan.toString();
+                    for (Attachment image : images) {
+                        String attachName = image.getPath().substring(image.getPath().lastIndexOf('/') + 1);
 
 
-                    if (contentString.contains("$" + attachName + "$")) {
-                        int idxStart = contentString.indexOf("$" + attachName + "$");
+                        if (contentString.contains("$" + attachName + "$")) {
+                            int idxStart = contentString.indexOf("$" + attachName + "$");
 
-                        contentSpan.setSpan(new ImageSpan(getResources().getDrawable(R.drawable.ic_temp_img)), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    }
-                }
-                detailContent.setText(contentSpan);
-                //thread implementation
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Editable contentSpan = detailContent.getText();
-                        String contentString = contentSpan.toString();
-                        for (Attachment image : images) {
-                            String attachName = image.getPath().substring(image.getPath().lastIndexOf('/') + 1);
-
-
-                            if (contentString.contains("$" + attachName + "$")) {
-                                int idxStart = contentString.indexOf("$" + attachName + "$");
-
-                                Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
-                                        UtilHelper.createThumbnail(image.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
-
-                                contentSpan.setSpan(new ImageSpan(getApplicationContext(), thumb), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                                contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                                contentSpan.setSpan(new ClickableSpan() {
-                                    @Override
-                                    public void onClick(@NonNull View widget) {
-                                        File file = new File(image.getPath());
-                                        Intent intent = new Intent();
-                                        intent.setAction(android.content.Intent.ACTION_VIEW);
-                                        Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
-                                                "com.blacksun.quicknote.fileprovider",
-                                                file);
-                                        intent.setData(fileUri);
-                                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                        widget.getContext().startActivity(intent);
-                                    }
-                                }, idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                            }
+                            contentSpan.setSpan(new ImageSpan(getResources().getDrawable(R.drawable.ic_temp_img)), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         }
-
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                detailContent.setText(contentSpan);
-                            }
-                        });
                     }
-                }).start();
+                    detailContent.setText(contentSpan);
+                    //thread implementation
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Editable contentSpan = detailContent.getText();
+                            contentSpan.clearSpans();
+                            String contentString = contentSpan.toString();
+                            for (Attachment image : images) {
+                                String attachName = image.getPath().substring(image.getPath().lastIndexOf('/') + 1);
 
+
+                                if (contentString.contains("$" + attachName + "$")) {
+                                    int idxStart = contentString.indexOf("$" + attachName + "$");
+
+                                    Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
+                                            UtilHelper.createThumbnail(image.getPath(), displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
+
+                                    contentSpan.setSpan(new ImageSpan(getApplicationContext(), thumb), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                    contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                    contentSpan.setSpan(new ClickableSpan() {
+                                        @Override
+                                        public void onClick(@NonNull View widget) {
+                                            File file = new File(image.getPath());
+                                            Intent intent = new Intent();
+                                            intent.setAction(android.content.Intent.ACTION_VIEW);
+                                            Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
+                                                    "com.blacksun.quicknote.fileprovider",
+                                                    file);
+                                            intent.setData(fileUri);
+                                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                            widget.getContext().startActivity(intent);
+                                        }
+                                    }, idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                }
+                            }
+
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    detailContent.setText(contentSpan);
+                                }
+                            });
+                        }
+                    }).start();
+                }
 
 //                Editable contentSpan = detailContent.getText();
 //                String contentString = contentSpan.toString();
