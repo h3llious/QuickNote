@@ -13,6 +13,7 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.Layout;
 import android.text.Spannable;
 import android.text.Spanned;
@@ -982,6 +983,8 @@ public class DetailActivity extends AppCompatActivity {
             currentNote.setTitle(title);
             if (!TextUtils.isEmpty(content))
                 currentNote.setContent(content);
+            else
+                currentNote.setContent("");
             NoteManager.newInstance(this).update(currentNote);
 
             if (newImages != null) {
