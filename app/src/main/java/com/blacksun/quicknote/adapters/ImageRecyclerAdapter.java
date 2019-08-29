@@ -62,6 +62,8 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
             return;
         }
 
+        holder.image.setImageDrawable(context.getResources().getDrawable(android.R.drawable.ic_menu_gallery));
+
 //        Bitmap imageFile = UtilHelper.decodeSampledBitmapFromFile(attach.getPath(), 300, 300);
         final Handler handler = new Handler();
         new Thread() {

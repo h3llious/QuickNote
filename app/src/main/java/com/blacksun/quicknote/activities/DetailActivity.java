@@ -66,6 +66,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DetailActivity extends AppCompatActivity {
 
@@ -196,18 +198,54 @@ public class DetailActivity extends AppCompatActivity {
 //
 //
 //                    //+2 for cursor+1 and length+1
-//                    content.setSpan(new ImageSpan(getBaseContext().getResources().getDrawable(android.R.drawable.checkbox_off_background)),
+//                    content.setSpan(new ImageSpan(getApplicationContext(), android.R.drawable.checkbox_off_background),
 //                            cursorLoc, cursorLoc + textCheckbox.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-////                    content.setSpan(new ClickableSpan() {
-////                        @Override
-////                        public void onClick(@NonNull View widget) {
-////                            content.replace(cursorLoc, cursorLoc + textCheckbox.length(), textNoCheck);
-////                        }
-////                    }, cursorLoc, cursorLoc + textCheckbox.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                    content.setSpan(new ClickableSpan() {
+//                        @Override
+//                        public void onClick(@NonNull View widget) {
+//                            ImageSpan[] toBeDeleted = content.getSpans(cursorLoc, cursorLoc + textCheckbox.length(), ImageSpan.class);
+//                            for (ImageSpan delete: toBeDeleted) {
+//                                content.removeSpan(delete);
+//                            }
+//                            ClickableSpan[] toBeDeletedClick = content.getSpans(cursorLoc, cursorLoc + textCheckbox.length(), ClickableSpan.class);
+//                            for (ClickableSpan delete: toBeDeletedClick) {
+//                                content.removeSpan(delete);
+//                            }
+//                            content.replace(cursorLoc, cursorLoc + textCheckbox.length(), textNoCheck);
+//                            content.setSpan(new ImageSpan(getApplicationContext(), android.R.drawable.checkbox_on_background),
+//                                    cursorLoc, cursorLoc + textNoCheck.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                            content.setSpan(new ClickableSpan() {
+//                                @Override
+//                                public void onClick(@NonNull View widget) {
+//                                    ImageSpan[] toBeDelted = content.getSpans(cursorLoc, cursorLoc + textNoCheck.length(), ImageSpan.class);
+//                                    for (ImageSpan delete: toBeDelted) {
+//                                        content.removeSpan(delete);
+//                                    }
+//                                    ClickableSpan[] toBeDeletedClick = content.getSpans(cursorLoc, cursorLoc + textNoCheck.length(), ClickableSpan.class);
+//                                    for (ClickableSpan delete: toBeDeletedClick) {
+//                                        content.removeSpan(delete);
+//                                    }
+//                                    content.replace(cursorLoc, cursorLoc + textNoCheck.length(), textCheckbox);
+//                                    content.setSpan(new ImageSpan(getApplicationContext(), android.R.drawable.checkbox_off_background),
+//                                            cursorLoc, cursorLoc + textCheckbox.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                                    detailContent.setText(content);
+//                                }
+//                            }, cursorLoc, cursorLoc + textCheckbox.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                            detailContent.setText(content);
+//
+//                        }
+//                    }, cursorLoc, cursorLoc + textCheckbox.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 //
 //                    detailContent.setText(content);
 //                } else {
-//                    Toast.makeText(getBaseContext(), "Please choose a position in content box", Toast.LENGTH_SHORT).show();
+////                    Toast.makeText(getBaseContext(), "Please choose a position in content box", Toast.LENGTH_SHORT).show();
+//                    Snackbar.make(v, "Please choose a position in content box", Snackbar.LENGTH_SHORT)
+//                            .setAction("Dismiss", new View.OnClickListener() {
+//                                @Override
+//                                public void onClick(View v) {
+//                                }
+//                            })
+//                            .show();
 //                }
 
                 Snackbar.make(v, "Not implemented yet", Snackbar.LENGTH_SHORT)
@@ -305,11 +343,9 @@ public class DetailActivity extends AppCompatActivity {
                 int quality = 100 / options.inSampleSize;
 
 
-
-
 //                Bitmap capturedImg = UtilHelper.decodeSampledBitmapFromFile(currentPhotoPath, 720, 720);
 
-                if (quality<100) {
+                if (quality < 100) {
                     // Decode bitmap with inSampleSize set
                     options.inJustDecodeBounds = false;
                     Bitmap capturedImg = BitmapFactory.decodeFile(currentPhotoPath, options);
@@ -475,7 +511,7 @@ public class DetailActivity extends AppCompatActivity {
                             options.inSampleSize = UtilHelper.calculateInSampleSize(options, 960, 960);
                             int quality = 100 / options.inSampleSize;
 
-                            if (quality<100) {
+                            if (quality < 100) {
                                 // Decode bitmap with inSampleSize set
                                 options.inJustDecodeBounds = false;
                                 in = this.getContentResolver().openInputStream(uri);
@@ -540,7 +576,7 @@ public class DetailActivity extends AppCompatActivity {
                         options.inSampleSize = UtilHelper.calculateInSampleSize(options, 960, 960);
                         int quality = 100 / options.inSampleSize;
 
-                        if (quality<100) {
+                        if (quality < 100) {
                             // Decode bitmap with inSampleSize set
                             options.inJustDecodeBounds = false;
                             in = this.getContentResolver().openInputStream(uri);
@@ -639,41 +675,6 @@ public class DetailActivity extends AppCompatActivity {
                 }
             }).start();
 
-//            Bitmap thumb = UtilHelper.getRoundedCornerBitmap(
-//                    UtilHelper.createThumbnail(currentPhotoPath, displayMetrics.widthPixels / 2, displayMetrics.widthPixels / 2), 20);
-//
-//            Log.d(SPANNABLE_TAG, "cursor location: " + cursorLoc);
-//
-//            Editable content = detailContent.getText();
-//
-//            String attachName = newAttach.getPath().substring(newAttach.getPath().lastIndexOf('/') + 1);
-//            //cursor onPause+1 is the position of imageSpan
-//            content.insert(cursorLoc, "\n$" + attachName + "$ \n");
-//
-//            //update position to change into image
-//            cursorLoc += 1;
-//
-//            Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(cursorLoc, cursorLoc + attachName.length() + 1));
-//
-//            //+2 for cursor+1 and length+1
-//            content.setSpan(new ImageSpan(this, thumb), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-//            content.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-//            content.setSpan(new ClickableSpan() {
-//                @Override
-//                public void onClick(@NonNull View widget) {
-//                    File file = new File(newAttach.getPath());
-//                    Intent intent = new Intent();
-//                    intent.setAction(Intent.ACTION_VIEW);
-//                    Uri fileUri = FileProvider.getUriForFile(widget.getContext(),
-//                            "com.blacksun.quicknote.fileprovider",
-//                            file);
-//                    intent.setData(fileUri);
-//                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-//                    widget.getContext().startActivity(intent);
-//                }
-//            }, cursorLoc, cursorLoc + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-//
-//            detailContent.setText(content);
         }
     }
 
@@ -731,32 +732,7 @@ public class DetailActivity extends AppCompatActivity {
 
 
                 //change header image
-                if (images.size() == 0) {
-                    changeHeaderImageDefault();
-                } else {
-                    float scale = getResources().getDisplayMetrics().density;
-                    int dpAsPixels = (int) (180 * scale + 0.5f);
-
-                    ImageView toolbarImage = findViewById(R.id.toolbar_image);
-
-                    //handle loading bitmap
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Bitmap imgHeader = UtilHelper.createThumbnail(images.get(0).getPath(), displayMetrics.widthPixels, dpAsPixels);
-                            Log.d("bitmap", "display width " + displayMetrics.widthPixels);
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    toolbarImage.setImageBitmap(imgHeader);
-                                }
-                            });
-                        }
-                    }).start();
-//                    Bitmap imgHeader = UtilHelper.createThumbnail(images.get(0).getPath(), displayMetrics.widthPixels, dpAsPixels);
-//                    Log.d("bitmap", "display width " + displayMetrics.widthPixels);
-//                    toolbarImage.setImageBitmap(imgHeader);
-                }
+                changeHeaderImage();
 
                 ArrayList<Attachment> currentFiles = AttachManager.newInstance(this).getAttach(id, NoteContract.AttachEntry.FILE_TYPE);
                 files.clear();
@@ -768,6 +744,15 @@ public class DetailActivity extends AppCompatActivity {
                 currentNote = new Note(title, content, id, dateCreated, dateModified);
 //                isSaved = false;
 
+
+                //checkbox
+                String wordToFind = "\\$checked\\$";
+                Pattern word = Pattern.compile(wordToFind);
+                Matcher match = word.matcher(detailContent.getText());
+
+                while (match.find()) {
+                    System.out.println("Found love at index "+ match.start() +" - "+ (match.end()-1));
+                }
 
                 if (images.size() > 0) {
                     //spannable test
@@ -781,7 +766,7 @@ public class DetailActivity extends AppCompatActivity {
                         if (contentString.contains("$" + attachName + "$")) {
                             int idxStart = contentString.indexOf("$" + attachName + "$");
 
-                            contentSpan.setSpan(new ImageSpan(getResources().getDrawable(R.drawable.ic_temp_img)), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            contentSpan.setSpan(new ImageSpan(getResources().getDrawable(android.R.drawable.ic_menu_gallery)), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                             contentSpan.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), idxStart, idxStart + attachName.length() + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         }
                     }
@@ -876,6 +861,32 @@ public class DetailActivity extends AppCompatActivity {
 
         collapsingToolbar.setCollapsedTitleTextColor(ContextCompat.getColor(this, R.color.white));
         collapsingToolbar.setExpandedTitleColor(ContextCompat.getColor(this, R.color.transparent));
+    }
+
+    private void changeHeaderImage() {
+        if (images.size() == 0) {
+            changeHeaderImageDefault();
+        } else {
+            float scale = getResources().getDisplayMetrics().density;
+            int dpAsPixels = (int) (180 * scale + 0.5f);
+
+            ImageView toolbarImage = findViewById(R.id.toolbar_image);
+
+            //handle loading bitmap
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Bitmap imgHeader = UtilHelper.createThumbnail(images.get(0).getPath(), displayMetrics.widthPixels, dpAsPixels);
+                    Log.d("bitmap", "display width " + displayMetrics.widthPixels);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            toolbarImage.setImageBitmap(imgHeader);
+                        }
+                    });
+                }
+            }).start();
+        }
     }
 
     private void initialize() {
