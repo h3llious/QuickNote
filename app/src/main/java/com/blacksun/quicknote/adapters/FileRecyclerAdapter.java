@@ -31,9 +31,9 @@ import java.util.ArrayList;
 import static com.blacksun.quicknote.activities.DetailActivity.REQUEST_CHANGE;
 
 public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapter.ViewHolder> {
-    ArrayList<Attachment> files;
-    ArrayList<Attachment> newFiles;
-    Context context;
+    private ArrayList<Attachment> files;
+    private ArrayList<Attachment> newFiles;
+    private Context context;
 
     public FileRecyclerAdapter(ArrayList<Attachment> files, ArrayList<Attachment> newFiles, Context context) {
         this.files = files;
@@ -102,7 +102,6 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
                 break;
             }
         }
-
 
         //check changes in Notes
         Intent intent = new Intent(context, DetailActivity.class);
@@ -195,7 +194,6 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
                     });
                     //displaying the popup
                     popup.show();
-
 
 //                saveAttach(v, filePath);
                     return true;

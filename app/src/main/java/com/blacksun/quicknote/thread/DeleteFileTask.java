@@ -8,7 +8,7 @@ public class DeleteFileTask implements Callable<Boolean> {
     private DriveServiceHelper driveServiceHelper;
     private String id;
 
-    public DeleteFileTask(DriveServiceHelper driveServiceHelper, String id) {
+    DeleteFileTask(DriveServiceHelper driveServiceHelper, String id) {
         this.driveServiceHelper = driveServiceHelper;
         this.id = id;
     }

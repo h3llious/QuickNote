@@ -53,20 +53,18 @@ public class SyncTask implements Runnable {
 
     @Override
     public void run() {
-
+        //check internet connection
         if (!isInternetAvailable()) {
             Log.d(DRIVE_TAG, "No internet connection");
             return;
         }
         Log.d(DRIVE_TAG, "Internet connected");
 
+        //notification
         Intent intent = new Intent(context, MainActivity.class);
-
         intent.setAction(MainActivity.class.getName());
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_stat_name)
@@ -88,7 +86,7 @@ public class SyncTask implements Runnable {
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
-// notificationId is a unique int for each notification that you must define
+        // notificationId is a unique int for each notification that you must define
         int notificationId = 10;
         notificationManager.notify(notificationId, builder.build());
 
@@ -142,7 +140,6 @@ public class SyncTask implements Runnable {
                 Future<String> resDbId = SyncManager.getSyncManager().callSyncString(searchDbTask);
                 dbId = resDbId.get();
 
-
                 Future<Boolean> resDb;
                 //download db for further usage
                 if (dbId != null) {
@@ -161,30 +158,26 @@ public class SyncTask implements Runnable {
                             (DATABASE_PATH, null, SQLiteDatabase.OPEN_READONLY);
                     int localVersion = sqlDb.getVersion();
 
-
-//                    backup local db
+                    // backup local db
                     File from = new File(DATABASE_PATH);
                     File to = new File(DATABASE_PATH + "_backup");
                     copy(Uri.fromFile(from), to, context);
-
 
                     //cloud db
                     DownloadTask downloadDbTask = new DownloadTask(driveServiceHelper, DATABASE_PATH, dbId);
                     resDb = SyncManager.getSyncManager().callSyncBool(downloadDbTask);
                     resDb.get();
 
-
                     PROGRESS_CURRENT = 20;
                     builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
                     notificationManager.notify(notificationId, builder.build());
-
 
                     //check db version
                     sqlDb = SQLiteDatabase.openDatabase
                             (DATABASE_PATH, null, SQLiteDatabase.OPEN_READONLY);
                     int cloudVersion = sqlDb.getVersion();
 
-                    boolean checkVersion;
+//                    boolean checkVersion;
                     if (cloudVersion < localVersion) {
 
                         DeleteFileTask deleteFileTask = new DeleteFileTask(driveServiceHelper, filesFolderId);
@@ -204,7 +197,6 @@ public class SyncTask implements Runnable {
                             }
                         });
 
-
                     } else if (cloudVersion > localVersion) {
                         SyncManager.getSyncManager().getMainThreadExecutor().execute(new Runnable() {
                             @Override
@@ -221,8 +213,6 @@ public class SyncTask implements Runnable {
                             }
                         });
                     } else {
-
-
                         //check if there are some attachments missing
                         boolean isMissing = false;
 
@@ -231,13 +221,11 @@ public class SyncTask implements Runnable {
                             Note local = localNotes.get(i);
                             long noteLocalId = local.getId();
 
-
                             //notification
                             if (PROGRESS_CURRENT < 80)
                                 PROGRESS_CURRENT += 5;
                             builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
                             notificationManager.notify(notificationId, builder.build());
-
 
                             Note cloudNote = noteManager.getNote(noteLocalId);
 
@@ -263,7 +251,6 @@ public class SyncTask implements Runnable {
                                     //TODO check if needed or not
                                     delResults.add(resDelFile);
 
-
                                     //delete attachment in db
                                     attachManager.delete(attach);
                                 }
@@ -274,7 +261,6 @@ public class SyncTask implements Runnable {
                                 //delete in cloud db
                                 if (cloudNote != null)
                                     noteManager.delete(cloudNote);
-
 
                                 //delete local notes
                                 localNotes.remove(i);
@@ -321,7 +307,6 @@ public class SyncTask implements Runnable {
                                         localAttaches.remove(iNew);
                                     }
 
-
                                     //notification
                                     if (PROGRESS_CURRENT < 80)
                                         PROGRESS_CURRENT += 1;
@@ -331,7 +316,6 @@ public class SyncTask implements Runnable {
                                 continue;
                             }
 
-
                             if (cloudNote != null) { //exist note satisfied conditions
 
                                 //notification
@@ -339,7 +323,6 @@ public class SyncTask implements Runnable {
                                     PROGRESS_CURRENT += 1;
                                 builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
                                 notificationManager.notify(notificationId, builder.build());
-
 
                                 ArrayList<Attachment> cloudAttachesOfANote = attachManager.getAttach(cloudNote.getId(), NoteContract.AttachEntry.ANY_TYPE);
 
@@ -380,43 +363,7 @@ public class SyncTask implements Runnable {
                                         }
                                     }
                                 }
-
-//                            else if (synced == 0) { //new note
-//
-//                                //upload new attaches into Cloud
-//                                ArrayList<Future<Boolean>> results = new ArrayList<>();
-//                                for (int iAttach = localAttaches.size() - 1; iAttach >= 0; iAttach--) {
-//
-//                                    Attachment attach = localAttaches.get(iAttach);
-//                                    if (attach.getNote_id() == noteLocalId) {
-//                                        File newFile = new File(attach.getPath());
-//                                        UploadTask uploadAttaches = new UploadTask(driveServiceHelper, newFile, getMIMEType(newFile), filesFolderId);
-//                                        Future<Boolean> res = SyncManager.getSyncManager().callSyncBool(uploadAttaches);
-//                                        results.add(res);
-//                                    }
-//                                }
-//                                for (Future<Boolean> res : results) {
-//                                    res.get();
-//                                }
-//
-//                                //add new note into db
-//                                long newNoteId = noteManager.create(local);
-//                                Log.d(DRIVE_TAG, "(obsolete)new note from local created with id "+newNoteId);
-//                                localNotes.remove(i);
-//
-//                                //...along with its attaches
-//                                for (int iNew = localAttaches.size() - 1; iNew >= 0; iNew--) {
-//                                    Attachment newAttach = localAttaches.get(iNew);
-//                                    if (noteLocalId == newAttach.getNote_id()) {
-//                                        newAttach.setNote_id(newNoteId);
-//                                        attachManager.create(newAttach);
-//                                        localAttaches.remove(iNew);
-//                                    }
-//                                }
-//
-//                            }
                             }
-
                         }
 
                         //for the rest in cloud... TODO may need to check deleted note in local
@@ -441,7 +388,6 @@ public class SyncTask implements Runnable {
                                 addResults.add(resAttach);
                                 Log.d(DRIVE_TAG, "new file downloaded to local: " + fileName);
 
-
                                 //notification
                                 if (PROGRESS_CURRENT < 80)
                                     PROGRESS_CURRENT += 1;
@@ -451,8 +397,6 @@ public class SyncTask implements Runnable {
                             } else {
                                 isMissing = true;
                             }
-
-
                         }
 
                         for (Future<Boolean> res : addResults) {
@@ -466,7 +410,6 @@ public class SyncTask implements Runnable {
                             noteManager.sync(note);
                         }
 
-
                         if (isMissing) {
                             SyncManager.getSyncManager().getMainThreadExecutor().execute(new Runnable() {
                                 @Override
@@ -475,7 +418,6 @@ public class SyncTask implements Runnable {
                                 }
                             });
                         }
-
                         //the place temporary moved to back
                     }
 
@@ -495,34 +437,7 @@ public class SyncTask implements Runnable {
 //                    }
                 }
             } else { //if not created app folder
-                //get all notes before overwriting existing db
-                final NoteManager noteManager = NoteManager.newInstance(context);
-                ArrayList<Note> localNotes = noteManager.getAllNotes(null);
-                Log.d(DRIVE_TAG, "Old database found! Size notes: " + localNotes.size());
-
-                //get all attaches
-                final AttachManager attachManager = AttachManager.newInstance(context);
-                ArrayList<Attachment> localAttaches = attachManager.getAllAttaches();
-                Log.d(DRIVE_TAG, "size attaches test: " + localAttaches.size());
-
-                for (int i = localNotes.size() - 1; i >= 0; i--) {
-                    Note local = localNotes.get(i);
-                    long noteLocalId = local.getId();
-
-                    //check deleted
-                    int isDeleted = local.getDeleted();
-                    if (isDeleted == NoteContract.NoteEntry.DELETED) {
-
-                        //delete local notes
-                        localNotes.remove(i);
-                        noteManager.delete(local);
-
-                        continue;
-
-                    }
-
-                    noteManager.sync(local);
-                }
+                setUpNotesForNewAppFolder();
             }
 
             PROGRESS_CURRENT = 90;
@@ -534,7 +449,6 @@ public class SyncTask implements Runnable {
             Future<Boolean> resDb = SyncManager.getSyncManager().callSyncBool(uploadDb);
             resDb.get();
 
-
             if (dbId != null) {
                 //delete old db
                 DeleteFileTask deleteFileTask = new DeleteFileTask(driveServiceHelper, dbId);
@@ -544,34 +458,7 @@ public class SyncTask implements Runnable {
 
             //when first created or folder is missing
             if (!isCreatedAppFolder || !isCreatedFilesFolder) {
-                File[] files = DIRECTORY.listFiles();
-                Log.d("Files", "Size: " + files.length);
-
-                ArrayList<Future<Boolean>> results = new ArrayList<>();
-
-                for (File child : files) {
-                    String name = child.getName();
-                    if (!name.equals("instant-run")) {
-//                                    allFilesPath.add(name);
-                        UploadTask uploadAttaches = new UploadTask(driveServiceHelper, child, getMIMEType(child), filesFolderId);
-                        Future<Boolean> res = SyncManager.getSyncManager().callSyncBool(uploadAttaches);
-                        results.add(res);
-
-                    }
-                    Log.d("Files", getMIMEType(child) + " FileName:" + child.getName());
-                }
-
-                for (Future<Boolean> res : results) {
-                    Log.d(DRIVE_TAG, "block thread");
-                    res.get();
-
-
-                    //notification
-                    if (PROGRESS_CURRENT < 100)
-                        PROGRESS_CURRENT += 1;
-                    builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
-                    notificationManager.notify(notificationId, builder.build());
-                }
+                uploadAllAttachments(builder, PROGRESS_MAX, PROGRESS_CURRENT, notificationManager, notificationId, filesFolderId);
             }
 
             builder.setProgress(0, 0, false)
@@ -583,9 +470,7 @@ public class SyncTask implements Runnable {
                     .setAutoCancel(true);
             notificationManager.notify(notificationId, builder.build());
 
-
             SyncManager.getSyncManager().getMainThreadExecutor().execute(command);
-
 
         } catch (InterruptedException e) {
             Log.e(DRIVE_TAG, "error interrupted " + e);
@@ -604,7 +489,6 @@ public class SyncTask implements Runnable {
                     @Override
                     public void run() {
                         Toast.makeText(context, "Please grant permissions and try again", Toast.LENGTH_LONG).show();
-
                     }
                 });
             } else {
@@ -612,9 +496,66 @@ public class SyncTask implements Runnable {
                 File to = new File(DATABASE_PATH);
                 copy(Uri.fromFile(from), to, context);
                 Log.d(DRIVE_TAG, "Backup db");
+            }
+        }
+    }
+
+    private void uploadAllAttachments(NotificationCompat.Builder builder, int PROGRESS_MAX, int PROGRESS_CURRENT, NotificationManagerCompat notificationManager, int notificationId, String filesFolderId) throws ExecutionException, InterruptedException {
+        File[] files = DIRECTORY.listFiles();
+        Log.d("Files", "Size: " + files.length);
+
+        ArrayList<Future<Boolean>> results = new ArrayList<>();
+
+        for (File child : files) {
+            String name = child.getName();
+            if (!name.equals("instant-run")) {
+//                                    allFilesPath.add(name);
+                UploadTask uploadAttaches = new UploadTask(driveServiceHelper, child, getMIMEType(child), filesFolderId);
+                Future<Boolean> res = SyncManager.getSyncManager().callSyncBool(uploadAttaches);
+                results.add(res);
 
             }
+            Log.d("Files", getMIMEType(child) + " FileName:" + child.getName());
+        }
 
+        for (Future<Boolean> res : results) {
+            Log.d(DRIVE_TAG, "block thread");
+            res.get();
+
+            //notification
+            if (PROGRESS_CURRENT < 100)
+                PROGRESS_CURRENT += 1;
+            builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+            notificationManager.notify(notificationId, builder.build());
+        }
+    }
+
+    private void setUpNotesForNewAppFolder() {
+        //get all notes before overwriting existing db
+        final NoteManager noteManager = NoteManager.newInstance(context);
+        ArrayList<Note> localNotes = noteManager.getAllNotes(null);
+        Log.d(DRIVE_TAG, "Old database found! Size notes: " + localNotes.size());
+
+        //get all attaches
+        final AttachManager attachManager = AttachManager.newInstance(context);
+        ArrayList<Attachment> localAttaches = attachManager.getAllAttaches();
+        Log.d(DRIVE_TAG, "size attaches test: " + localAttaches.size());
+
+        for (int i = localNotes.size() - 1; i >= 0; i--) {
+            Note local = localNotes.get(i);
+            long noteLocalId = local.getId();
+
+            //check deleted
+            int isDeleted = local.getDeleted();
+            if (isDeleted == NoteContract.NoteEntry.DELETED) {
+
+                //delete local notes
+                localNotes.remove(i);
+                noteManager.delete(local);
+
+                continue;
+            }
+            noteManager.sync(local);
         }
     }
 
@@ -625,14 +566,10 @@ public class SyncTask implements Runnable {
             //just reload the screen
             Intent startActivity = new Intent();
 
-
             startActivity.setClass(context, MainActivity.class);
             startActivity.setAction(REQUEST_RESTART);
             startActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-//                    startActivity.setFlags(
-//                            Intent.FLAG_ACTIVITY_NEW_TASK
-//                                    | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
             context.startActivity(startActivity);
         }
     };
@@ -643,9 +580,6 @@ public class SyncTask implements Runnable {
         local.setDateModified(cloudNote.getDateModified());
 
         ArrayList<Attachment> cloudAttaches = AttachManager.newInstance(context).getAttach(local.getId(), NoteContract.AttachEntry.ANY_TYPE);
-
-        //temp array of attaches of a given note
-        //ArrayList<Attachment> updateAttaches = new ArrayList<>();
 
         for (int i = localAttaches.size() - 1; i >= 0; i--) {
             Attachment currentAttach = localAttaches.get(i);
@@ -702,14 +636,10 @@ public class SyncTask implements Runnable {
         for (Future<Boolean> res : addResults) {
             res.get();
         }
-
     }
-
 
     //upload new change into Drive
     private void updateCloud(long noteLocalId, ArrayList<Attachment> localAttaches, String filesFolderId) throws InterruptedException, ExecutionException {
-//        ArrayList<Attachment> updateAttaches = new ArrayList<>();
-
         //need for deleting files in Drive
         ArrayList<Attachment> cloudAttaches = AttachManager.newInstance(context).getAttach(noteLocalId, NoteContract.AttachEntry.ANY_TYPE);
 
@@ -720,7 +650,6 @@ public class SyncTask implements Runnable {
         for (int i = 0; i < localAttaches.size(); i++) {
             Attachment attach = localAttaches.get(i);
             if (noteLocalId == attach.getNote_id()) {
-                //updateAttaches.add(attach);
 
                 boolean isExist = false;
 
@@ -768,11 +697,9 @@ public class SyncTask implements Runnable {
         for (Future<Boolean> res : delResults) {
             res.get();
         }
-
     }
 
-
-    public String getMIMEType(File child) {
+    private String getMIMEType(File child) {
         String mimeType;
         Uri uri = Uri.fromFile(child);
         if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
@@ -785,6 +712,4 @@ public class SyncTask implements Runnable {
         }
         return mimeType;
     }
-
-
 }

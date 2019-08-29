@@ -21,7 +21,6 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
     public RecyclerItemTouchHelper(int dragDirs, int swipeDirs, RecyclerItemTouchHelperListener listener) {
         super(dragDirs, swipeDirs);
         this.listener = listener;
-
     }
 
     @Override
@@ -39,16 +38,6 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
         listener.onSwiped(viewHolder, direction, viewHolder.getAdapterPosition());
     }
 
-//    @Override
-//    public void onSelectedChanged(@Nullable RecyclerView.ViewHolder viewHolder, int actionState) {
-//        super.onSelectedChanged(viewHolder, actionState);
-//    }
-
-//    @Override
-//    public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
-//        super.clearView(recyclerView, viewHolder);
-//    }
-
     @Override
     public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
         Drawable deleteIcon = ContextCompat.getDrawable(viewHolder.itemView.getContext(), R.drawable.ic_baseline_delete_forever_24px);
@@ -62,7 +51,6 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
         paint.setColor(Color.WHITE);
         paint.setAntiAlias(true);
         paint.setTextSize(60);
-        //            paint.setTextAlign(Paint.Align.CENTER);
         String sDelete = itemView.getContext().getResources().getString(R.string.delete);
         paint.getTextBounds(sDelete, 0, sDelete.length(), bounds);
 
@@ -105,11 +93,6 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
 
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
     }
-
-//    @Override
-//    public void onChildDrawOver(@NonNull Canvas c, @NonNull RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-//        super.onChildDrawOver(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-//    }
 
     public interface RecyclerItemTouchHelperListener {
         void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position);

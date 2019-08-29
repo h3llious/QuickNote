@@ -3,7 +3,6 @@ package com.blacksun.quicknote.adapters;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
@@ -35,9 +34,9 @@ import static com.blacksun.quicknote.activities.DetailActivity.REQUEST_CHANGE;
 import static com.blacksun.quicknote.activities.DetailActivity.REQUEST_INSERT;
 
 public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdapter.ViewHolder> {
-    ArrayList<Attachment> images;
-    ArrayList<Attachment> newImages;
-    Context context;
+    private ArrayList<Attachment> images;
+    private ArrayList<Attachment> newImages;
+    private Context context;
 
     public ImageRecyclerAdapter(ArrayList<Attachment> images, ArrayList<Attachment> newImages, Context context) {
         this.images = images;
@@ -49,8 +48,7 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
     @Override
     public ImageRecyclerAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View listView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_image, parent, false);
-        ViewHolder viewHolder = new ViewHolder(listView);
-        return viewHolder;
+        return new ViewHolder(listView);
     }
 
     @Override
@@ -64,7 +62,6 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
 
         holder.image.setImageDrawable(context.getResources().getDrawable(android.R.drawable.ic_menu_gallery));
 
-//        Bitmap imageFile = UtilHelper.decodeSampledBitmapFromFile(attach.getPath(), 300, 300);
         final Handler handler = new Handler();
         new Thread() {
             public void run() {
@@ -79,17 +76,14 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
                 });
             }
         }.start();
-//        Bitmap thumbImage = UtilHelper.createThumbnail(attach.getPath(), 300, 300);
-//        holder.image.setImageBitmap(thumbImage);
-
-
     }
 
     private void deleteAttach(int position) {
         Attachment curAttach = images.get(position);
         String curPath = curAttach.getPath();
         File curFile = new File(curPath);
-        curFile.delete();
+        boolean isDel = curFile.delete();
+        Log.d("imageAttach", "is Deleted Image: "+isDel);
 
         long curId = curAttach.getId();
 
@@ -107,7 +101,6 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
                 break;
             }
         }
-
 
         //check changes in Notes
         Intent intent = new Intent(context, DetailActivity.class);
@@ -175,7 +168,6 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
             itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-
                     //creating a popup menu
                     PopupMenu popup = new PopupMenu(context, itemView);
                     //inflating menu from xml resource

@@ -125,4 +125,6 @@
     <string name="about_title">About</string>
     <string name="menu_insert_img">Insert</string>
     <string name="header_image">header_image</string>
+    <string name="note_time_recently">Recently</string>
+    <string name="note_time_past">minutes ago</string>
 </resources>

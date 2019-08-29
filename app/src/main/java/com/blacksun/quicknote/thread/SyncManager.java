@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 
 public class SyncManager {
     private final ThreadPoolExecutor syncThreadPool;
-    private final BlockingQueue<Runnable> syncWorkQueue;
 
     private static final int CORE_POOL_SIZE = Runtime.getRuntime().availableProcessors();
     private static final int MAX_POOL_SIZE = Runtime.getRuntime().availableProcessors();
@@ -32,7 +31,7 @@ public class SyncManager {
 
 
     private SyncManager(){
-        syncWorkQueue = new LinkedBlockingQueue<Runnable>();
+        BlockingQueue<Runnable> syncWorkQueue = new LinkedBlockingQueue<Runnable>();
 
         syncThreadPool = new ThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE,
                 KEEP_ALIVE_TIME, TimeUnit.MILLISECONDS, syncWorkQueue);
@@ -46,20 +45,20 @@ public class SyncManager {
         syncThreadPool.execute(task);
     }
 
-    public Future<String> callSyncString(Callable<String> task){
+    Future<String> callSyncString(Callable<String> task){
         return syncThreadPool.submit(task);
     }
 
-    public Future<Boolean> callSyncBool(Callable<Boolean> task){
+    Future<Boolean> callSyncBool(Callable<Boolean> task){
         return syncThreadPool.submit(task);
     }
 
-    public Future<ArrayList<DriveFileHolder>> callSyncArray(Callable<ArrayList<DriveFileHolder>> task){
+    Future<ArrayList<DriveFileHolder>> callSyncArray(Callable<ArrayList<DriveFileHolder>> task){
         return syncThreadPool.submit(task);
     }
 
     //to runs task on main thread from background thread
-    public MainThreadExecutor getMainThreadExecutor(){
+    MainThreadExecutor getMainThreadExecutor(){
         return handler;
     }
 }

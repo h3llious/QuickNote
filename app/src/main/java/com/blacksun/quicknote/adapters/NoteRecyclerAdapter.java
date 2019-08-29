@@ -2,10 +2,8 @@ package com.blacksun.quicknote.adapters;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.media.ThumbnailUtils;
 import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -40,7 +38,6 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         this.notes = notes;
     }
 
-
     @NonNull
     @Override
     public NoteRecyclerAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -59,27 +56,18 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         String tempContent = note.getContent().replaceAll("\\$.*?\\$", "<IMG>");
         holder.textContent.setText(tempContent);
 
-        ArrayList<Attachment> curAttaches = AttachManager.newInstance(holder.itemView.getContext()).getAttach(note.getId(), NoteContract.AttachEntry.ANY_TYPE);
+        ArrayList<Attachment> curAttaches = AttachManager.newInstance(holder.itemView.getContext())
+                .getAttach(note.getId(), NoteContract.AttachEntry.ANY_TYPE);
 
         if (curAttaches.size() != 0) {
-
             Attachment curAttach = curAttaches.get(curAttaches.size() - 1);
-//            float scale = holder.itemView.getContext().getResources().getDisplayMetrics().density;
             if (curAttach.getType().equals(NoteContract.AttachEntry.FILE_TYPE)) {
-//                int dpAsPixels = (int) (20 * scale + 0.5f);
-
                 holder.img.setImageDrawable(ContextCompat.getDrawable(holder.itemView.getContext(), R.drawable.ic_attach));
-//                holder.img.setPadding(dpAsPixels, dpAsPixels, dpAsPixels, dpAsPixels);
             } else {
-
-
                 File checkedImg = new File(curAttach.getPath());
                 if (checkedImg.exists()) {
 
                     int height = holder.itemView.getContext().getResources().getDimensionPixelSize(R.dimen.listPreferredItemHeightLarge);
-
-//                    Bitmap imageFile = UtilHelper.decodeSampledBitmapFromFile(curAttach.getPath(), height, height);
-
 
                     final Handler handler = new Handler();
                     new Thread() {
@@ -87,7 +75,8 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
                             // Do time-consuming initialization.
                             Bitmap thumbImage = UtilHelper.createThumbnail(curAttach.getPath(), height, height);
 
-                            RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(holder.itemView.getContext().getResources(), thumbImage);
+                            RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory
+                                    .create(holder.itemView.getContext().getResources(), thumbImage);
                             final float roundPx = (float) thumbImage.getWidth() * 0.1f;
                             roundedBitmapDrawable.setCornerRadius(roundPx);
                             // When done:
@@ -99,19 +88,10 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
                             });
                         }
                     }.start();
-//                    Bitmap thumbImage = UtilHelper.createThumbnail(curAttach.getPath(), height, height);
-//
-//                    RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(holder.itemView.getContext().getResources(), thumbImage);
-//                    final float roundPx = (float) thumbImage.getWidth() * 0.1f;
-//                    roundedBitmapDrawable.setCornerRadius(roundPx);
-//                    holder.img.setImageDrawable(roundedBitmapDrawable);
-
-//                holder.img.setImageBitmap(thumbImage);
                 } else {
                     Log.e("Note Adapter", "Error getting image");
                 }
             }
-//            notifyItemChanged(position);
         } else {
             holder.img.setImageDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
@@ -122,10 +102,11 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         long timeDiff = currentTime - moddedTime;
 
         if (timeDiff< 60000) {
-            holder.textTime.setText("Recently");
+            holder.textTime.setText(holder.itemView.getResources().getString(R.string.note_time_recently));
         } else if (timeDiff < 3600000) {
             long minute = timeDiff / 60000;
-            holder.textTime.setText(minute + " minutes ago");
+            String timeModified = minute + holder.itemView.getResources().getString(R.string.note_time_past);
+            holder.textTime.setText(timeModified);
         } else {
             holder.textTime.setText(getDate(note.getDateModified(), "dd/MM/yyyy HH:mm"));
         }
@@ -138,7 +119,6 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         return notes.size();
     }
 
-
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView textTitle, textContent, textTime;
         ImageView img;
@@ -150,7 +130,6 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
 
             textContent = itemView.findViewById(R.id.note_content);
             textTime = itemView.findViewById(R.id.note_time);
-//            textTimeCreated = itemView.findViewById(R.id.note_time_created);
             img = itemView.findViewById(R.id.note_img);
 
             itemView.setOnClickListener(new View.OnClickListener() {
@@ -162,7 +141,6 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
                     intent.putExtra("content", notes.get(getAdapterPosition()).getContent());
                     intent.putExtra("dateModified", notes.get(getAdapterPosition()).getDateModified());
                     intent.putExtra("dateCreated", notes.get(getAdapterPosition()).getDateCreated());
-//                    intent.putExtra("imagePath", notes.get(getAdapterPosition()).getImagePath());
 
                     v.getContext().startActivity(intent);
                 }
@@ -184,7 +162,6 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         notes.remove(position);
         // notify the item removed by position
         // to perform recycler view delete animations
-        // NOTE: don't call notifyDataSetChanged()
         notifyItemRemoved(position);
     }
 

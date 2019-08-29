@@ -6,11 +6,11 @@ import android.provider.BaseColumns;
 
 //for the whole database
 public class NoteContract {
-    public static final String CONTENT_AUTHORITY_NOTE = "com.blacksun.quicknote.data.NoteProvider";
-    public static final String CONTENT_AUTHORITY_ATTACH = "com.blacksun.quicknote.data.AttachProvider";
-    public static final String PATH_NOTES = "notes";
+    static final String CONTENT_AUTHORITY_NOTE = "com.blacksun.quicknote.data.NoteProvider";
+    static final String CONTENT_AUTHORITY_ATTACH = "com.blacksun.quicknote.data.AttachProvider";
+    static final String PATH_NOTES = "notes";
 
-    public static final String PATH_ATTACHES = "attaches";
+    static final String PATH_ATTACHES = "attaches";
 
     private NoteContract(){
     }
@@ -18,18 +18,18 @@ public class NoteContract {
     //Entry for each table
     public static final class NoteEntry implements BaseColumns {
 
-        public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY_NOTE);
+        static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY_NOTE);
 
         /**
          * The MIME type of the {@link #CONTENT_URI} for a list of notes.
          */
-        public static final String CONTENT_LIST_TYPE =
+        static final String CONTENT_LIST_TYPE =
                 ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY_NOTE + "/" + PATH_NOTES;
 
         /**
          * The MIME type of the {@link #CONTENT_URI} for a single pet.
          */
-        public static final String CONTENT_ITEM_TYPE =
+        static final String CONTENT_ITEM_TYPE =
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY_NOTE + "/" + PATH_NOTES;
 
         public final static String TABLE_NAME = "notes";
@@ -48,20 +48,16 @@ public class NoteContract {
         public final static int NOT_DELETED = 0;
         public final static int DELETED = 1;
 
-
-        //public final static String COLUMN_NOTE_IMG = "image_path";
-
-
         public static final Uri CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_NOTES);
     }
 
     public static final class AttachEntry implements  BaseColumns {
-        public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY_ATTACH);
+        static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY_ATTACH);
 
-        public static final String CONTENT_LIST_TYPE =
+        static final String CONTENT_LIST_TYPE =
                 ContentResolver.CURSOR_DIR_BASE_TYPE+"/"+ CONTENT_AUTHORITY_ATTACH +"/" + PATH_ATTACHES;
 
-        public static final String CONTENT_ITEM_TYPE =
+        static final String CONTENT_ITEM_TYPE =
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY_ATTACH + "/" + PATH_ATTACHES;
 
         public final static String TABLE_NAME = "attaches";
@@ -76,6 +72,4 @@ public class NoteContract {
         public final static String IMAGE_TYPE = "image";
         public final static String ANY_TYPE = "any";
     }
-
-
 }

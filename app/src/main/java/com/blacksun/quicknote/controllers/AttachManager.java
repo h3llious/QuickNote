@@ -16,11 +16,9 @@ public class AttachManager {
     private static AttachManager sNoteManagerInstance = null;
 
     public static AttachManager newInstance(Context context) {
-
         if (sNoteManagerInstance == null) {
             sNoteManagerInstance = new AttachManager(context.getApplicationContext());
         }
-
         return sNoteManagerInstance;
     }
 
@@ -35,6 +33,13 @@ public class AttachManager {
         values.put(NoteContract.AttachEntry.COLUMN_ATTACH_PATH, attach.getPath());
 
         Uri result = mContext.getContentResolver().insert(NoteContract.AttachEntry.CONTENT_URI, values);
+        if (result == null)
+            return -1;
+
+        String lastPathSegment = result.getLastPathSegment();
+
+        if (lastPathSegment == null)
+            return -1;
         long id = Long.parseLong(result.getLastPathSegment());
         Log.i("Log Cursor", " create attach name  " + id + " ");
         return id;
@@ -49,20 +54,17 @@ public class AttachManager {
         values.put(NoteContract.AttachEntry.ID, attach.getId());
 
         Uri result = mContext.getContentResolver().insert(NoteContract.AttachEntry.CONTENT_URI, values);
-        long id = Long.parseLong(result.getLastPathSegment());
+        if (result == null)
+            return -1;
+
+        String lastPathSegment = result.getLastPathSegment();
+
+        if (lastPathSegment == null)
+            return -1;
+        long id = Long.parseLong(lastPathSegment);
+
         Log.i("Log Cursor", " Add existing attach name  " + id + " ");
         return id;
-    }
-
-    public void update(Attachment attach) {
-        ContentValues values = new ContentValues();
-        values.put(NoteContract.AttachEntry.COLUMN_ATTACH_NOTE_ID, attach.getNote_id());
-        values.put(NoteContract.AttachEntry.COLUMN_ATTACH_TYPE, attach.getType());
-        values.put(NoteContract.AttachEntry.COLUMN_ATTACH_PATH, attach.getPath());
-
-        mContext.getApplicationContext().getContentResolver().update(NoteContract.AttachEntry.CONTENT_URI,
-                values, NoteContract.AttachEntry.ID + "=" + attach.getId(), null);
-
     }
 
     public void delete(Attachment attach) {
@@ -90,7 +92,6 @@ public class AttachManager {
             };
         }
 
-
         Cursor cursor = mContext.getContentResolver().query(NoteContract.AttachEntry.CONTENT_URI, null, selection, selectionArgs, null);
         if (cursor != null) {
             cursor.moveToFirst();
@@ -102,21 +103,6 @@ public class AttachManager {
         }
         return attaches;
     }
-
-//    public boolean isExist(long attachId) {
-////        ArrayList<Attachment> attaches = new ArrayList<Attachment>();
-//
-//        String selection = NoteContract.AttachEntry.ID + "=?";
-//        String[] selectionArgs = new String[]{
-//                Long.toString(attachId)
-//        };
-//
-//        Cursor cursor = mContext.getContentResolver().query(NoteContract.AttachEntry.CONTENT_URI, null, selection, selectionArgs, null);
-//        if (cursor.getCount() > 0) {
-//            return true;
-//        } else
-//            return false;
-//    }
 
     public ArrayList<Attachment> getAllAttaches() {
         ArrayList<Attachment> attaches = new ArrayList<>();

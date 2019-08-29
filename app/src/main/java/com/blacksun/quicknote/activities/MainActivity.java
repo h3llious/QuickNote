@@ -18,7 +18,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
+
 import androidx.appcompat.widget.SearchView;
+
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -124,7 +126,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     SearchView searchView;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -134,6 +135,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         PACKAGE_NAME = getPackageName();
         DIRECTORY = getFilesDir();
 
+        //save reorder options
         setSharedPref();
 
         initializeView();
@@ -144,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //sign in, sign out by google account
         setUpGoogleAccount();
 
+        //set up "hamburger" button
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
@@ -155,13 +158,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawerToggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
 
-
+        //create new note activity
         newNoteFAB();
 
         retrieveNoteList();
 
         Log.d(MainActivity.class.getName(), "onCreate Activity");
-
     }
 
     private void newNoteFAB() {
@@ -174,7 +176,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
     }
-
 
     private void setSharedPref() {
         sharedPreferences = getPreferences(MODE_PRIVATE);
@@ -189,6 +190,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         noteList = findViewById(R.id.note_list);
 
+        //empty note list, show Empty View
         if (notes.size() == 0) {
             emptyView.setVisibility(View.VISIBLE);
         }
@@ -208,7 +210,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position) {
         if (viewHolder instanceof NoteRecyclerAdapter.ViewHolder) {
-
 
             // backup of removed item for undo purpose
             final int deletedIndex = viewHolder.getAdapterPosition();
@@ -233,9 +234,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 File delFile = new File(curPath);
 
                 //rename not delete
-                File tempFile = new File(curPath+"(.temp)");
-
-
+                File tempFile = new File(curPath + "(.temp)");
 
                 boolean res = delFile.renameTo(tempFile);
 
@@ -256,7 +255,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (notes.size() == 0) {
                 emptyView.setVisibility(View.VISIBLE);
             }
-
 
             // showing snack bar with Undo option
             Snackbar snackbar = Snackbar
@@ -279,7 +277,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         // long curAttachId = curAttach.getId();
                         String curPath = curAttach.getPath();
 
-                        File delFile = new File(curPath+"(.temp)");
+                        File delFile = new File(curPath + "(.temp)");
                         //rename not delete
                         File tempFile = new File(curPath);
 
@@ -293,7 +291,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         AttachManager.newInstance(getApplication()).add(curAttach);
                     }
-
                 }
             });
             snackbar.setActionTextColor(Color.YELLOW);
@@ -349,11 +346,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void onSignOut() {
         googleSignInClient.signOut();
-        googleSignInButton.setVisibility(View.VISIBLE);
-        googleSignOutButton.setVisibility(View.GONE);
-        googleEmailText.setText("");
+        googleSignInButton.setVisibility(View.VISIBLE); //enable sign in button
+        googleSignOutButton.setVisibility(View.GONE); //disable sign out button
+        googleEmailText.setText(""); //clear user info
         googleNameText.setText(R.string.app_name);
-        googleAvatarImg.setImageDrawable(getResources().getDrawable(R.mipmap.ic_avatar_round));
+        googleAvatarImg.setImageDrawable(getResources().getDrawable(R.mipmap.ic_avatar_round)); //default avatar
         loadedAvatar = null;
         googleServiceDrive = null;
     }
@@ -395,6 +392,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getInfo();
             noteRecyclerAdapter.notifyDataSetChanged();
 
+            //enable screen interaction
             progressBar.setVisibility(View.GONE);
             dimView.setVisibility(View.GONE);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
@@ -403,7 +401,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (intent.getAction() != null && intent.getAction().equals(REQUEST_TAB)) {
             navigationView.setCheckedItem(R.id.nav_home);
         }
-
 
         super.onNewIntent(intent);
     }
@@ -438,10 +435,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             sortType = " ASC";
         }
 
-
+        //get all note satisfied conditions above
         ArrayList<Note> newNotes = NoteManager.newInstance(this).getAllNotes(sortOrder + sortType);
         notes.clear();
 
+        //note is not tagged as deleted
         for (Note note : newNotes) {
             if (note.getDeleted() == NoteContract.NoteEntry.NOT_DELETED) {
                 notes.add(note);
@@ -463,7 +461,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         MenuItem search = menu.findItem(R.id.action_search);
 
         searchView = (SearchView) search.getActionView();
-        search(searchView);
+        search(searchView); //search note function
 
         return true;
     }
@@ -488,13 +486,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         String title = note.getTitle().toLowerCase();
                         String content = note.getContent().toLowerCase();
                         String dateModified = NoteRecyclerAdapter.getDate(note.getDateModified(), "dd/MM/yyyy HH:mm");
+                        //search by title, content and date modified
                         if (title.contains(newText) || content.contains(newText) || dateModified.contains(newText)) {
                             newList.add(note);
                         }
                     }
                     noteRecyclerAdapter.setFilter(newList);
-                }    return true;
-
+                }
+                return true;
             }
         });
     }
@@ -536,7 +535,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             popupMenu.getMenu().findItem(R.id.sort_asc).setChecked(true);
         }
 
-
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -546,6 +544,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 switch (item.getItemId()) {
                     case R.id.sort_time:
                         if (!sortByTime) {
+                            //sort ArrayList by date modified
                             Collections.sort(notes, new Comparator<Note>() {
                                 @Override
                                 public int compare(Note o1, Note o2) {
@@ -677,23 +676,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         if (id == R.id.nav_home) {
             startActivity(new Intent(this, MainActivity.class));
-
         } else if (id == R.id.nav_about) {
             startActivity(new Intent(this, AboutActivity.class));
-
-
         } else if (id == R.id.nav_upload) {
-
             syncData(SyncManager.UP_DATA);
         } else if (id == R.id.nav_download) {
-
 //            loadingIndicator();
 
             //download database into drive.
             syncData(SyncManager.DOWN_DATA);
         } else if (id == R.id.nav_sync) {
 //            loadingIndicator();
-
             syncData(SyncManager.SYNC_DATA);
         }
 
@@ -714,7 +707,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (googleServiceDrive == null) {
             Toast.makeText(this, "Please sign in with your Google account!", Toast.LENGTH_SHORT).show();
         } else {
-
 //            if (!GoogleSignIn.hasPermissions(account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE))) {
 //                GoogleSignIn.requestPermissions(this, 10, account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE));
 //                Log.d(DRIVE_TAG, "Request Scope permission");
@@ -728,7 +720,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Thread checkInternetThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-
                     if (!isInternetAvailable()) {
                         Log.d(DRIVE_TAG, "No internet connection");
                         runOnUiThread(new Runnable() {
@@ -753,7 +744,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             });
             checkInternetThread.start();
 
-
             Runnable syncTask = null;
             if (type.equals(SyncManager.DOWN_DATA)) {
                 syncTask = new SyncDownTask(driveServiceHelper, getApplicationContext());
@@ -767,7 +757,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         }
     }
-
 
     private static class DownloadImgTask extends AsyncTask<String, Void, Bitmap> {
         private WeakReference<MainActivity> activityReference;
@@ -806,11 +795,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         @Override
         protected void onPostExecute(Bitmap bitmap) {
-
             // get a reference to the activity if it is still there
             MainActivity activity = activityReference.get();
             if (activity == null || activity.isFinishing()) return;
-
 
             ImageView avatar = activity.findViewById(R.id.google_avatar);
 

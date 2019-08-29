@@ -16,7 +16,6 @@ public class NoteManager {
     private static NoteManager sNoteManagerInstance = null;
 
     public static NoteManager newInstance(Context context) {
-
         if (sNoteManagerInstance == null) {
             sNoteManagerInstance = new NoteManager(context.getApplicationContext());
         }
@@ -38,14 +37,13 @@ public class NoteManager {
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_SYNC, NoteContract.NoteEntry.NOT_SYNCED);
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_DELETED, NoteContract.NoteEntry.NOT_DELETED);
 
-        //test new img path
-//        if (!TextUtils.isEmpty(note.getImagePath()))
-//            values.put(NoteContract.NoteEntry.COLUMN_NOTE_IMG, note.getImagePath());
-
-        //values.put(NoteContract.NoteEntry.ID, note.getId());
         Uri result = mContext.getContentResolver().insert(NoteContract.NoteEntry.CONTENT_URI, values);
         if (result != null) {
-            long id = Long.parseLong(result.getLastPathSegment());
+            String lastPathSegment = result.getLastPathSegment();
+            if (lastPathSegment == null)
+                return -1;
+
+            long id = Long.parseLong(lastPathSegment);
             Log.i("Log Cursor", " create note name  " + id + " ");
             return id;
         } else
@@ -64,6 +62,10 @@ public class NoteManager {
         values.put(NoteContract.NoteEntry.ID, note.getId());
         Uri result = mContext.getContentResolver().insert(NoteContract.NoteEntry.CONTENT_URI, values);
         if (result != null) {
+            String lastPathSegment = result.getLastPathSegment();
+            if (lastPathSegment == null)
+                return -1;
+
             long id = Long.parseLong(result.getLastPathSegment());
             Log.i("Log Cursor", " Add existing note name  " + id + " ");
             return id;
@@ -80,9 +82,12 @@ public class NoteManager {
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME, note.getDateModified());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_SYNC, NoteContract.NoteEntry.SYNCED);
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_DELETED, note.getDeleted());
-//        values.put(NoteContract.NoteEntry.ID, note.getId());
         Uri result = mContext.getContentResolver().insert(NoteContract.NoteEntry.CONTENT_URI, values);
         if (result != null) {
+            String lastPathSegment = result.getLastPathSegment();
+            if (lastPathSegment == null)
+                return -1;
+
             long id = Long.parseLong(result.getLastPathSegment());
             Log.i("Log Cursor", " Add existing note name  " + id + " ");
             return id;
@@ -114,7 +119,6 @@ public class NoteManager {
                 Long.toString(noteId)
         };
 
-
         Cursor cursor = mContext.getContentResolver().query(NoteContract.NoteEntry.CONTENT_URI, null, selection, selectionArgs, null);
         if (cursor != null) {
             cursor.moveToFirst();
@@ -130,56 +134,36 @@ public class NoteManager {
         ContentValues values = new ContentValues();
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_TITLE, note.getTitle());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_CONTENT, note.getContent());
-//        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, note.getDateCreated());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME, System.currentTimeMillis());
-//        if (!TextUtils.isEmpty(note.getImagePath()))
-//            values.put(NoteContract.NoteEntry.COLUMN_NOTE_IMG, note.getImagePath());
 
         mContext.getApplicationContext().getContentResolver().update(NoteContract.NoteEntry.CONTENT_URI,
                 values, NoteContract.NoteEntry.ID + "=" + note.getId(), null);
-
     }
 
     public void sync(Note note) {
         ContentValues values = new ContentValues();
-//        values.put(NoteContract.NoteEntry.COLUMN_NOTE_TITLE, note.getTitle());
-//        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CONTENT, note.getContent());
-//        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, note.getDateCreated());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_SYNC, NoteContract.NoteEntry.SYNCED);
-//        if (!TextUtils.isEmpty(note.getImagePath()))
-//            values.put(NoteContract.NoteEntry.COLUMN_NOTE_IMG, note.getImagePath());
 
         mContext.getApplicationContext().getContentResolver().update(NoteContract.NoteEntry.CONTENT_URI,
                 values, NoteContract.NoteEntry.ID + "=" + note.getId(), null);
-
     }
 
     public void disable(Note note) {
         ContentValues values = new ContentValues();
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_TITLE, "(DELETED)" + note.getTitle());
-//        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CONTENT, note.getContent());
-//        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, note.getDateCreated());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_DELETED, NoteContract.NoteEntry.DELETED);
-//        if (!TextUtils.isEmpty(note.getImagePath()))
-//            values.put(NoteContract.NoteEntry.COLUMN_NOTE_IMG, note.getImagePath());
 
         mContext.getApplicationContext().getContentResolver().update(NoteContract.NoteEntry.CONTENT_URI,
                 values, NoteContract.NoteEntry.ID + "=" + note.getId(), null);
-
     }
 
     public void enable(Note note) {
         ContentValues values = new ContentValues();
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_TITLE, note.getTitle());
-//        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CONTENT, note.getContent());
-//        values.put(NoteContract.NoteEntry.COLUMN_NOTE_CRETIME, note.getDateCreated());
         values.put(NoteContract.NoteEntry.COLUMN_NOTE_DELETED, NoteContract.NoteEntry.NOT_DELETED);
-//        if (!TextUtils.isEmpty(note.getImagePath()))
-//            values.put(NoteContract.NoteEntry.COLUMN_NOTE_IMG, note.getImagePath());
 
         mContext.getApplicationContext().getContentResolver().update(NoteContract.NoteEntry.CONTENT_URI,
                 values, NoteContract.NoteEntry.ID + "=" + note.getId(), null);
-
     }
 
     //CRU(D)

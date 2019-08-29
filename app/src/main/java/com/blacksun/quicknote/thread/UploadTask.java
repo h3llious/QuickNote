@@ -12,7 +12,7 @@ public class UploadTask implements Callable<Boolean> {
     private String mimeType;
     private String parentId;
 
-    public UploadTask(DriveServiceHelper driveServiceHelper, File file, String mimeType, String parentId) {
+    UploadTask(DriveServiceHelper driveServiceHelper, File file, String mimeType, String parentId) {
         this.driveServiceHelper = driveServiceHelper;
         this.file = file;
         this.mimeType = mimeType;

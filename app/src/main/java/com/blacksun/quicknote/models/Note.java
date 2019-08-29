@@ -13,23 +13,13 @@ public class Note {
     private int sync;
     private int deleted;
 
-    //    public Note(String title, String content, long id, long dateCreated, long dateModified, String imagePath) {
     public Note(String title, String content, long id, long dateCreated, long dateModified) {
         this.title = title;
         this.content = content;
         this.id = id;
         this.dateCreated = dateCreated;
         this.dateModified = dateModified;
-//        this.imagePath = imagePath;
     }
-
-//    public String getImagePath() {
-//        return imagePath;
-//    }
-//
-//    public void setImagePath(String imagePath) {
-//        this.imagePath = imagePath;
-//    }
 
     public Note() {
     }
@@ -99,10 +89,6 @@ public class Note {
         note.setDateModified(cursor.getLong(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_MODTIME)));
         note.setSync(cursor.getInt(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_SYNC)));
         note.setDeleted(cursor.getInt(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_DELETED)));
-//        if (!TextUtils.isEmpty(cursor.getString(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_IMG))))
-//            note.setImagePath(cursor.getString(cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NOTE_IMG)));
-//        else
-//            note.setImagePath(null);
         return note;
     }
 }

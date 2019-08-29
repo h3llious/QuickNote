@@ -54,7 +54,6 @@ public class NoteProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Cannot query unknown URI " + uri);
         }
-
         return cursor;
     }
 

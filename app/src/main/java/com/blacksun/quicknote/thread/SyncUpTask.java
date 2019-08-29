@@ -77,13 +77,6 @@ public class SyncUpTask implements Runnable {
             if (resDelFolder != null)
                 resDelFolder.get();
 
-
-
-
-
-
-
-
             //new implementation body
             UploadTask uploadDb = new UploadTask(driveServiceHelper, FILE_DATABASE, MIME_TYPE_DB, null);
             Future<Boolean> resDb = SyncManager.getSyncManager().callSyncBool(uploadDb);
@@ -151,7 +144,7 @@ public class SyncUpTask implements Runnable {
 
     }
 
-    public String getMIMEType(File child) {
+    private String getMIMEType(File child) {
         String mimeType;
         Uri uri = Uri.fromFile(child);
         if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
@@ -164,5 +157,4 @@ public class SyncUpTask implements Runnable {
         }
         return mimeType;
     }
-
 }

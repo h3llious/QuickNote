@@ -48,8 +48,6 @@ public class SyncDownTask implements Runnable {
 
             }
 
-
-
             //database
             SearchTask searchDbTask = new SearchTask(driveServiceHelper, MIME_TYPE_DB, DATABASE_NAME, null);
             Future<ArrayList<DriveFileHolder>> resDbId = SyncManager.getSyncManager().callSyncArray(searchDbTask);
@@ -68,7 +66,6 @@ public class SyncDownTask implements Runnable {
                 Log.e(DRIVE_TAG, "Cannot download database");
                 return;
             }
-
 
             SearchTask searchFolderTask = new SearchTask(driveServiceHelper, MIME_TYPE_FOLDER, FOLDER_NAME, null);
             Future<ArrayList<DriveFileHolder>> resFolder = SyncManager.getSyncManager().callSyncArray(searchFolderTask);
@@ -111,7 +108,6 @@ public class SyncDownTask implements Runnable {
                 Log.e(DRIVE_TAG, "No attachment");
             }
 
-
             //wait until finish
             resDb.get();
 
@@ -129,42 +125,6 @@ public class SyncDownTask implements Runnable {
                     context.startActivity(startActivity);
                 }
             });
-
-
-//            //database
-//            ArrayList<DriveFileHolder> database = driveServiceHelper.search(MIME_TYPE_DB, DATABASE_NAME, null);
-//            if (database.size() >= 1) {
-//                String databaseId = database.get(0).getId();
-//
-//                driveServiceHelper.download(DATABASE_PATH, databaseId);
-//                Log.d(DRIVE_TAG, "Database downloaded " + databaseId);
-//            } else {
-//                Log.e(DRIVE_TAG, "Cannot download database");
-//            }
-//
-//
-//            //folder files
-//            ArrayList<DriveFileHolder> filesFolder = driveServiceHelper.search(MIME_TYPE_FOLDER, FOLDER_NAME, null);
-//            String folderId = null;
-//            if (filesFolder.size() >= 1) {
-//                folderId = filesFolder.get(0).getId();
-//            } else {
-//                Log.e(DRIVE_TAG, "Cannot get \"files\" folder");
-//            }
-//
-//            //attachments
-//            if (folderId != null) {
-//                ArrayList<DriveFileHolder> attachments = driveServiceHelper.search(null, null, folderId);
-//                String filesDir = DIRECTORY.getAbsolutePath();
-//                for (DriveFileHolder attach : attachments) {
-//                    String attachId = attach.getId();
-//
-//                    driveServiceHelper.download(filesDir + "/" + attach.getName(), attachId);
-//
-//                }
-//            } else {
-//                Log.e(DRIVE_TAG, "No attachment");
-//            }
 
         } catch (InterruptedException e) {
             Log.e(DRIVE_TAG, "error interrupted " + e);

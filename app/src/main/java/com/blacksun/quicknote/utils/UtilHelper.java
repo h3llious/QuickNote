@@ -44,7 +44,6 @@ public class UtilHelper {
         Canvas c = new Canvas(circleBitmap);
         c.drawCircle((float) (bitmap.getWidth()) / 2, (float) bitmap.getHeight() / 2, (float) bitmap.getWidth() / 2, paint);
 
-
         return circleBitmap;
     }
 
@@ -70,7 +69,6 @@ public class UtilHelper {
         return output;
     }
 
-    //    public static void copy(File src, File dst) {
     public static void copy(Uri uri, File dst, Context context) {
 //        try (InputStream in = new FileInputStream(src);
         try (InputStream in = context.getContentResolver().openInputStream(uri);
@@ -91,7 +89,6 @@ public class UtilHelper {
             InetAddress ipAddr = InetAddress.getByName("google.com");
             //You can replace it with your name
             return !ipAddr.equals("");
-
         } catch (Exception e) {
             return false;
         }
@@ -105,7 +102,6 @@ public class UtilHelper {
             if (name.length() >= 7) {
                 String ext = name.substring(name.length() - 7);
                 if (ext.equals("(.temp)")) {
-//                                    allFilesPath.add(name);
                     child.delete();
                 }
             }
@@ -134,9 +130,8 @@ public class UtilHelper {
         return inSampleSize;
     }
 
-    public static Bitmap decodeSampledBitmapFromFile(String filePath,
-                                                         int reqWidth, int reqHeight) {
-
+    private static Bitmap decodeSampledBitmapFromFile(String filePath,
+                                                      int reqWidth, int reqHeight) {
         // First decode with inJustDecodeBounds=true to check dimensions
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
