@@ -246,10 +246,12 @@ public class SyncTask implements Runnable {
                                     Future<String> resFileId = SyncManager.getSyncManager().callSyncString(searchFileTask);
                                     String fileId = resFileId.get();
 
-                                    DeleteFileTask deleteFileTask = new DeleteFileTask(driveServiceHelper, fileId);
-                                    Future<Boolean> resDelFile = SyncManager.getSyncManager().callSyncBool(deleteFileTask);
-                                    //TODO check if needed or not
-                                    delResults.add(resDelFile);
+                                    if (fileId != null) {
+                                        DeleteFileTask deleteFileTask = new DeleteFileTask(driveServiceHelper, fileId);
+                                        Future<Boolean> resDelFile = SyncManager.getSyncManager().callSyncBool(deleteFileTask);
+                                        //TODO check if needed or not
+                                        delResults.add(resDelFile);
+                                    }
 
                                     //delete attachment in db
                                     attachManager.delete(attach);
@@ -626,11 +628,13 @@ public class SyncTask implements Runnable {
             Future<String> resFileId = SyncManager.getSyncManager().callSyncString(searchFileTask);
             String fileId = resFileId.get();
 
-            DownloadTask downloadAttachTask = new DownloadTask(driveServiceHelper, filesDir + "/" + fileName, fileId);
-            Future<Boolean> resAttach = SyncManager.getSyncManager().callSyncBool(downloadAttachTask);
-            addResults.add(resAttach);
+            if (fileId != null) {
+                DownloadTask downloadAttachTask = new DownloadTask(driveServiceHelper, filesDir + "/" + fileName, fileId);
+                Future<Boolean> resAttach = SyncManager.getSyncManager().callSyncBool(downloadAttachTask);
+                addResults.add(resAttach);
 
-            Log.d(DRIVE_TAG, "new file updated to local: " + fileName);
+                Log.d(DRIVE_TAG, "new file updated to local: " + fileName);
+            }
         }
 
         for (Future<Boolean> res : addResults) {
@@ -684,7 +688,7 @@ public class SyncTask implements Runnable {
             Future<String> resFileId = SyncManager.getSyncManager().callSyncString(searchFileTask);
             String fileId = resFileId.get();
 
-            if (fileId!= null) {
+            if (fileId != null) {
                 DeleteFileTask deleteFileTask = new DeleteFileTask(driveServiceHelper, fileId);
                 Future<Boolean> resDelFile = SyncManager.getSyncManager().callSyncBool(deleteFileTask);
                 //TODO check if needed or not
