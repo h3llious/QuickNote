@@ -684,10 +684,12 @@ public class SyncTask implements Runnable {
             Future<String> resFileId = SyncManager.getSyncManager().callSyncString(searchFileTask);
             String fileId = resFileId.get();
 
-            DeleteFileTask deleteFileTask = new DeleteFileTask(driveServiceHelper, fileId);
-            Future<Boolean> resDelFile = SyncManager.getSyncManager().callSyncBool(deleteFileTask);
-            //TODO check if needed or not
-            delResults.add(resDelFile);
+            if (fileId!= null) {
+                DeleteFileTask deleteFileTask = new DeleteFileTask(driveServiceHelper, fileId);
+                Future<Boolean> resDelFile = SyncManager.getSyncManager().callSyncBool(deleteFileTask);
+                //TODO check if needed or not
+                delResults.add(resDelFile);
+            }
         }
 
         for (Future<Boolean> res : results) {
