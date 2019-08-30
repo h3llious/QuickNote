@@ -37,12 +37,20 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
     private ArrayList<Attachment> images;
     private ArrayList<Attachment> newImages;
     private Context context;
+    public MyAdapterListener onClickListener;
 
-    public ImageRecyclerAdapter(ArrayList<Attachment> images, ArrayList<Attachment> newImages, Context context) {
+    public ImageRecyclerAdapter(ArrayList<Attachment> images, ArrayList<Attachment> newImages, Context context, MyAdapterListener listener) {
         this.images = images;
         this.newImages = newImages;
         this.context = context;
+        this.onClickListener = listener;
     }
+
+    public interface MyAdapterListener {
+        //        void iconTextViewOnClick(View v, int position);
+        void deleteButtonOnClick(View v, int position);
+    }
+
 
     @NonNull
     @Override
@@ -185,7 +193,8 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
                                     saveAttach(v, getAdapterPosition());
                                     return true;
                                 case R.id.action_delete_attach:
-                                    deleteAttach(getAdapterPosition());
+//                                    deleteAttach(getAdapterPosition());
+                                    onClickListener.deleteButtonOnClick(v, getAdapterPosition());
                                     return true;
                                 case R.id.action_insert_img:
                                     Intent intent = new Intent(context, DetailActivity.class);
@@ -208,7 +217,8 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
             deleteButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    deleteAttach(getAdapterPosition());
+//                    deleteAttach(getAdapterPosition());
+                    onClickListener.deleteButtonOnClick(v, getAdapterPosition());
                 }
             });
         }

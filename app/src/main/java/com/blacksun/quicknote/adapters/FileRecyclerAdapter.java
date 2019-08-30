@@ -34,11 +34,18 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
     private ArrayList<Attachment> files;
     private ArrayList<Attachment> newFiles;
     private Context context;
+    public MyAdapterListener onClickListener;
 
-    public FileRecyclerAdapter(ArrayList<Attachment> files, ArrayList<Attachment> newFiles, Context context) {
+    public FileRecyclerAdapter(ArrayList<Attachment> files, ArrayList<Attachment> newFiles, Context context, MyAdapterListener listener) {
         this.files = files;
         this.newFiles = newFiles;
         this.context = context;
+        this.onClickListener = listener;
+    }
+
+    public interface MyAdapterListener {
+//        void iconTextViewOnClick(View v, int position);
+        void deleteButtonOnClick(View v, int position);
     }
 
     @NonNull
@@ -102,6 +109,8 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
                 break;
             }
         }
+
+        Log.d(FileRecyclerAdapter.class.getName(), "delete attaches");
 
         //check changes in Notes
         Intent intent = new Intent(context, DetailActivity.class);
@@ -185,7 +194,8 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
                                     saveAttach(v, getAdapterPosition());
                                     return true;
                                 case R.id.action_delete_attach:
-                                    deleteAttach(getAdapterPosition());
+//                                    deleteAttach(getAdapterPosition());
+                                    onClickListener.deleteButtonOnClick(v, getAdapterPosition());
                                     return true;
                                 default:
                                     return false;
@@ -203,7 +213,8 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
             deleteButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    deleteAttach(getAdapterPosition());
+//                    deleteAttach(getAdapterPosition());
+                    onClickListener.deleteButtonOnClick(v, getAdapterPosition());
                 }
             });
         }

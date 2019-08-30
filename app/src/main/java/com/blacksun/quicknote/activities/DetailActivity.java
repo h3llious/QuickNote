@@ -130,14 +130,86 @@ public class DetailActivity extends AppCompatActivity {
         newFiles = new ArrayList<>();
 
         images = new ArrayList<>();
-        imageRecyclerAdapter = new ImageRecyclerAdapter(images, newImages, this);
+        imageRecyclerAdapter = new ImageRecyclerAdapter(images, newImages, this, new ImageRecyclerAdapter.MyAdapterListener() {
+            @Override
+            public void deleteButtonOnClick(View v, int position) {
+                Attachment curAttach = images.get(position);
+                String curPath = curAttach.getPath();
+                File curFile = new File(curPath);
+                boolean isDel = curFile.delete();
+                Log.d("imageAttach", "is Deleted Image: " + isDel);
+
+                long curId = curAttach.getId();
+
+                if (curId != 0) {
+                    AttachManager.newInstance(getApplicationContext()).delete(curAttach);
+                }
+
+                images.remove(position);
+                imageRecyclerAdapter.notifyItemRemoved(position);
+                imageRecyclerAdapter.notifyItemRangeChanged(position, images.size());
+
+                for (int i = newImages.size() - 1; i >= 0; i--) {
+                    if (newImages.get(i).getPath().equals(curPath)) {
+                        newImages.remove(i);
+                        break;
+                    }
+                }
+
+                isChanged = true;
+//                String attachType = intent.getStringExtra(NoteContract.AttachEntry.COLUMN_ATTACH_TYPE);
+
+                //delete attaches in content
+//                String attachPath = intent.getStringExtra(NoteContract.AttachEntry.COLUMN_ATTACH_PATH);
+
+                //when attach type is image, delete corresponding image in EditText if existed
+//                if (attachType.equals(NoteContract.AttachEntry.IMAGE_TYPE)) {
+//                    File curFile = new File(attachPath);
+                String attachName = curFile.getName();
+                String contentString = detailContent.getText().toString();
+                String attachFormat = "$" + attachName + "$";
+                if (contentString.contains(attachFormat)) {
+                    int startIdx = contentString.indexOf(attachFormat);
+                    Editable changedContent = detailContent.getText().delete(startIdx, startIdx + 1 + attachFormat.length());
+                    detailContent.setText(changedContent);
+                }
+//                }
+            }
+        });
 
         imageList.setHasFixedSize(false);
         imageList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         imageList.setAdapter(imageRecyclerAdapter);
 
         files = new ArrayList<>();
-        fileRecyclerAdapter = new FileRecyclerAdapter(files, newFiles, this);
+        fileRecyclerAdapter = new FileRecyclerAdapter(files, newFiles, this, new FileRecyclerAdapter.MyAdapterListener() {
+            @Override
+            public void deleteButtonOnClick(View v, int position) {
+                Attachment curAttach = files.get(position);
+                String curPath = curAttach.getPath();
+                File curFile = new File(curPath);
+                curFile.delete();
+
+                long curId = curAttach.getId();
+
+                if (curId != 0) {
+                    AttachManager.newInstance(getApplicationContext()).delete(curAttach);
+                }
+
+                files.remove(position);
+                fileRecyclerAdapter.notifyItemRemoved(position);
+                fileRecyclerAdapter.notifyItemRangeChanged(position, files.size());
+
+                for (int i = newFiles.size() - 1; i >= 0; i--) {
+                    if (newFiles.get(i).getPath().equals(curPath)) {
+                        newFiles.remove(i);
+                        break;
+                    }
+                }
+
+                isChanged = true;
+            }
+        });
 
         fileList.setHasFixedSize(false); //size change with content
         fileList.setLayoutManager(new LinearLayoutManager(this));
@@ -963,6 +1035,7 @@ public class DetailActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
+        Log.d(DetailActivity.class.getName(), "onPause");
         super.onPause();
         if (!isAttaching) {
             if (!isSaved) { //fix no duplication caused by calling saveNote() twice in a row
@@ -973,6 +1046,7 @@ public class DetailActivity extends AppCompatActivity {
         } else
             isAttaching = false;
         //just implement create new note or something
+
     }
 
     @Override
