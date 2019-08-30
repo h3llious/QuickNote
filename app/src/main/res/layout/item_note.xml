@@ -49,6 +49,7 @@
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentBottom="true"
                 android:layout_marginLeft="10dp"
+                android:textStyle="italic"
                 android:text="Updated: " />
 
             <TextView
@@ -58,6 +59,7 @@
                 android:layout_alignParentBottom="true"
                 android:layout_toRightOf="@id/note_text_update"
                 android:paddingLeft="10dp"
+                android:textStyle="italic"
                 android:text="10 mins ago" />
 
             <!--<TextView-->
