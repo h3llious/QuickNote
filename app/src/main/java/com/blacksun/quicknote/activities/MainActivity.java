@@ -664,7 +664,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (avatarUri == null) //user doesn't have avatar
                 googleAvatarImg.setImageDrawable(getResources().getDrawable(R.drawable.ic_user));
             else
-                new DownloadImgTask(this).execute(avatarUri.toString());
+                if (!isInternetAvailable())
+                    new DownloadImgTask(this).execute(avatarUri.toString());
+                else
+                    googleAvatarImg.setImageDrawable(getResources().getDrawable(R.drawable.ic_user));
         }
     }
 

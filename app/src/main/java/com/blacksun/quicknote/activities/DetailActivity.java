@@ -1077,22 +1077,21 @@ public class DetailActivity extends AppCompatActivity {
 
                         Log.d(SPANNABLE_TAG, "cursor location: " + cursorLoc);
 
-                        Editable content = detailContent.getText();
-
-                        String attachName = inserted.getPath().substring(inserted.getPath().lastIndexOf('/') + 1);
-                        //cursor onPause+1 is the position of imageSpan
-                        content.insert(cursorLoc, "\n$" + attachName + "$ \n");
-
-                        //update position to change into image
-                        int newCursorLoc = cursorLoc + 1;
-
-                        Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(newCursorLoc, newCursorLoc + attachName.length() + 1));
-
-                        setSpans(thumb, content, attachName, newCursorLoc, inserted);
-
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                Editable content = detailContent.getText();
+
+                                String attachName = inserted.getPath().substring(inserted.getPath().lastIndexOf('/') + 1);
+                                //cursor onPause+1 is the position of imageSpan
+                                content.insert(cursorLoc, "\n$" + attachName + "$ \n");
+
+                                //update position to change into image
+                                int newCursorLoc = cursorLoc + 1;
+
+                                Log.d(SPANNABLE_TAG, "cursor name: " + content.subSequence(newCursorLoc, newCursorLoc + attachName.length() + 1));
+
+                                setSpans(thumb, content, attachName, newCursorLoc, inserted);
                                 detailContent.setText(content);
                             }
                         });
