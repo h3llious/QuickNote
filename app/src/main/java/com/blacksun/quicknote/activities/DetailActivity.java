@@ -1,5 +1,6 @@
 package com.blacksun.quicknote.activities;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -38,6 +39,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -105,10 +107,15 @@ public class DetailActivity extends AppCompatActivity {
 
     ImageHandler mEmoticonHandler;
 
+    public static final int STORAGE_PERMISSION_REQUEST_CODE = 111;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+
+        //ask for permissions
+//        askPermissions();
 
         //findViewById
         initialize();
@@ -1153,6 +1160,48 @@ public class DetailActivity extends AppCompatActivity {
             toolbarImage.setImageDrawable(getResources().getDrawable(R.drawable.day));
         } else {
             toolbarImage.setImageDrawable(getResources().getDrawable(R.drawable.night));
+        }
+    }
+
+
+    private void askPermissions() {
+
+        int permissionCheckStorage = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        // if storage request is denied
+        if (permissionCheckStorage != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage("You need to give permission to access storage for saving attachments.");
+                builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                });
+                builder.setPositiveButton("GIVE PERMISSION", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+
+                        // Show permission request popup
+                        ActivityCompat.requestPermissions(DetailActivity.this,
+                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                STORAGE_PERMISSION_REQUEST_CODE);
+                    }
+                });
+                builder.show();
+
+            } //asking permission for first time
+            else {
+                // Show permission request popup for the first time
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        STORAGE_PERMISSION_REQUEST_CODE);
+
+            }
         }
     }
 
