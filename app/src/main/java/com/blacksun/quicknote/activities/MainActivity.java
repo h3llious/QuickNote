@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -512,7 +513,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //noinspection SimplifiableIfStatement
         switch (id) {
             case R.id.action_settings:
-                startActivity(new Intent(this, AboutActivity.class));
+                showQualityPopup(id);
                 return true;
             case R.id.action_sort:
                 showSortPopup(id);
@@ -520,6 +521,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showQualityPopup(int id) {
+        View menuItemView = findViewById(id);
+        PopupMenu popupMenu = new PopupMenu(this, menuItemView);
+        popupMenu.inflate(R.menu.menu_quality);
+
+        SharedPreferences defaultSP = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean isHighQuality = defaultSP.getBoolean(getResources().getString(R.string.isHighQuality), false);
+
+        if (isHighQuality) {
+            popupMenu.getMenu().findItem(R.id.img_quality).setChecked(true);
+        }
+
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                item.setChecked(!item.isChecked());
+
+                // Do other stuff
+                if (!isHighQuality) {
+                    defaultSP.edit().putBoolean(getResources().getString(R.string.isHighQuality), true).apply();
+                } else {
+                    defaultSP.edit().putBoolean(getResources().getString(R.string.isHighQuality), false).apply();
+                }
+
+                // Keep the popup menu open
+                item.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+                item.setActionView(new View(getBaseContext()));
+                item.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+                    @Override
+                    public boolean onMenuItemActionExpand(MenuItem item) {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onMenuItemActionCollapse(MenuItem item) {
+                        return false;
+                    }
+                });
+
+                return false;
+            }
+        });
+        popupMenu.show();
+
     }
 
     private void showSortPopup(int id) {
@@ -663,11 +710,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             if (avatarUri == null) //user doesn't have avatar
                 googleAvatarImg.setImageDrawable(getResources().getDrawable(R.drawable.ic_user));
+            else if (!isInternetAvailable())
+                new DownloadImgTask(this).execute(avatarUri.toString());
             else
-                if (!isInternetAvailable())
-                    new DownloadImgTask(this).execute(avatarUri.toString());
-                else
-                    googleAvatarImg.setImageDrawable(getResources().getDrawable(R.drawable.ic_user));
+                googleAvatarImg.setImageDrawable(getResources().getDrawable(R.drawable.ic_user));
         }
     }
 

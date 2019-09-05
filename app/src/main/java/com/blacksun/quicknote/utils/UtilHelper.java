@@ -45,7 +45,7 @@ public class UtilHelper {
         paint.setAntiAlias(true);
         Canvas c = new Canvas(circleBitmap);
         c.drawCircle((float) (bitmap.getWidth()) / 2, (float) bitmap.getHeight() / 2, (float) bitmap.getWidth() / 2, paint);
-
+        bitmap.recycle();
         return circleBitmap;
     }
 
@@ -67,7 +67,7 @@ public class UtilHelper {
 
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
         canvas.drawBitmap(bitmap, rect, rect, paint);
-
+        bitmap.recycle();
         return output;
     }
 
@@ -149,13 +149,15 @@ public class UtilHelper {
 
     public static Bitmap createThumbnail(String path, int width, int height) {
         Bitmap imageFile = decodeSampledBitmapFromFile(path, width, height);
-//        try {
-//            imageFile = rotateImageIfRequired(imageFile, path);
-//        } catch (IOException e) {
-//            Log.e("Rotating", "Error when rotating images");
-//            e.printStackTrace();
-//        }
-        return ThumbnailUtils.extractThumbnail(imageFile, width, height);
+        try {
+            imageFile = rotateThumbnail(imageFile, path);
+        } catch (IOException e) {
+            Log.e("Rotating", "Error when rotating images");
+            e.printStackTrace();
+        }
+        Bitmap thumb = ThumbnailUtils.extractThumbnail(imageFile, width, height);
+        imageFile.recycle();
+        return thumb;
     }
 
     public static Bitmap rotateImageIfRequired(Bitmap img, String path) throws IOException {
@@ -171,6 +173,22 @@ public class UtilHelper {
                 return rotateImage(img, 270);
             case ExifInterface.ORIENTATION_UNDEFINED:
                 return rotateImage(img, 90);
+            default:
+                return img;
+        }
+    }
+
+    public static Bitmap rotateThumbnail(Bitmap img, String path) throws IOException {
+        ExifInterface ei = new ExifInterface(path);
+        int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                return rotateImage(img, 90);
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                return rotateImage(img, 180);
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                return rotateImage(img, 270);
             default:
                 return img;
         }

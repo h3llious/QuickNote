@@ -4,12 +4,14 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.text.Editable;
@@ -108,6 +110,8 @@ public class DetailActivity extends AppCompatActivity {
     ImageHandler mEmoticonHandler;
 
     public static final int STORAGE_PERMISSION_REQUEST_CODE = 111;
+
+    boolean isHighQuality;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -534,7 +538,7 @@ public class DetailActivity extends AppCompatActivity {
         options.inSampleSize = UtilHelper.calculateInSampleSize(options, 720, 720);
         int quality = 100 / options.inSampleSize;
 
-        if (quality < 100) {
+        if (quality < 100 && !isHighQuality) {
             // Decode bitmap with inSampleSize set
             options.inJustDecodeBounds = false;
             in = this.getContentResolver().openInputStream(uri);
@@ -544,7 +548,7 @@ public class DetailActivity extends AppCompatActivity {
             capturedImg = UtilHelper.rotateImageIfRequired(capturedImg, filePath);
 
             try (FileOutputStream out = new FileOutputStream(filePath)) {
-                capturedImg.compress(Bitmap.CompressFormat.JPEG, quality, out); // bmp is your Bitmap instance
+                capturedImg.compress(Bitmap.CompressFormat.JPEG, quality, out);
                 // PNG is a lossless format, the compression factor (100) is ignored
             } catch (IOException e) {
                 e.printStackTrace();
@@ -607,11 +611,10 @@ public class DetailActivity extends AppCompatActivity {
 
 //                Bitmap capturedImg = UtilHelper.decodeSampledBitmapFromFile(currentPhotoPath, 720, 720);
 
-        if (quality < 100) {
+        if (quality < 100 && !isHighQuality) {
             // Decode bitmap with inSampleSize set
             options.inJustDecodeBounds = false;
             Bitmap capturedImg = BitmapFactory.decodeFile(currentPhotoPath, options);
-
 
             try (FileOutputStream out = new FileOutputStream(currentPhotoPath)) {
                 //fix rotating bug
@@ -859,6 +862,9 @@ public class DetailActivity extends AppCompatActivity {
         //size pixel
         WindowManager windowmanager = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
         windowmanager.getDefaultDisplay().getMetrics(displayMetrics);
+
+        SharedPreferences defaultSP = PreferenceManager.getDefaultSharedPreferences(this);
+        isHighQuality = defaultSP.getBoolean(getResources().getString(R.string.isHighQuality), false);
     }
 
 
