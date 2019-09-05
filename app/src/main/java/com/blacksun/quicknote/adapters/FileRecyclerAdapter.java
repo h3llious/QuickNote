@@ -1,5 +1,7 @@
 package com.blacksun.quicknote.adapters;
 
+import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -9,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.MimeTypeMap;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -143,15 +146,21 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
     }
 
     private void openAttach(View v, int position) {
-        File file = new File(files.get(position).getPath());
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_VIEW);
-        Uri fileUri = FileProvider.getUriForFile(v.getContext(),
-                "com.blacksun.quicknote.fileprovider",
-                file);
-        intent.setData(fileUri);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        v.getContext().startActivity(intent);
+        try {
+            File file = new File(files.get(position).getPath());
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_VIEW);
+            Uri fileUri = FileProvider.getUriForFile(v.getContext(),
+                    "com.blacksun.quicknote.fileprovider",
+                    file);
+
+            intent.setData(fileUri);
+
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            v.getContext().startActivity(intent);
+        } catch (ActivityNotFoundException e){
+            Toast.makeText(context, "Can't open this file!", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
