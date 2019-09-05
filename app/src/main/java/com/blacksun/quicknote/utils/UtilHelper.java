@@ -5,12 +5,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
+import android.media.ExifInterface;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Environment;
@@ -147,6 +149,38 @@ public class UtilHelper {
 
     public static Bitmap createThumbnail(String path, int width, int height) {
         Bitmap imageFile = decodeSampledBitmapFromFile(path, width, height);
+//        try {
+//            imageFile = rotateImageIfRequired(imageFile, path);
+//        } catch (IOException e) {
+//            Log.e("Rotating", "Error when rotating images");
+//            e.printStackTrace();
+//        }
         return ThumbnailUtils.extractThumbnail(imageFile, width, height);
+    }
+
+    public static Bitmap rotateImageIfRequired(Bitmap img, String path) throws IOException {
+        ExifInterface ei = new ExifInterface(path);
+        int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                return rotateImage(img, 90);
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                return rotateImage(img, 180);
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                return rotateImage(img, 270);
+            case ExifInterface.ORIENTATION_UNDEFINED:
+                return rotateImage(img, 90);
+            default:
+                return img;
+        }
+    }
+
+    private static Bitmap rotateImage(Bitmap img, int degree) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(degree);
+        Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
+        img.recycle();
+        return rotatedImg;
     }
 }

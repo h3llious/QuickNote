@@ -531,7 +531,7 @@ public class DetailActivity extends AppCompatActivity {
         BitmapFactory.decodeStream(in, null, options);
         in.close();
         // Calculate inSampleSize
-        options.inSampleSize = UtilHelper.calculateInSampleSize(options, 960, 960);
+        options.inSampleSize = UtilHelper.calculateInSampleSize(options, 720, 720);
         int quality = 100 / options.inSampleSize;
 
         if (quality < 100) {
@@ -539,6 +539,9 @@ public class DetailActivity extends AppCompatActivity {
             options.inJustDecodeBounds = false;
             in = this.getContentResolver().openInputStream(uri);
             Bitmap capturedImg = BitmapFactory.decodeStream(in, null, options);
+
+            //fix rotating bug
+            capturedImg = UtilHelper.rotateImageIfRequired(capturedImg, filePath);
 
             try (FileOutputStream out = new FileOutputStream(filePath)) {
                 capturedImg.compress(Bitmap.CompressFormat.JPEG, quality, out); // bmp is your Bitmap instance
@@ -599,7 +602,7 @@ public class DetailActivity extends AppCompatActivity {
         BitmapFactory.decodeFile(currentPhotoPath, options);
 
         // Calculate inSampleSize
-        options.inSampleSize = UtilHelper.calculateInSampleSize(options, 960, 960);
+        options.inSampleSize = UtilHelper.calculateInSampleSize(options, 720, 720);
         int quality = 100 / options.inSampleSize;
 
 //                Bitmap capturedImg = UtilHelper.decodeSampledBitmapFromFile(currentPhotoPath, 720, 720);
@@ -609,7 +612,11 @@ public class DetailActivity extends AppCompatActivity {
             options.inJustDecodeBounds = false;
             Bitmap capturedImg = BitmapFactory.decodeFile(currentPhotoPath, options);
 
+
             try (FileOutputStream out = new FileOutputStream(currentPhotoPath)) {
+                //fix rotating bug
+                capturedImg = UtilHelper.rotateImageIfRequired(capturedImg, currentPhotoPath);
+
                 capturedImg.compress(Bitmap.CompressFormat.JPEG, quality, out); // bmp is your Bitmap instance
                 // PNG is a lossless format, the compression factor (100) is ignored
             } catch (IOException e) {
@@ -842,7 +849,7 @@ public class DetailActivity extends AppCompatActivity {
         detailContent.setMovementMethod(new LinkMovementMethod() {
             @Override
             public boolean onTouchEvent(TextView widget, Spannable buffer, MotionEvent event) {
-                detailContent.setSelection(0);
+//                detailContent.setSelection(0);
 //                Selection.removeSelection(buffer);
 //                widget.setHighlightColor(Color.argb(50,100,0,0));
                 return super.onTouchEvent(widget, buffer, event);
