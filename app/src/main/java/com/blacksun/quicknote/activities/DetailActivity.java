@@ -114,9 +114,6 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        //ask for permissions
-//        askPermissions();
-
         //findViewById
         initialize();
 
@@ -422,6 +419,9 @@ public class DetailActivity extends AppCompatActivity {
                 //spannable test
                 spannableImage(newAttach);
 
+                //ask for permissions
+                askPermissions();
+
             } else if (resultCode == RESULT_CANCELED) {
                 if (!TextUtils.isEmpty(currentPhotoPath)) {
                     File tobedeleted = new File(currentPhotoPath);
@@ -453,6 +453,9 @@ public class DetailActivity extends AppCompatActivity {
                     saveFileAttach(uri);
                 }
 
+                //ask for permissions
+                askPermissions();
+
             }
         } else if (requestCode == REQUEST_IMAGE_CHOOSER) {
             if (resultCode == RESULT_OK) {
@@ -479,6 +482,9 @@ public class DetailActivity extends AppCompatActivity {
 
                     saveImageAttach(uri);
                 }
+
+                //ask for permissions
+                askPermissions();
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -680,6 +686,9 @@ public class DetailActivity extends AppCompatActivity {
     //Set title of the note and attributes of collapsing toolbar with corresponding attachments
     private void setUpCurrentNote() {
         if (getIntent() != null && getIntent().getExtras() != null) {
+            //ask for permissions
+            askPermissions();
+
             Bundle bundle = getIntent().getExtras();
             if (bundle.getString("title") != null) {
 
@@ -1185,7 +1194,7 @@ public class DetailActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         dialogInterface.dismiss();
-
+                        isAttaching = true;
                         // Show permission request popup
                         ActivityCompat.requestPermissions(DetailActivity.this,
                                 new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
@@ -1196,6 +1205,7 @@ public class DetailActivity extends AppCompatActivity {
 
             } //asking permission for first time
             else {
+                isAttaching = true;
                 // Show permission request popup for the first time
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
