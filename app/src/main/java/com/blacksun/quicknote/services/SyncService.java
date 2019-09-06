@@ -27,10 +27,8 @@ import com.blacksun.quicknote.models.Note;
 import com.blacksun.quicknote.thread.CreateFolderTask;
 import com.blacksun.quicknote.thread.DeleteFileTask;
 import com.blacksun.quicknote.thread.DownloadTask;
-import com.blacksun.quicknote.thread.MainThreadExecutor;
 import com.blacksun.quicknote.thread.SearchSingleTask;
 import com.blacksun.quicknote.thread.SyncManager;
-import com.blacksun.quicknote.thread.SyncTask;
 import com.blacksun.quicknote.thread.UploadTask;
 import com.blacksun.quicknote.utils.DriveServiceHelper;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -101,9 +99,9 @@ public class SyncService extends IntentService {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_stat_name)
                 .setContentTitle("QuickNote")
-                .setContentText("Synchronizing data...")
+                .setContentText(getString(R.string.service_syncing))
                 .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText("Synchronizing data..."))
+                        .bigText(getString(R.string.service_syncing)))
                 .setOngoing(true)
                 .setContentIntent(pendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_HIGH);
@@ -448,7 +446,7 @@ public class SyncService extends IntentService {
                             SyncManager.getSyncManager().getMainThreadExecutor().execute(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Toast.makeText(context, "Attachment(s) missing!", Toast.LENGTH_LONG).show();
+                                    Toast.makeText(context, getString(R.string.service_missing_attaches), Toast.LENGTH_LONG).show();
                                 }
                             });
                         }
@@ -498,9 +496,9 @@ public class SyncService extends IntentService {
             SyncManager.getSyncManager().getMainThreadExecutor().execute(command);
 
             builder.setProgress(0, 0, false)
-                    .setContentText("Synchronizing data finished")
+                    .setContentText(getString(R.string.service_syncing_finished))
                     .setStyle(new NotificationCompat.BigTextStyle()
-                            .bigText("Synchronizing data finished"))
+                            .bigText(getString(R.string.service_syncing_finished)))
                     .setOngoing(false)
                     .setContentIntent(pendingIntent)
                     .setAutoCancel(true);
@@ -524,7 +522,7 @@ public class SyncService extends IntentService {
                 SyncManager.getSyncManager().getMainThreadExecutor().execute(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(context, "Please grant permissions and try again", Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, getString(R.string.service_no_permission), Toast.LENGTH_LONG).show();
                     }
                 });
             } else {

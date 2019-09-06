@@ -10,13 +10,13 @@
         android:icon="@android:drawable/ic_menu_preferences"/>
     <item
         android:id="@+id/action_search"
-        android:title="Search"
+        android:title="@string/search"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always"
         android:icon="@android:drawable/ic_menu_search" />
     <item
         android:id="@+id/action_sort"
-        android:title="Sort"
+        android:title="@string/sort"
         android:icon="@drawable/ic_sort_button_with_three_lines"
         app:showAsAction="ifRoom"/>
 

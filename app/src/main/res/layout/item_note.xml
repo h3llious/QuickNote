@@ -50,7 +50,7 @@
                 android:layout_alignParentBottom="true"
                 android:layout_marginLeft="10dp"
                 android:textStyle="italic"
-                android:text="Updated: " />
+                android:text="@string/updated" />
 
             <TextView
                 android:id="@+id/note_time"

@@ -231,7 +231,7 @@ public class DetailActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
-                    Toast.makeText(v.getContext(), "Device does not have camera", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(v.getContext(), getResources().getString(R.string.detail_no_camera), Toast.LENGTH_SHORT).show();
                 } else {
                     isAttaching = true;
                     dispatchTakePictureIntent();
@@ -317,8 +317,8 @@ public class DetailActivity extends AppCompatActivity {
 ////                    Toast.makeText(getBaseContext(), "Please choose a position in content box", Toast.LENGTH_SHORT).show();
 //                }
 
-                Snackbar.make(v, "Not implemented yet", Snackbar.LENGTH_SHORT)
-                        .setAction("Dismiss", new View.OnClickListener() {
+                Snackbar.make(v, getResources().getString(R.string.detail_not_implemented), Snackbar.LENGTH_SHORT)
+                        .setAction(getResources().getString(R.string.dismiss), new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                             }
@@ -335,7 +335,7 @@ public class DetailActivity extends AppCompatActivity {
         chooseGallery.addCategory(Intent.CATEGORY_OPENABLE);
         chooseGallery.setType("image/*");
         chooseGallery.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        intent = Intent.createChooser(chooseGallery, "Choose an image");
+        intent = Intent.createChooser(chooseGallery, getResources().getString(R.string.detail_choose_image));
         startActivityForResult(intent, REQUEST_IMAGE_CHOOSER);
     }
 
@@ -346,7 +346,7 @@ public class DetailActivity extends AppCompatActivity {
         chooseFile.addCategory(Intent.CATEGORY_OPENABLE);
         chooseFile.setType("*/*");
         chooseFile.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        intent = Intent.createChooser(chooseFile, "Choose a file");
+        intent = Intent.createChooser(chooseFile, getString(R.string.detail_choose_file));
         startActivityForResult(intent, REQUEST_FILE_CHOOSER);
     }
 
@@ -740,7 +740,7 @@ public class DetailActivity extends AppCompatActivity {
 
             }
         } else {
-            collapsingToolbar.setTitle("New note");
+            collapsingToolbar.setTitle(getResources().getString(R.string.detail_new_note));
             changeHeaderImageDefault();
         }
 
@@ -874,13 +874,13 @@ public class DetailActivity extends AppCompatActivity {
 
         if (TextUtils.isEmpty(title) && TextUtils.isEmpty(content) &&
                 currentNote == null && images.size() == 0 && files.size() == 0) {
-            Toast.makeText(this, "Note cannot be empty!", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getResources().getString(R.string.detail_empty_note), Toast.LENGTH_LONG).show();
             Log.d("saveState", "nothing");
             return false;
         }
 
         if (TextUtils.isEmpty(title)) {
-            title = "No title";
+            title = getResources().getString(R.string.detail_no_title);
             //return false;
         }
 
@@ -1018,17 +1018,17 @@ public class DetailActivity extends AppCompatActivity {
 
                 if (currentNote == null) {
                     if (saveCheck) {
-                        Toast.makeText(this, "Save successfully", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getResources().getString(R.string.detail_save_successfully), Toast.LENGTH_SHORT).show();
                         finish();
                     } else
                         finish();
                 } else {
                     if (saveCheck) {
-                        Toast.makeText(this, "Update successfully", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getResources().getString(R.string.detail_update), Toast.LENGTH_SHORT).show();
 //                        finish();
                     } else {
 //                        finish();
-                        Toast.makeText(this, "No change was made", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getResources().getString(R.string.detail_no_change), Toast.LENGTH_SHORT).show();
                     }
                     //Toast.makeText(this, "Encounter error(s) when updating", Toast.LENGTH_SHORT).show();
                 }
@@ -1036,8 +1036,8 @@ public class DetailActivity extends AppCompatActivity {
             case R.id.action_delete:
 
                 new AlertDialog.Builder(this)
-                        .setTitle("Delete note")
-                        .setMessage("Are you sure you want to delete this note?")
+                        .setTitle(getResources().getString(R.string.detail_delete_note))
+                        .setMessage(getResources().getString(R.string.detail_delete_confirm))
 
                         // Specifying a listener allows you to take an action before dismissing the dialog.
                         // The dialog is automatically dismissed when a dialog button is clicked.
@@ -1046,10 +1046,10 @@ public class DetailActivity extends AppCompatActivity {
                                 // Continue with delete operation
                                 boolean deleteCheck = deleteNote();
                                 if (deleteCheck) {
-                                    Toast.makeText(getBaseContext(), "Delete successfully", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getBaseContext(), getResources().getString(R.string.detail_delete_successfully), Toast.LENGTH_SHORT).show();
                                     finish();
                                 } else
-                                    Toast.makeText(getBaseContext(), "Encounter error(s) when deleting", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getBaseContext(), getResources().getString(R.string.detail_delete_error), Toast.LENGTH_SHORT).show();
                             }
                         })
                         // A null listener allows the button to dismiss the dialog and take no further action.
@@ -1128,7 +1128,7 @@ public class DetailActivity extends AppCompatActivity {
                 }).start();
 
             } else {
-                Toast.makeText(this, "Please select a position in the content textbox!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getResources().getString(R.string.detail_spannable_pos), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -1196,14 +1196,14 @@ public class DetailActivity extends AppCompatActivity {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage("You need to give permission to access storage for saving attachments.");
-                builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                builder.setMessage(getResources().getString(R.string.detail_permit_storage));
+                builder.setNegativeButton(getResources().getString(android.R.string.cancel), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         dialogInterface.dismiss();
                     }
                 });
-                builder.setPositiveButton("GIVE PERMISSION", new DialogInterface.OnClickListener() {
+                builder.setPositiveButton(getResources().getString(R.string.give_permission), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         dialogInterface.dismiss();

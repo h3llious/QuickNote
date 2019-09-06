@@ -283,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // showing snack bar with Undo option
             Snackbar snackbar = Snackbar
                     .make(constraintLayout, name + " removed!", Snackbar.LENGTH_LONG);
-            snackbar.setAction("UNDO", new View.OnClickListener() {
+            snackbar.setAction("UfNDO", new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
 
@@ -763,7 +763,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //            syncData(SyncManager.SYNC_DATA);
 
             if (googleServiceDrive == null) {
-                Toast.makeText(this, "Please sign in with your Google account!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getResources().getString(R.string.main_not_signed_in), Toast.LENGTH_SHORT).show();
             } else {
 //            if (!GoogleSignIn.hasPermissions(account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE))) {
 //                GoogleSignIn.requestPermissions(this, 10, account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE));
@@ -779,11 +779,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void run() {
                         if (!isInternetAvailable()) {
-                            Log.d(DRIVE_TAG, "No internet connection");
+                            Log.d(DRIVE_TAG, getResources().getString(R.string.no_internet));
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Toast.makeText(getBaseContext(), "No internet connection", Toast.LENGTH_LONG).show();
+                                    Toast.makeText(getBaseContext(), getResources().getString(R.string.no_internet), Toast.LENGTH_LONG).show();
                                 }
                             });
                             return;
@@ -795,7 +795,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             public void run() {
                                 loadingIndicator();
 
-                                Toast.makeText(getBaseContext(), "Start syncing", Toast.LENGTH_LONG).show();
+                                Toast.makeText(getBaseContext(), getResources().getString(R.string.start_syncing), Toast.LENGTH_LONG).show();
                             }
                         });
                     }
@@ -823,7 +823,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void syncData(String type) {
         if (googleServiceDrive == null) {
-            Toast.makeText(this, "Please sign in with your Google account!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getResources().getString(R.string.main_not_signed_in), Toast.LENGTH_SHORT).show();
         } else {
 //            if (!GoogleSignIn.hasPermissions(account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE))) {
 //                GoogleSignIn.requestPermissions(this, 10, account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE));
@@ -843,7 +843,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(getBaseContext(), "No internet connection", Toast.LENGTH_LONG).show();
+                                Toast.makeText(getBaseContext(), getResources().getString(R.string.no_internet), Toast.LENGTH_LONG).show();
                             }
                         });
                         return;
@@ -855,7 +855,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         public void run() {
                             loadingIndicator();
 
-                            Toast.makeText(getBaseContext(), "Start syncing", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getBaseContext(), getResources().getString(R.string.start_syncing), Toast.LENGTH_LONG).show();
                         }
                     });
                 }

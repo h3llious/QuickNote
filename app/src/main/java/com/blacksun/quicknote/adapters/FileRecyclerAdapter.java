@@ -140,7 +140,7 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
 
         Log.d("saveFile", ""+savedFile);
 
-        Toast.makeText(context, "File saved into "+savedFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
+        Toast.makeText(context, context.getResources().getString(R.string.adapter_saved_path)+savedFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
     }
 
     private void openAttach(View v, int position) {
@@ -157,7 +157,7 @@ public class FileRecyclerAdapter extends RecyclerView.Adapter<FileRecyclerAdapte
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             v.getContext().startActivity(intent);
         } catch (ActivityNotFoundException e){
-            Toast.makeText(context, "Can't open this file!", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, context.getResources().getString(R.string.adapter_cant_open_file), Toast.LENGTH_LONG).show();
         }
     }
 

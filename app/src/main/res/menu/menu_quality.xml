@@ -3,5 +3,5 @@
         <item android:id="@+id/img_quality"
             android:checkable="true"
             android:checked="false"
-            android:title="High quality images" />
+            android:title="@string/high_quality_images" />
 </menu>

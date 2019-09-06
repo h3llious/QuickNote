@@ -26,13 +26,13 @@ public class AboutActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Element versionElement = new Element();
-        versionElement.setTitle("Version " + getResources().getString(R.string.version));
+        versionElement.setTitle(getResources().getString(R.string.version_text) + getResources().getString(R.string.version));
 
         View aboutPage = new AboutPage(this)
                 .isRTL(false)
                 .setImage(R.mipmap.ic_launcher_round)
                 .addItem(versionElement)
-                .addGroup("Connect with us")
+                .addGroup(getResources().getString(R.string.connect))
                 .addEmail("anhnhatbuiit@gmail.com")
                 .addFacebook("h3llious")
                 .addPlayStore("com.blacksun.quicknote")

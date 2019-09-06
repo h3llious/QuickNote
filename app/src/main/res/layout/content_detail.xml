@@ -51,7 +51,7 @@
             android:layout_marginEnd="@dimen/text_margin"
             android:layout_marginRight="@dimen/text_margin"
             android:gravity="top|left"
-            android:hint="What's on your mind?"
+            android:hint="@string/what_s_on_your_mind"
             android:inputType="textMultiLine" />
 
     </LinearLayout>

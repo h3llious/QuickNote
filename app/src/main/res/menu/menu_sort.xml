@@ -4,16 +4,16 @@
         android:checkableBehavior="single">
         <item android:id="@+id/sort_time"
             android:checked="true"
-        android:title="Sort by time" />
+        android:title="@string/sort_by_time" />
         <item android:id="@+id/sort_title"
-            android:title="Sort by title" />
+            android:title="@string/sort_by_title" />
     </group>
     <group android:id="@+id/group_sort_type"
         android:checkableBehavior="single">
         <item android:id="@+id/sort_asc"
-            android:title="Ascending" />
+            android:title="@string/ascending" />
         <item android:id="@+id/sort_desc"
-            android:title="Descending"
+            android:title="@string/descending"
             android:checked="true"/>
     </group>
 </menu>

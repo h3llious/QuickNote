@@ -137,7 +137,7 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
 
         Log.d("saveFile", "" + savedFile);
 
-        Toast.makeText(context, "Image saved " + storageLoc , Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, context.getResources().getString(R.string.adapter_saved_path)+ storageLoc , Toast.LENGTH_SHORT).show();
     }
 
     private void openAttach(View v, int position) {
