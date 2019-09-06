@@ -128,4 +128,5 @@
     <string name="note_time_recently">Recently</string>
     <string name="note_time_past">&#160;minutes ago</string>
     <string name="isHighQuality">isHighQuality</string>
+    <string name="title">Title</string>
 </resources>
