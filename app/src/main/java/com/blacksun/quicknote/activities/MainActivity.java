@@ -1,7 +1,10 @@
 package com.blacksun.quicknote.activities;
 
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -33,6 +36,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.MenuCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -128,10 +132,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     SearchView searchView;
 
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            getInfo();
+            noteRecyclerAdapter.notifyDataSetChanged();
+
+            //enable screen interaction
+            progressBar.setVisibility(View.GONE);
+            dimView.setVisibility(View.GONE);
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+
+            Log.d("sync", "enable interaction");
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_drawer);
+
+        //register broadcast receiver
+        LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, new IntentFilter(REQUEST_RESTART));
 
         //package name
         PACKAGE_NAME = getPackageName();
@@ -739,9 +761,51 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //            loadingIndicator();
 
 //            syncData(SyncManager.SYNC_DATA);
-            //new way using service
-            Intent intent = new Intent(MainActivity.this, SyncService.class);
-            startService(intent);
+
+            if (googleServiceDrive == null) {
+                Toast.makeText(this, "Please sign in with your Google account!", Toast.LENGTH_SHORT).show();
+            } else {
+//            if (!GoogleSignIn.hasPermissions(account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE))) {
+//                GoogleSignIn.requestPermissions(this, 10, account, new Scope(DriveScopes.DRIVE_APPDATA), new Scope(DriveScopes.DRIVE_FILE));
+//                Log.d(DRIVE_TAG, "Request Scope permission");
+//            }
+//            Log.d(DRIVE_TAG, "Has Scope permission");
+
+                if (driveServiceHelper == null) {
+                    driveServiceHelper = new DriveServiceHelper(googleServiceDrive, this);
+                }
+
+                Thread checkInternetThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!isInternetAvailable()) {
+                            Log.d(DRIVE_TAG, "No internet connection");
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getBaseContext(), "No internet connection", Toast.LENGTH_LONG).show();
+                                }
+                            });
+                            return;
+                        }
+                        Log.d(DRIVE_TAG, "Internet connected");
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                loadingIndicator();
+
+                                Toast.makeText(getBaseContext(), "Start syncing", Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+                });
+                checkInternetThread.start();
+
+                //new way using service
+                Intent intent = new Intent(MainActivity.this, SyncService.class);
+                startService(intent);
+            }
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);

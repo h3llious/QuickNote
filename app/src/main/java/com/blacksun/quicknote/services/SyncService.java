@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.blacksun.quicknote.R;
 import com.blacksun.quicknote.activities.MainActivity;
@@ -494,6 +495,8 @@ public class SyncService extends IntentService {
                 uploadAllAttachments(builder, PROGRESS_MAX, PROGRESS_CURRENT, notificationManager, notificationId, filesFolderId);
             }
 
+            SyncManager.getSyncManager().getMainThreadExecutor().execute(command);
+
             builder.setProgress(0, 0, false)
                     .setContentText("Synchronizing data finished")
                     .setStyle(new NotificationCompat.BigTextStyle()
@@ -503,7 +506,7 @@ public class SyncService extends IntentService {
                     .setAutoCancel(true);
             notificationManager.notify(notificationId, builder.build());
 
-            SyncManager.getSyncManager().getMainThreadExecutor().execute(command);
+            Thread.sleep(1000);
 
         } catch (InterruptedException e) {
             Log.e(DRIVE_TAG, "error interrupted " + e);
@@ -530,7 +533,8 @@ public class SyncService extends IntentService {
                 copy(Uri.fromFile(from), to, context);
                 Log.d(DRIVE_TAG, "Backup db");
             }
-        } finally {
+        }
+        finally {
             stopForeground(false);
         }
     }
@@ -594,18 +598,28 @@ public class SyncService extends IntentService {
         }
     }
 
+//    private Runnable command = new Runnable() {
+//        @Override
+//        public void run() {
+////            Toast.makeText(context, "Finished syncing data!", Toast.LENGTH_LONG).show();
+//            //just reload the screen
+//            Intent startActivity = new Intent();
+//
+//            startActivity.setClass(context, MainActivity.class);
+//            startActivity.setAction(REQUEST_RESTART);
+//            startActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//
+//            context.startActivity(startActivity);
+//        }
+//    };
+
     private Runnable command = new Runnable() {
         @Override
         public void run() {
 //            Toast.makeText(context, "Finished syncing data!", Toast.LENGTH_LONG).show();
             //just reload the screen
-            Intent startActivity = new Intent();
-
-            startActivity.setClass(context, MainActivity.class);
-            startActivity.setAction(REQUEST_RESTART);
-            startActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            context.startActivity(startActivity);
+            Intent intent = new Intent(REQUEST_RESTART);
+            LocalBroadcastManager.getInstance(SyncService.this).sendBroadcast(intent);
         }
     };
 
