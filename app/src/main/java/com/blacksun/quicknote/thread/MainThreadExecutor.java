@@ -5,7 +5,7 @@ import android.os.Looper;
 
 import java.util.concurrent.Executor;
 
-class MainThreadExecutor implements Executor {
+public class MainThreadExecutor implements Executor {
     private Handler handler = new Handler(Looper.getMainLooper());
 
     @Override

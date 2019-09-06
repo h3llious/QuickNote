@@ -44,6 +44,7 @@ import com.blacksun.quicknote.data.NoteContract;
 import com.blacksun.quicknote.controllers.NoteManager;
 import com.blacksun.quicknote.models.Attachment;
 import com.blacksun.quicknote.models.Note;
+import com.blacksun.quicknote.services.SyncService;
 import com.blacksun.quicknote.thread.SyncDownTask;
 import com.blacksun.quicknote.thread.SyncManager;
 import com.blacksun.quicknote.thread.SyncTask;
@@ -110,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Bitmap loadedAvatar;
 
     Drive googleServiceDrive;
-    private static final String[] DRIVE_SCOPES = {DriveScopes.DRIVE_FILE, DriveScopes.DRIVE_APPDATA};
+    public static final String[] DRIVE_SCOPES = {DriveScopes.DRIVE_FILE, DriveScopes.DRIVE_APPDATA};
 
     DriveServiceHelper driveServiceHelper;
 
@@ -736,7 +737,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             syncData(SyncManager.DOWN_DATA);
         } else if (id == R.id.nav_sync) {
 //            loadingIndicator();
-            syncData(SyncManager.SYNC_DATA);
+
+//            syncData(SyncManager.SYNC_DATA);
+            //new way using service
+            Intent intent = new Intent(MainActivity.this, SyncService.class);
+            startService(intent);
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);

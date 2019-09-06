@@ -10,7 +10,7 @@ public class DownloadTask implements Callable<Boolean> {
     private String outputFilePath;
     private String attachId;
 
-    DownloadTask(DriveServiceHelper driveServiceHelper, String outputFilePath, String attachId) {
+    public DownloadTask(DriveServiceHelper driveServiceHelper, String outputFilePath, String attachId) {
         this.driveServiceHelper = driveServiceHelper;
         this.outputFilePath = outputFilePath;
         this.attachId = attachId;

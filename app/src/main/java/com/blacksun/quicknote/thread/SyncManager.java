@@ -45,11 +45,11 @@ public class SyncManager {
         syncThreadPool.execute(task);
     }
 
-    Future<String> callSyncString(Callable<String> task){
+    public Future<String> callSyncString(Callable<String> task){
         return syncThreadPool.submit(task);
     }
 
-    Future<Boolean> callSyncBool(Callable<Boolean> task){
+    public Future<Boolean> callSyncBool(Callable<Boolean> task){
         return syncThreadPool.submit(task);
     }
 
@@ -58,7 +58,7 @@ public class SyncManager {
     }
 
     //to runs task on main thread from background thread
-    MainThreadExecutor getMainThreadExecutor(){
+    public MainThreadExecutor getMainThreadExecutor(){
         return handler;
     }
 }

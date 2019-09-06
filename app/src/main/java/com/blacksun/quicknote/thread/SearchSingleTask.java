@@ -10,7 +10,7 @@ public class SearchSingleTask implements Callable<String> {
     private String folderName;
     private String parentId;
 
-    SearchSingleTask(DriveServiceHelper driveServiceHelper, String mimeType, String folderName, String parentId){
+    public SearchSingleTask(DriveServiceHelper driveServiceHelper, String mimeType, String folderName, String parentId){
         this.driveServiceHelper = driveServiceHelper;
         this.mimeType = mimeType;
         this.folderName = folderName;

@@ -8,7 +8,7 @@ public class CreateFolderTask implements Callable<String> {
     private String name;
     private String parentId;
 
-    CreateFolderTask(DriveServiceHelper driveServiceHelper, String name, String parentId){
+    public CreateFolderTask(DriveServiceHelper driveServiceHelper, String name, String parentId){
         this.driveServiceHelper = driveServiceHelper;
         this.name = name;
         this.parentId = parentId;
