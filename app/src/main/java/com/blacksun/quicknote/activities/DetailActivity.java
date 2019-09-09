@@ -113,6 +113,10 @@ public class DetailActivity extends AppCompatActivity {
 
     boolean isHighQuality;
 
+    private Menu menu;
+
+    boolean isNew = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -738,6 +742,7 @@ public class DetailActivity extends AppCompatActivity {
 
                 setUpImageSpan();
 
+                isNew = false;
             }
         } else {
             collapsingToolbar.setTitle(getResources().getString(R.string.detail_new_note));
@@ -885,8 +890,9 @@ public class DetailActivity extends AppCompatActivity {
         }
 
         if (currentNote == null) {
-            saveNewNote(title, content);
-
+            long newId = saveNewNote(title, content);
+            currentNote = new Note(title, content, newId, 0, 0);
+            menu.findItem(R.id.action_delete).setVisible(true);
         } else {
             //check if note is changed
             if (currentNote.getTitle().equals(title) && currentNote.getContent().equals(content)
@@ -927,7 +933,7 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
-    private void saveNewNote(String title, String content) {
+    private long saveNewNote(String title, String content) {
         Note note = new Note();
         note.setTitle(title);
 
@@ -960,6 +966,8 @@ public class DetailActivity extends AppCompatActivity {
                 AttachManager.newInstance(this).create(currentAttach);
             }
         }
+
+        return newId;
     }
 
     private boolean deleteNote() {
@@ -994,6 +1002,7 @@ public class DetailActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_detail, menu);
+        this.menu = menu;
         if (currentNote == null)
             menu.findItem(R.id.action_delete).setVisible(false);
         return true;
@@ -1016,12 +1025,12 @@ public class DetailActivity extends AppCompatActivity {
                 if (saveCheck)
                     isSaved = true;
 
-                if (currentNote == null) {
-                    if (saveCheck) {
-                        Toast.makeText(this, getResources().getString(R.string.detail_save_successfully), Toast.LENGTH_SHORT).show();
-                        finish();
-                    } else
-                        finish();
+                if (isNew) {
+//                    if (saveCheck) {
+                    Toast.makeText(this, getResources().getString(R.string.detail_save_successfully), Toast.LENGTH_SHORT).show();
+                    finish();
+//                    } else
+//                        finish();
                 } else {
                     if (saveCheck) {
                         Toast.makeText(this, getResources().getString(R.string.detail_update), Toast.LENGTH_SHORT).show();

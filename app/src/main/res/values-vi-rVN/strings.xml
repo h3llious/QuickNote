@@ -75,4 +75,5 @@
     <string name="service_missing_attaches">Tập tin đính kèm bị thiếu!</string>
     <string name="service_syncing_finished">Đồng bộ hóa kết thúc</string>
     <string name="service_no_permission">Mời cấp quyền và thử lại</string>
+    <string name="swipe_removed">&#160;removed!</string>
 </resources>

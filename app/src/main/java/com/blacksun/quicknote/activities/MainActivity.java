@@ -282,8 +282,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             // showing snack bar with Undo option
             Snackbar snackbar = Snackbar
-                    .make(constraintLayout, name + " removed!", Snackbar.LENGTH_LONG);
-            snackbar.setAction("UfNDO", new View.OnClickListener() {
+                    .make(constraintLayout, name + getString(R.string.swipe_removed), Snackbar.LENGTH_LONG);
+            snackbar.setAction("UNDO", new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
 
