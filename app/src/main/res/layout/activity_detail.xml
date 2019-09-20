@@ -39,7 +39,7 @@
                 android:fitsSystemWindows="true"
                 app:layout_collapseMode="parallax">
 
-                <com.blacksun.quicknote.models.EditTextWithClear
+                <com.blacksun.quicknote.CustomView.EditTextWithClear
                     android:id="@+id/detail_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

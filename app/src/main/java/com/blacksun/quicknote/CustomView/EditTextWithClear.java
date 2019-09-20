@@ -1,4 +1,4 @@
-package com.blacksun.quicknote.models;
+package com.blacksun.quicknote.CustomView;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
