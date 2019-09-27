@@ -158,6 +158,11 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         return formatter.format(calendar.getTime());
     }
 
+    @Override
+    public long getItemId(int position) {
+        return notes.get(position).getId();
+    }
+
     public void removeItem(int position) {
         notes.remove(position);
         // notify the item removed by position

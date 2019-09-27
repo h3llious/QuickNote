@@ -220,6 +220,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         noteRecyclerAdapter = new NoteRecyclerAdapter(notes);
+        noteRecyclerAdapter.setHasStableIds(true);
 
         noteList.setHasFixedSize(true);
         noteList.setLayoutManager(new LinearLayoutManager(this));
