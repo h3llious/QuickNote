@@ -20,6 +20,7 @@ This project is intended to develop a functional note taking app.
 * Simple, user-friendly layout.
     * Splash Screen
     * Coordinator Layout for 'Editing notes' activity.
+    * Customized View: EditText
 
 ## Planned features
 * Simple, easy to use layout yet having necessary functions.
